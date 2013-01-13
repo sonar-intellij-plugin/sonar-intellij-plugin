@@ -1,9 +1,10 @@
-package org.mayevskiy.intellij.sonar;
+package org.mayevskiy.intellij.sonar.component;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.bean.SonarSettingsFactory;
 
 @State(
         name = "SonarConfiguration",
@@ -15,11 +16,10 @@ public class SonarProjectComponent implements ProjectComponent, PersistentStateC
     private SonarSettingsBean sonarSettings;
 
     public SonarProjectComponent(Project project) {
-        this.sonarSettings = SonarSettingsFactory.getInstance();
     }
 
     public void initComponent() {
-        // TODO: insert component initialization logic here
+        this.sonarSettings = SonarSettingsFactory.getInstance();
     }
 
     public void disposeComponent() {

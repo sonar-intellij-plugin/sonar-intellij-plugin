@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar;
+package org.mayevskiy.intellij.sonar.bean;
 
 public class SonarSettingsFactory {
 

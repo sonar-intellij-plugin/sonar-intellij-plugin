@@ -1,45 +1,46 @@
 <idea-plugin version="2">
-  <id>org.mayevskiy.intellij.sonar</id>
-  <name>Sonar</name>
-  <version>1.0</version>
-  <vendor email="omayevskiy@gmail.com" url="http://www.github.com">Oleg Mayevskiy</vendor>
+    <id>org.mayevskiy.intellij.sonar</id>
+    <name>Sonar</name>
+    <version>1.0</version>
+    <vendor email="omayevskiy@gmail.com" url="http://www.github.com">Oleg Mayevskiy</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
       Enter short description for your plugin here.<br>
       <small>most HTML tags may be used</small>
       ]]></description>
 
-  <change-notes><![CDATA[
+    <change-notes><![CDATA[
       Add change notes here.<br>
       <small>most HTML tags may be used</small>
       ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="107.105"/>
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="107.105"/>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
 
-  <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.lang</depends>
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
+    <application-components>
+        <!-- Add your application components here -->
+    </application-components>
 
-  <project-components>
-    <!-- Add your project components here -->
-      <component>
-          <implementation-class>org.mayevskiy.intellij.sonar.SonarProjectComponent</implementation-class>
-      </component>
-  </project-components>
+    <project-components>
+        <!-- Add your project components here -->
+        <component>
+            <implementation-class>org.mayevskiy.intellij.sonar.component.SonarProjectComponent</implementation-class>
+        </component>
+    </project-components>
 
-  <actions>
+    <actions>
 
-  </actions>
+    </actions>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <projectConfigurable id="SonarProjectSettingsConfigurable" instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable" />
-  </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable id="SonarProjectSettingsConfigurable"
+                             instance="org.mayevskiy.intellij.sonar.ui.SonarProjectSettingsConfigurable"/>
+    </extensions>
 
 </idea-plugin>
