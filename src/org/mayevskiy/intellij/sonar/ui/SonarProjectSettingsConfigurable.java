@@ -1,19 +1,15 @@
 package org.mayevskiy.intellij.sonar.ui;
 
-import com.intellij.codeInsight.completion.CompletionProgressIndicator;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import com.sun.deploy.util.Waiter;
 import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
 import org.mayevskiy.intellij.sonar.component.SonarProjectComponent;
 import org.mayevskiy.intellij.sonar.service.SonarService;
 
@@ -24,9 +20,14 @@ import java.awt.event.ActionListener;
 
 public class SonarProjectSettingsConfigurable implements Configurable {
 
-    private JTextField sonarServerUrlTextField;
+
     private JButton testConnectionButton;
     private JPanel jPanel;
+    private JTextField sonarServerUrlTextField;
+    private JTextField sonarUserTextField;
+    private JTextField sonarPasswordTextField;
+    private JTextField sonarResourceTextField;
+
     private SonarProjectComponent sonarProjectComponent;
     private SonarService sonarService;
     private Project project;
@@ -52,14 +53,19 @@ public class SonarProjectSettingsConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        //noinspection ConstantConditions
-        this.sonarServerUrlTextField.setText(this.sonarProjectComponent.getState().host);
+        SonarSettingsBean state = this.sonarProjectComponent.getState();
+        if (null != state) {
+            this.sonarServerUrlTextField.setText(state.host);
+            this.sonarUserTextField.setText(state.user);
+            this.sonarPasswordTextField.setText(state.password);
+            this.sonarResourceTextField.setText(state.resource);
+        }
 
         testConnectionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                boolean processed= ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                boolean processed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
                         new Runnable() {
                             @Override
                             public void run() {
@@ -70,7 +76,7 @@ public class SonarProjectSettingsConfigurable implements Configurable {
                                 indicator.setIndeterminate(true);
 
                                 try {
-                                    sonarService.testConnection(sonarServerUrlTextField.getText());
+                                    sonarService.testConnection(new SonarSettingsBean(sonarServerUrlTextField.getText(), sonarUserTextField.getText(), sonarPasswordTextField.getText(), sonarResourceTextField.getText()));
                                 } catch (RuntimeException re) {
                                     throw new ProcessCanceledException();
                                 }
@@ -141,8 +147,13 @@ public class SonarProjectSettingsConfigurable implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-        //noinspection ConstantConditions
-        sonarProjectComponent.getState().host = sonarServerUrlTextField.getText();
+        SonarSettingsBean state = sonarProjectComponent.getState();
+        if (null != state) {
+            state.host = sonarServerUrlTextField.getText();
+            state.user = sonarUserTextField.getText();
+            state.password = sonarPasswordTextField.getText();
+            state.resource = sonarResourceTextField.getText();
+        }
     }
 
     @Override
