@@ -96,45 +96,6 @@ public class SonarProjectSettingsConfigurable implements Configurable {
                     Messages.showMessageDialog("Connection not successful", "Connection Test", Messages.getInformationIcon());
                 }
 
-
-
-
-/*
-
-                new Task.Backgroundable(project, "Testing Connection", true) {
-                    @Override
-                    public boolean shouldStartInBackground() {
-                        return false;
-                    }
-
-                    private boolean connectionSuccessful;
-
-                    @Override
-                    public void run(@NotNull ProgressIndicator indicator) {
-                        indicator.setText("Testing Connection");
-                        indicator.setText2(String.format("connecting to %s", sonarServerUrlTextField.getText()));
-                        indicator.setFraction(0.5);
-                        indicator.setIndeterminate(true);
-                        try {
-                            connectionSuccessful = sonarService.testConnection(sonarServerUrlTextField.getText());
-                        } catch (Exception e1) {
-                            connectionSuccessful = false;
-                        }
-
-                    }
-
-                    @Override
-                    public void onSuccess() {
-                        if (connectionSuccessful) {
-                            Messages.showMessageDialog("Connection successful", "Connection Test", Messages.getInformationIcon());
-                        } else {
-                            Messages.showMessageDialog("Connection not successful", "Connection Test", Messages.getInformationIcon());
-                        }
-                    }
-                }.queue();
-
-*/
-
             }
         });
         return jPanel;

@@ -11,7 +11,10 @@ public class SonarService {
     public boolean testConnection(SonarSettingsBean sonarSettingsBean) {
 
         Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
-        List<Violation> violations = sonar.findAll(ViolationQuery.createForResource(sonarSettingsBean.resource));
+        ViolationQuery violationQuery = ViolationQuery.createForResource(sonarSettingsBean.resource);
+        violationQuery.setDepth(-1);
+        violationQuery.setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
+        List<Violation> violations = sonar.findAll(violationQuery);
         for (Violation violation : violations) {
             violation.getLine();
             violation.getMessage();
@@ -20,5 +23,14 @@ public class SonarService {
         }
 
         return true;
+    }
+
+    public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
+        Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
+        ViolationQuery violationQuery = ViolationQuery.createForResource(sonarSettingsBean.resource);
+        violationQuery.setDepth(-1);
+        violationQuery.setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
+        List<Violation> violations = sonar.findAll(violationQuery);
+        return violations;
     }
 }

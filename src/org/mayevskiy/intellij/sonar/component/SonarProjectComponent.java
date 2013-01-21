@@ -41,9 +41,6 @@ public class SonarProjectComponent implements ProjectComponent, PersistentStateC
 
     @Override
     public SonarSettingsBean getState() {
-        if (null == sonarSettings) {
-            sonarSettings = SonarSettingsFactory.getInstance();
-        }
         return sonarSettings;
     }
 
