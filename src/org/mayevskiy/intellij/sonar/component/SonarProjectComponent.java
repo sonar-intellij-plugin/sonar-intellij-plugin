@@ -9,7 +9,7 @@ import org.mayevskiy.intellij.sonar.bean.SonarSettingsFactory;
 @State(
         name = "SonarConfiguration",
         storages = {
-                @Storage(id = "sonar", file = StoragePathMacros.PROJECT_FILE)
+                @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
         }
 )
 public class SonarProjectComponent implements ProjectComponent, PersistentStateComponent<SonarSettingsBean> {

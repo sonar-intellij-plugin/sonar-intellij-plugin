@@ -76,7 +76,12 @@ public class SonarProjectSettingsConfigurable implements Configurable {
                                 indicator.setIndeterminate(true);
 
                                 try {
-                                    sonarService.testConnection(new SonarSettingsBean(sonarServerUrlTextField.getText(), sonarUserTextField.getText(), sonarPasswordTextField.getText(), sonarResourceTextField.getText()));
+                                    SonarSettingsBean sonarSettingsBean = new SonarSettingsBean();
+                                    sonarSettingsBean.host = sonarServerUrlTextField.getText();
+                                    sonarSettingsBean.user = sonarUserTextField.getText();
+                                    sonarSettingsBean.password = sonarPasswordTextField.getText();
+                                    sonarSettingsBean.resource = sonarResourceTextField.getText();
+                                    sonarService.testConnection(sonarSettingsBean);
                                 } catch (RuntimeException re) {
                                     throw new ProcessCanceledException();
                                 }
