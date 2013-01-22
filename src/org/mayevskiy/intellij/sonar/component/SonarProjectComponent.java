@@ -4,12 +4,11 @@ import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsFactory;
 
 @State(
         name = "SonarConfiguration",
         storages = {
-                @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
+                @Storage(id = "other", file = StoragePathMacros.WORKSPACE_FILE)
         }
 )
 public class SonarProjectComponent implements ProjectComponent, PersistentStateComponent<SonarSettingsBean> {
@@ -19,7 +18,7 @@ public class SonarProjectComponent implements ProjectComponent, PersistentStateC
     }
 
     public void initComponent() {
-        this.sonarSettings = SonarSettingsFactory.getInstance();
+//        this.sonarSettings = SonarSettingsFactory.getInstance();
     }
 
     public void disposeComponent() {
