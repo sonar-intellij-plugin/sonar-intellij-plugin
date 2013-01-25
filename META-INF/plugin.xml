@@ -40,7 +40,8 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="SonarProjectSettingsConfigurable"
-                             instance="org.mayevskiy.intellij.sonar.ui.SonarProjectSettingsConfigurable"/>
+                             instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
+        <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.inspection.InspectionProvider"/>
     </extensions>
 
 </idea-plugin>

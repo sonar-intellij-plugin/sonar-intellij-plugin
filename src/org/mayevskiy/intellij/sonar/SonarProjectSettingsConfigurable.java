@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar.ui;
+package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;

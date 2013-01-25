@@ -18,7 +18,6 @@ public class SonarProjectComponent implements ProjectComponent, PersistentStateC
     }
 
     public void initComponent() {
-//        this.sonarSettings = SonarSettingsFactory.getInstance();
     }
 
     public void disposeComponent() {
