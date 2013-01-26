@@ -1,0 +1,2 @@
+sonar-intellij-plugin
+=====================
