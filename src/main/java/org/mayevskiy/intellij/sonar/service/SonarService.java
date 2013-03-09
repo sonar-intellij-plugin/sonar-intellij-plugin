@@ -20,6 +20,8 @@ public class SonarService {
             violation.getMessage();
             violation.getRuleName();
             violation.getReview();
+            violation.getResourceKey();
+            violation.getResourceQualifier();
         }
 
         return true;
@@ -30,7 +32,7 @@ public class SonarService {
         ViolationQuery violationQuery = ViolationQuery.createForResource(sonarSettingsBean.resource);
         violationQuery.setDepth(-1);
         violationQuery.setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
-        List<Violation> violations = sonar.findAll(violationQuery);
-        return violations;
+
+        return sonar.findAll(violationQuery);
     }
 }

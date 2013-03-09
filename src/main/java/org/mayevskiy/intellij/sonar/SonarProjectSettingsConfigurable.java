@@ -17,9 +17,12 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-
 public class SonarProjectSettingsConfigurable implements Configurable {
 
+    private static final String DEFAULT_SERVER_URL = "";
+    private static final String DEFAULT_USER = "";
+    private static final String DEFAULT_PASSWORD = "";
+    private static final String DEFAULT_RESOURCE = "";
 
     private JButton testConnectionButton;
     private JPanel jPanel;
@@ -53,45 +56,14 @@ public class SonarProjectSettingsConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        SonarSettingsBean state = this.sonarProjectComponent.getState();
-        if (null != state) {
-            this.sonarServerUrlTextField.setText(state.host);
-            this.sonarUserTextField.setText(state.user);
-            this.sonarPasswordTextField.setText(state.password);
-            this.sonarResourceTextField.setText(state.resource);
-        }
+        fromSettingsBean(sonarProjectComponent.getState());
 
         testConnectionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 boolean processed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-                                indicator.setText("Testing Connection");
-                                indicator.setText2(String.format("connecting to %s", sonarServerUrlTextField.getText()));
-                                indicator.setFraction(0.5);
-                                indicator.setIndeterminate(true);
-
-                                try {
-                                    SonarSettingsBean sonarSettingsBean = new SonarSettingsBean();
-                                    sonarSettingsBean.host = sonarServerUrlTextField.getText();
-                                    sonarSettingsBean.user = sonarUserTextField.getText();
-                                    sonarSettingsBean.password = sonarPasswordTextField.getText();
-                                    sonarSettingsBean.resource = sonarResourceTextField.getText();
-                                    sonarService.testConnection(sonarSettingsBean);
-                                } catch (RuntimeException re) {
-                                    throw new ProcessCanceledException();
-                                }
-
-                                if (indicator.isCanceled()) {
-                                    throw new ProcessCanceledException();
-                                }
-
-                            }
-                        },
+                        new TestConnectionRunnable(),
                         "Testing Connection", true, project
                 );
 
@@ -106,28 +78,67 @@ public class SonarProjectSettingsConfigurable implements Configurable {
         return jPanel;
     }
 
+    private void fromSettingsBean(SonarSettingsBean state) {
+        if (null == state) {
+            sonarServerUrlTextField.setText(DEFAULT_SERVER_URL);
+            sonarUserTextField.setText(DEFAULT_USER);
+            sonarPasswordTextField.setText(DEFAULT_PASSWORD);
+            sonarResourceTextField.setText(DEFAULT_RESOURCE);
+        } else {
+            sonarServerUrlTextField.setText(state.host);
+            sonarUserTextField.setText(state.user);
+            sonarPasswordTextField.setText(state.password);
+            sonarResourceTextField.setText(state.resource);
+        }
+    }
+
+    private SonarSettingsBean toSettingsBean() {
+        SonarSettingsBean result = new SonarSettingsBean();
+        result.host = sonarServerUrlTextField.getText();
+        result.user = sonarUserTextField.getText();
+        result.password = sonarPasswordTextField.getText();
+        result.resource = sonarResourceTextField.getText();
+        return result;
+    }
+
     @Override
     public boolean isModified() {
-        return true;
+        SonarSettingsBean state = sonarProjectComponent.getState();
+        return null == state || !state.equals(toSettingsBean());
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        SonarSettingsBean state = sonarProjectComponent.getState();
-        if (null != state) {
-            state.host = sonarServerUrlTextField.getText();
-            state.user = sonarUserTextField.getText();
-            state.password = sonarPasswordTextField.getText();
-            state.resource = sonarResourceTextField.getText();
-        }
+        sonarProjectComponent.loadState(toSettingsBean());
     }
 
     @Override
     public void reset() {
+        fromSettingsBean(sonarProjectComponent.getState());
     }
 
     @Override
     public void disposeUIResources() {
     }
 
+    private class TestConnectionRunnable implements Runnable {
+        @Override
+        public void run() {
+            ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+            indicator.setText("Testing Connection");
+            indicator.setText2(String.format("connecting to %s", sonarServerUrlTextField.getText()));
+            indicator.setFraction(0.5);
+            indicator.setIndeterminate(true);
+
+            try {
+                sonarService.testConnection(toSettingsBean());
+            } catch (RuntimeException re) {
+                throw new ProcessCanceledException();
+            }
+
+            if (indicator.isCanceled()) {
+                throw new ProcessCanceledException();
+            }
+        }
+    }
 }
