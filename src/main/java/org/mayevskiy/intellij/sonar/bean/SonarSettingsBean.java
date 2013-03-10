@@ -13,20 +13,20 @@ public class SonarSettingsBean {
 
         SonarSettingsBean that = (SonarSettingsBean) o;
 
-        if (host != null ? !host.equals(that.host) : that.host != null) return false;
-        if (password != null ? !password.equals(that.password) : that.password != null) return false;
-        if (resource != null ? !resource.equals(that.resource) : that.resource != null) return false;
-        if (user != null ? !user.equals(that.user) : that.user != null) return false;
+        if (null != host ? !host.equals(that.host) : null != that.host) return false;
+        if (null != password ? !password.equals(that.password) : null != that.password) return false;
+        if (null != resource ? !resource.equals(that.resource) : null != that.resource) return false;
+        if (null != user ? !user.equals(that.user) : null != that.user) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = host != null ? host.hashCode() : 0;
-        result = 31 * result + (user != null ? user.hashCode() : 0);
-        result = 31 * result + (password != null ? password.hashCode() : 0);
-        result = 31 * result + (resource != null ? resource.hashCode() : 0);
+        int result = null != host ? host.hashCode() : 0;
+        result = 31 * result + (null != user ? user.hashCode() : 0);
+        result = 31 * result + (null != password ? password.hashCode() : 0);
+        result = 31 * result + (null != resource ? resource.hashCode() : 0);
         return result;
     }
 }

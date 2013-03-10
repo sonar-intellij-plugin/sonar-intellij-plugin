@@ -111,21 +111,25 @@ public class SonarInspection extends LocalInspectionTool {
 
         final Collection<ProblemDescriptor> result = new ArrayList<>();
 
-        String resourceKey = convertPsiFileToSonarKey(file, getSonarSettingsBean(manager.getProject()).resource);
-        Collection<Violation> violations = violationsMap.get(resourceKey);
-        if (null != violations) {
-            for (Violation violation : violations) {
-                PsiElement element = getElementAtLine(file, violation.getLine() - 1);
-                if (null != element) {
-                    result.add(manager.createProblemDescriptor(
-                            element,
-                            violation.getMessage(),
-                            ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                            null,
-                            isOnTheFly));
+        SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(manager.getProject());
+        if (null != sonarSettingsBean) {
+            String resourceKey = convertPsiFileToSonarKey(file, sonarSettingsBean.resource);
+            Collection<Violation> violations = violationsMap.get(resourceKey);
+            if (null != violations) {
+                for (Violation violation : violations) {
+                    PsiElement element = getElementAtLine(file, violation.getLine() - 1);
+                    if (null != element) {
+                        result.add(manager.createProblemDescriptor(
+                                element,
+                                violation.getMessage(),
+                                ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                                null,
+                                isOnTheFly));
+                    }
                 }
             }
         }
+
         return result.toArray(new ProblemDescriptor[result.size()]);
     }
 
@@ -133,14 +137,16 @@ public class SonarInspection extends LocalInspectionTool {
         violationsMap = new HashMap<>();
         SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(project);
         List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
-        for (Violation violation : violations) {
-            String resourceKey = violation.getResourceKey();
-            Collection<Violation> entry = violationsMap.get(resourceKey);
-            if (null == entry) {
-                entry = new ArrayList<>();
-                violationsMap.put(resourceKey, entry);
+        if (null != violations) {
+            for (Violation violation : violations) {
+                String resourceKey = violation.getResourceKey();
+                Collection<Violation> entry = violationsMap.get(resourceKey);
+                if (null == entry) {
+                    entry = new ArrayList<>();
+                    violationsMap.put(resourceKey, entry);
+                }
+                entry.add(violation);
             }
-            entry.add(violation);
         }
     }
 

@@ -48,6 +48,9 @@ public class SonarService {
     }
 
     public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
+        if (null == sonarSettingsBean) {
+            return null;
+        }
         Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
         ViolationQuery violationQuery = ViolationQuery.createForResource(sonarSettingsBean.resource);
         violationQuery.setDepth(-1);
