@@ -128,9 +128,6 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
                     violationsMap.put(resourceKey, entry);
                 }
                 entry.add(violation);
-
-                violation.getResourceKey();
-                violation.getResourceQualifier();
             }
         }
     }
