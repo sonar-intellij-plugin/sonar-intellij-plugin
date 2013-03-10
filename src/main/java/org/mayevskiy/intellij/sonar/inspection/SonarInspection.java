@@ -90,10 +90,20 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
         return result.toString();
     }
 
+    @Override
+    public void inspectionStarted(LocalInspectionToolSession session, boolean isOnTheFly) {
+        createViolationsMap(session.getFile().getProject());
+
+    }
+
+    @Override
+    public void inspectionFinished(LocalInspectionToolSession session, ProblemsHolder problemsHolder) {
+        violationsMap.clear();
+    }
+
     @Nullable
     @Override
     public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-        createViolationsMap(manager.getProject());
 
         final Collection<ProblemDescriptor> result = new ArrayList<>();
 
@@ -116,19 +126,17 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
     }
 
     private void createViolationsMap(Project project) {
-        if (null == violationsMap) {
-            violationsMap = new HashMap<>();
-            SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(project);
-            List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
-            for (Violation violation : violations) {
-                String resourceKey = violation.getResourceKey();
-                Collection<Violation> entry = violationsMap.get(resourceKey);
-                if (null == entry) {
-                    entry = new ArrayList<>();
-                    violationsMap.put(resourceKey, entry);
-                }
-                entry.add(violation);
+        violationsMap = new HashMap<>();
+        SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(project);
+        List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
+        for (Violation violation : violations) {
+            String resourceKey = violation.getResourceKey();
+            Collection<Violation> entry = violationsMap.get(resourceKey);
+            if (null == entry) {
+                entry = new ArrayList<>();
+                violationsMap.put(resourceKey, entry);
             }
+            entry.add(violation);
         }
     }
 
@@ -164,8 +172,6 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
         return new PsiElementVisitor() {
             @Override
             public void visitFile(PsiFile file) {
-                createViolationsMap(file.getProject());
-
                 String resourceKey = convertPsiFileToSonarKey(file, getSonarSettingsBean(file.getProject()).resource);
                 Collection<Violation> violations = violationsMap.get(resourceKey);
                 if (violations != null) {
