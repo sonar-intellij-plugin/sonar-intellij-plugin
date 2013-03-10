@@ -1,5 +1,6 @@
 package org.mayevskiy.intellij.sonar;
 
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -10,7 +11,7 @@ import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
-import org.mayevskiy.intellij.sonar.component.SonarProjectComponent;
+import org.mayevskiy.intellij.sonar.component.SonarModuleComponent;
 import org.mayevskiy.intellij.sonar.service.SonarService;
 
 import javax.swing.*;
@@ -18,7 +19,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 
-public class SonarProjectSettingsConfigurable implements Configurable {
+/**
+ * Author: Oleg Mayevskiy
+ * Date: 10.03.13
+ * Time: 20:53
+ */
+public class SonarModuleSettingsConfigurable implements Configurable {
 
     private static final String DEFAULT_SERVER_URL = "";
     private static final String DEFAULT_USER = "";
@@ -32,13 +38,13 @@ public class SonarProjectSettingsConfigurable implements Configurable {
     private JTextField sonarPasswordTextField;
     private JTextField sonarResourceTextField;
 
-    private SonarProjectComponent sonarComponent;
+    private SonarModuleComponent sonarComponent;
     private SonarService sonarService;
     private Project project;
 
-    public SonarProjectSettingsConfigurable(Project project) {
-        this.project = project;
-        this.sonarComponent = project.getComponent(SonarProjectComponent.class);
+    public SonarModuleSettingsConfigurable(Module module) {
+        this.project = module.getProject();
+        this.sonarComponent = module.getComponent(SonarModuleComponent.class);
         this.sonarService = new SonarService();
     }
 
@@ -145,6 +151,4 @@ public class SonarProjectSettingsConfigurable implements Configurable {
     @Override
     public void disposeUIResources() {
     }
-
-
 }

@@ -37,6 +37,11 @@
             <implementation-class>org.mayevskiy.intellij.sonar.component.SonarProjectComponent</implementation-class>
         </component>
     </project-components>
+    <module-components>
+        <component>
+            <implementation-class>org.mayevskiy.intellij.sonar.component.SonarModuleComponent</implementation-class>
+        </component>
+    </module-components>
 
     <actions>
 
@@ -45,6 +50,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="SonarProjectSettingsConfigurable"
                              instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
+        <moduleConfigurable id="SonarModuleSettingsConfigurable"
+                            instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
         <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.inspection.InspectionProvider"/>
     </extensions>
 
