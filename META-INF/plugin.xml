@@ -1,21 +1,21 @@
 <idea-plugin version="2">
     <id>org.mayevskiy.intellij.sonar</id>
     <name>Sonar Connector</name>
+
     <version>1.0</version>
-    <vendor email="omayevskiy@gmail.com" url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy
-    </vendor>
-    <vendor email="sonar-intellij-plugin@plushnikov.de" url="https://github.com/omayevskiy/sonar-intellij-plugin">
-        Michail Plushnikov
+
+    <vendor email="omayevskiy@gmail.com, sonar-intellij-plugin@plushnikov.de"
+            url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov
     </vendor>
 
     <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <small>most HTML tags may be used</small>
+      Connects sonar to IntelliJ.<br>
+      <!--<small>most HTML tags may be used</small>-->
       ]]></description>
 
     <change-notes><![CDATA[
-      Added support for simple sonar projects.<br>
-      <small>most HTML tags may be used</small>
+      10.03.2013 Added support for simple sonar projects.<br>
+      <!--<small>most HTML tags may be used</small>-->
       ]]>
     </change-notes>
 
