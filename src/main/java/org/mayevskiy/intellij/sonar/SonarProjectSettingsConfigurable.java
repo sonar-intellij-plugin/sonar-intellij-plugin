@@ -16,6 +16,7 @@ import org.mayevskiy.intellij.sonar.service.SonarService;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.MessageFormat;
 
 public class SonarProjectSettingsConfigurable implements Configurable {
 
@@ -68,7 +69,7 @@ public class SonarProjectSettingsConfigurable implements Configurable {
                 );
 
                 if (processed) {
-                    Messages.showMessageDialog("Connection successful", "Connection Test", Messages.getInformationIcon());
+                    Messages.showMessageDialog(MessageFormat.format("Connection successful\nSonar v.{0}", SONAR_SERVER_VERSION), "Connection Test", Messages.getInformationIcon());
                 } else {
                     Messages.showMessageDialog("Connection not successful", "Connection Test", Messages.getInformationIcon());
                 }
@@ -76,6 +77,30 @@ public class SonarProjectSettingsConfigurable implements Configurable {
             }
         });
         return jPanel;
+    }
+
+    public static String SONAR_SERVER_VERSION;
+
+    private class TestConnectionRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+            indicator.setText("Testing Connection");
+            indicator.setText2(String.format("connecting to %s", sonarServerUrlTextField.getText()));
+            indicator.setFraction(0.5);
+            indicator.setIndeterminate(true);
+
+            try {
+                SONAR_SERVER_VERSION = sonarService.testConnectionByGettingSonarServerVersion(toSettingsBean());
+            } catch (Exception re) {
+                throw new ProcessCanceledException();
+            }
+
+            if (indicator.isCanceled()) {
+                throw new ProcessCanceledException();
+            }
+        }
     }
 
     private void fromSettingsBean(SonarSettingsBean state) {
@@ -121,24 +146,5 @@ public class SonarProjectSettingsConfigurable implements Configurable {
     public void disposeUIResources() {
     }
 
-    private class TestConnectionRunnable implements Runnable {
-        @Override
-        public void run() {
-            ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-            indicator.setText("Testing Connection");
-            indicator.setText2(String.format("connecting to %s", sonarServerUrlTextField.getText()));
-            indicator.setFraction(0.5);
-            indicator.setIndeterminate(true);
 
-            try {
-                sonarService.testConnection(toSettingsBean());
-            } catch (RuntimeException re) {
-                throw new ProcessCanceledException();
-            }
-
-            if (indicator.isCanceled()) {
-                throw new ProcessCanceledException();
-            }
-        }
-    }
 }
