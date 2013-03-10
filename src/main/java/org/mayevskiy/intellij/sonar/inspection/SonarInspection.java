@@ -7,7 +7,10 @@ import com.intellij.openapi.fileTypes.StdFileTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +27,7 @@ import java.util.*;
  * Date: 23.01.13
  * Time: 10:50
  */
-public class SonarInspection extends BaseJavaLocalInspectionTool {
+public class SonarInspection extends LocalInspectionTool {
     @Nls
     @NotNull
     @Override
@@ -96,6 +99,7 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
 
     }
 
+
     @Override
     public void inspectionFinished(LocalInspectionToolSession session, ProblemsHolder problemsHolder) {
         violationsMap.clear();
@@ -166,30 +170,5 @@ public class SonarInspection extends BaseJavaLocalInspectionTool {
         return element;
     }
 
-    @NotNull
-    @Override
-    public PsiElementVisitor buildVisitor(@NotNull final ProblemsHolder holder, final boolean isOnTheFly) {
-        return new PsiElementVisitor() {
-            @Override
-            public void visitFile(PsiFile file) {
-                String resourceKey = convertPsiFileToSonarKey(file, getSonarSettingsBean(file.getProject()).resource);
-                Collection<Violation> violations = violationsMap.get(resourceKey);
-                if (violations != null) {
-                    for (Violation violation : violations) {
-                        PsiElement element = getElementAtLine(file, violation.getLine() - 1);
-                        if (null != element) {
-                            ProblemDescriptor descriptor = holder.getManager().createProblemDescriptor(
-                                    element,
-                                    violation.getMessage(),
-                                    ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-                                    null,
-                                    isOnTheFly);
-                            holder.registerProblem(descriptor);
-                        }
-                    }
-                }
 
-            }
-        };
-    }
 }
