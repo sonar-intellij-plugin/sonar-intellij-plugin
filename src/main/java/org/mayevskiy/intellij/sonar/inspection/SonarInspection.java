@@ -113,10 +113,14 @@ public class SonarInspection extends LocalInspectionTool {
                     SonarComponent component = module.getComponent(SonarModuleComponent.class);
                     sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
                 } else {
-                    sonarSettingsBean = getSonarSettingsBeanFromProject(file.getProject());
+
                 }
             }
+            if (null == sonarSettingsBean) {
+                sonarSettingsBean = getSonarSettingsBeanFromProject(file.getProject());
+            }
         }
+
         return sonarSettingsBean;
     }
 
