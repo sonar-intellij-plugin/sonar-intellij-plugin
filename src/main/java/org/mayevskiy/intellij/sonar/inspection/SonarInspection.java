@@ -4,6 +4,8 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.*;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileTypes.StdFileTypes;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -16,6 +18,8 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.component.SonarComponent;
+import org.mayevskiy.intellij.sonar.component.SonarModuleComponent;
 import org.mayevskiy.intellij.sonar.component.SonarProjectComponent;
 import org.mayevskiy.intellij.sonar.service.SonarService;
 import org.sonar.wsclient.services.Violation;
@@ -95,23 +99,41 @@ public class SonarInspection extends LocalInspectionTool {
 
     @Override
     public void inspectionStarted(LocalInspectionToolSession session, boolean isOnTheFly) {
-        createViolationsMap(session.getFile().getProject());
+        SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(session.getFile());
+        createViolationsMapFromSonarSettingsBean(sonarSettingsBean);
+    }
 
+    private SonarSettingsBean getSonarSettingsBeanForFile(PsiFile file) {
+        SonarSettingsBean sonarSettingsBean = null;
+        if (null != file) {
+            VirtualFile virtualFile = file.getVirtualFile();
+            if (null != virtualFile) {
+                Module module = ModuleUtil.findModuleForFile(virtualFile, file.getProject());
+                if (null != module) {
+                    SonarComponent component = module.getComponent(SonarModuleComponent.class);
+                    sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
+                } else {
+                    sonarSettingsBean = getSonarSettingsBeanFromProject(file.getProject());
+                }
+            }
+        }
+        return sonarSettingsBean;
     }
 
 
     @Override
     public void inspectionFinished(LocalInspectionToolSession session, ProblemsHolder problemsHolder) {
-        violationsMap.clear();
+        if (null != violationsMap) {
+            violationsMap.clear();
+        }
     }
 
     @Nullable
     @Override
     public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-
         final Collection<ProblemDescriptor> result = new ArrayList<>();
 
-        SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(manager.getProject());
+        SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(file);
         if (null != sonarSettingsBean) {
             String resourceKey = convertPsiFileToSonarKey(file, sonarSettingsBean.resource);
             Collection<Violation> violations = violationsMap.get(resourceKey);
@@ -133,9 +155,13 @@ public class SonarInspection extends LocalInspectionTool {
         return result.toArray(new ProblemDescriptor[result.size()]);
     }
 
-    private void createViolationsMap(Project project) {
+    private void createViolationsMapFromProject(Project project) {
+        SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanFromProject(project);
+        createViolationsMapFromSonarSettingsBean(sonarSettingsBean);
+    }
+
+    private void createViolationsMapFromSonarSettingsBean(SonarSettingsBean sonarSettingsBean) {
         violationsMap = new HashMap<>();
-        SonarSettingsBean sonarSettingsBean = getSonarSettingsBean(project);
         List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
         if (null != violations) {
             for (Violation violation : violations) {
@@ -157,9 +183,13 @@ public class SonarInspection extends LocalInspectionTool {
         return super.getDefaultLevel();
     }
 
-    private SonarSettingsBean getSonarSettingsBean(Project project) {
+    private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
         SonarProjectComponent sonarProjectComponent = project.getComponent(SonarProjectComponent.class);
         return sonarProjectComponent.getState();
+    }
+
+    private SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarComponent sonarComponent) {
+        return sonarComponent.getState();
     }
 
     @Nullable
