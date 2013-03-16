@@ -159,11 +159,6 @@ public class SonarInspection extends LocalInspectionTool {
         return result.toArray(new ProblemDescriptor[result.size()]);
     }
 
-    private void createViolationsMapFromProject(Project project) {
-        SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanFromProject(project);
-        createViolationsMapFromSonarSettingsBean(sonarSettingsBean);
-    }
-
     private void createViolationsMapFromSonarSettingsBean(SonarSettingsBean sonarSettingsBean) {
         violationsMap = new HashMap<>();
         List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
