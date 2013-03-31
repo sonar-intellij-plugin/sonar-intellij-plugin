@@ -58,4 +58,7 @@ public class SonarService {
 
         return sonar.findAll(violationQuery);
     }
+
+    //TODO Oleg: getAllRules for Project/Module
+    //TODO Oleg: getAllProjects and subModules
 }

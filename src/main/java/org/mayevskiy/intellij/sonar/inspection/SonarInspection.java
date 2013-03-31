@@ -206,4 +206,13 @@ public class SonarInspection extends LocalInspectionTool {
     }
 
 
+    //TODO Implement GlobalInspectionTool, match projectfiles to sonarviolations and create ProblemDescriptors
+//        ProjectRootManager.getInstance(file.getProject()).getFileIndex().iterateContent(new ContentIterator() {
+//            @Override
+//            public boolean processFile(VirtualFile fileOrDir) {
+//                System.out.println(fileOrDir.getPath());
+//                return true;
+//            }
+//        });
+
 }
