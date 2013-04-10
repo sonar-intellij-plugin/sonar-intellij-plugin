@@ -1,6 +1,5 @@
-package org.mayevskiy.intellij.sonar.service;
+package org.mayevskiy.intellij.sonar;
 
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.Violation;
 import org.sonar.wsclient.services.ViolationQuery;

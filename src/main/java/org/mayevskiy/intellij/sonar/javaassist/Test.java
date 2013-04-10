@@ -4,7 +4,7 @@ import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
-import org.mayevskiy.intellij.sonar.inspection.SonarInspection;
+import org.mayevskiy.intellij.sonar.SonarInspection;
 
 import java.lang.reflect.Method;
 

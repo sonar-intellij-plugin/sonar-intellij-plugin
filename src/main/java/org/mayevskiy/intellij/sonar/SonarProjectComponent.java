@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar.component;
+package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;

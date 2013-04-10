@@ -1,8 +1,7 @@
-package org.mayevskiy.intellij.sonar.component;
+package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.components.PersistentStateComponent;
 import org.jetbrains.annotations.NotNull;
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
 
 /**
  * Author: Oleg Mayevskiy

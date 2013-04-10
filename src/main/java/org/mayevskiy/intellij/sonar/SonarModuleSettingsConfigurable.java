@@ -3,9 +3,6 @@ package org.mayevskiy.intellij.sonar;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
-import org.mayevskiy.intellij.sonar.component.SonarComponent;
-import org.mayevskiy.intellij.sonar.component.SonarModuleComponent;
-import org.mayevskiy.intellij.sonar.service.SonarService;
 
 import javax.swing.*;
 

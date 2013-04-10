@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar.bean;
+package org.mayevskiy.intellij.sonar;
 
 public class SonarSettingsBean {
     public String host;

@@ -9,9 +9,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
-import org.mayevskiy.intellij.sonar.component.SonarComponent;
-import org.mayevskiy.intellij.sonar.service.SonarService;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

@@ -34,12 +34,12 @@
     <project-components>
         <!-- Add your project components here -->
         <component>
-            <implementation-class>org.mayevskiy.intellij.sonar.component.SonarProjectComponent</implementation-class>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarProjectComponent</implementation-class>
         </component>
     </project-components>
     <module-components>
         <component>
-            <implementation-class>org.mayevskiy.intellij.sonar.component.SonarModuleComponent</implementation-class>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarModuleComponent</implementation-class>
         </component>
     </module-components>
 
@@ -52,7 +52,7 @@
                              instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
         <moduleConfigurable id="SonarModuleSettingsConfigurable"
                             instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
-        <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.inspection.InspectionProvider"/>
+        <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionProvider"/>
     </extensions>
 
 </idea-plugin>

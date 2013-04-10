@@ -1,11 +1,10 @@
-package org.mayevskiy.intellij.sonar.component;
+package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
 
 /**
  * Author: Oleg Mayevskiy

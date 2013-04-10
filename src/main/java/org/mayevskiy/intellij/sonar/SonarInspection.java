@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar.inspection;
+package org.mayevskiy.intellij.sonar;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.*;
@@ -17,11 +17,6 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mayevskiy.intellij.sonar.bean.SonarSettingsBean;
-import org.mayevskiy.intellij.sonar.component.SonarComponent;
-import org.mayevskiy.intellij.sonar.component.SonarModuleComponent;
-import org.mayevskiy.intellij.sonar.component.SonarProjectComponent;
-import org.mayevskiy.intellij.sonar.service.SonarService;
 import org.sonar.wsclient.services.Violation;
 
 import java.util.*;
