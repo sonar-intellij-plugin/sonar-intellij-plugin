@@ -17,19 +17,19 @@ import com.intellij.openapi.module.ModuleComponent;
                 @Storage(id = "other", file = "$MODULE_FILE$")
         }
 )
-public class SonarModuleComponent extends SonarComponent implements ModuleComponent, PersistentStateComponent<SonarSettingsBean> {
+public class SonarModuleSettingsComponent extends SonarSettingsComponent implements ModuleComponent, PersistentStateComponent<SonarSettingsBean> {
     private SonarSettingsBean sonarSettings;
 
     private Module module;
 
-    public SonarModuleComponent(Module module) {
+    public SonarModuleSettingsComponent(Module module) {
         this.module = module;
     }
 
     @Override
     public void moduleAdded() {
         if (null == this.getState()) {
-            this.loadState(this.module.getProject().getComponent(SonarProjectComponent.class).getState());
+            this.loadState(this.module.getProject().getComponent(SonarProjectSettingsComponent.class).getState());
         }
     }
 

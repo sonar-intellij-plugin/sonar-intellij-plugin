@@ -31,7 +31,7 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
     public abstract SonarService getSonarService();
 
-    public abstract SonarComponent getSonarComponent();
+    public abstract SonarSettingsComponent getSonarSettingsComponent();
 
     public abstract Project getProject();
 
@@ -60,7 +60,7 @@ public abstract class SonarSettingsConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        fromSettingsBean(getSonarComponent().getState());
+        fromSettingsBean(getSonarSettingsComponent().getState());
 
         getTestConnectionButton().addActionListener(new ActionListener() {
             @Override
@@ -107,18 +107,18 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
     @Override
     public boolean isModified() {
-        SonarSettingsBean state = getSonarComponent().getState();
+        SonarSettingsBean state = getSonarSettingsComponent().getState();
         return null == state || !state.equals(toSettingsBean());
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        getSonarComponent().loadState(toSettingsBean());
+        getSonarSettingsComponent().loadState(toSettingsBean());
     }
 
     @Override
     public void reset() {
-        fromSettingsBean(getSonarComponent().getState());
+        fromSettingsBean(getSonarSettingsComponent().getState());
     }
 
     @Override

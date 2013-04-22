@@ -8,10 +8,12 @@ import com.intellij.codeInspection.InspectionToolProvider;
  * Time: 10:48
  */
 public class SonarInspectionProvider implements InspectionToolProvider {
+
     @Override
     public Class[] getInspectionClasses() {
-        //TODO Get all rules from sonar server/project configuration and register it as inspections
+        //TODO Get all rules from sonar server/project configuration and register them as inspections
 //        ProjectManager.getInstance().getOpenProjects();
-        return new Class[]{SonarInspection.class};
+//        return new Class[]{SonarLocalInspectionTool.class, SonarGlobalInspection.class};
+        return new Class[]{SonarLocalInspectionTool.class};
     }
 }

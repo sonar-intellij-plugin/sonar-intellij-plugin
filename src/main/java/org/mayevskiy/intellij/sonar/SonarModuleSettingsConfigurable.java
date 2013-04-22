@@ -20,13 +20,13 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
     private JTextField sonarPasswordTextField;
     private JTextField sonarResourceTextField;
 
-    private SonarModuleComponent sonarComponent;
+    private SonarModuleSettingsComponent sonarComponent;
     private SonarService sonarService;
     private Project project;
 
     public SonarModuleSettingsConfigurable(Module module) {
         this.project = module.getProject();
-        this.sonarComponent = module.getComponent(SonarModuleComponent.class);
+        this.sonarComponent = module.getComponent(SonarModuleSettingsComponent.class);
         this.sonarService = new SonarService();
     }
 
@@ -42,7 +42,7 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
     }
 
     @Override
-    public SonarComponent getSonarComponent() {
+    public SonarSettingsComponent getSonarSettingsComponent() {
         return sonarComponent;
     }
 

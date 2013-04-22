@@ -29,4 +29,9 @@ public class SonarSettingsBean {
         result = 31 * result + (null != resource ? resource.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return host + user + password + resource;
+    }
 }

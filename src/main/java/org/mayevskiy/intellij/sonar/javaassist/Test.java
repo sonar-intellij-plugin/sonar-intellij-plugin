@@ -4,7 +4,7 @@ import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
-import org.mayevskiy.intellij.sonar.SonarInspection;
+import org.mayevskiy.intellij.sonar.SonarLocalInspectionTool;
 
 import java.lang.reflect.Method;
 
@@ -18,8 +18,8 @@ public class Test {
 
 //        Class clazz = getaClass("111");
 //        HelloWorld obj = (HelloWorld) clazz.newInstance();
-        SonarInspection doit1 = doit("111");
-        SonarInspection doit2 = doit("2222");
+        SonarLocalInspectionTool doit1 = doit("111");
+        SonarLocalInspectionTool doit2 = doit("2222");
         System.out.println(doit1.getDisplayName());
         System.out.println(doit2.getDisplayName());
 
@@ -58,9 +58,9 @@ public class Test {
 //        return clazz;
 //    }
 
-    private static SonarInspection doit(final String p) throws IllegalAccessException, InstantiationException {
+    private static SonarLocalInspectionTool doit(final String p) throws IllegalAccessException, InstantiationException {
         ProxyFactory f = new ProxyFactory();
-        f.setSuperclass(SonarInspection.class);
+        f.setSuperclass(SonarLocalInspectionTool.class);
         f.setFilter(new MethodFilter() {
             @Override
             public boolean isHandled(Method method) {
@@ -77,7 +77,7 @@ public class Test {
                 return myDisplayName;
             }
         };
-        SonarInspection foo = (SonarInspection) c.newInstance();
+        SonarLocalInspectionTool foo = (SonarLocalInspectionTool) c.newInstance();
         ((ProxyObject) foo).setHandler(mi);
         return foo;
     }

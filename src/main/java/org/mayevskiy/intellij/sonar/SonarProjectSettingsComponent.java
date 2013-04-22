@@ -12,9 +12,9 @@ import com.intellij.openapi.project.Project;
                 @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
         }
 )
-public class SonarProjectComponent extends SonarComponent implements ProjectComponent {
+public class SonarProjectSettingsComponent extends SonarSettingsComponent implements ProjectComponent {
 
-    public SonarProjectComponent(Project project) {
+    public SonarProjectSettingsComponent(Project project) {
     }
 
 }
