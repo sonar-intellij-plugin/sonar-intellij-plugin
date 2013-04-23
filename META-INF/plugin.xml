@@ -34,21 +34,21 @@
     <project-components>
         <!-- Add your project components here -->
         <component>
-            <implementation-class>org.mayevskiy.intellij.sonar.SonarProjectSettingsComponent</implementation-class>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarSettingsProjectComponent</implementation-class>
         </component>
-        <component>
-            <implementation-class>org.mayevskiy.intellij.sonar.SonarViolationsComponent</implementation-class>
-        </component>
+        <!--<component>-->
+        <!--<implementation-class>org.mayevskiy.intellij.sonar.SonarViolationsServiceimplementation-class>-->
+        <!--</component>-->
     </project-components>
     <module-components>
         <component>
-            <implementation-class>org.mayevskiy.intellij.sonar.SonarModuleSettingsComponent</implementation-class>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarSettingsModuleComponent</implementation-class>
         </component>
     </module-components>
 
     <actions>
         <action id="Show.SyncWithSonar" class="org.mayevskiy.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">
-            <add-to-group group-id="ToolsMenu"/>
+            <add-to-group group-id="EditorPopupMenu"/>
         </action>
     </actions>
 
@@ -58,6 +58,7 @@
         <moduleConfigurable id="SonarModuleSettingsConfigurable"
                             instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
         <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionProvider"/>
+        <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsService"/>
     </extensions>
 
 </idea-plugin>

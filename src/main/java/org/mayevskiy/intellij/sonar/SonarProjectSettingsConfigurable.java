@@ -64,7 +64,7 @@ public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable 
 
     public SonarProjectSettingsConfigurable(Project project) {
         this.project = project;
-        this.sonarSettingsComponent = project.getComponent(SonarProjectSettingsComponent.class);
+        this.sonarSettingsComponent = project.getComponent(SonarSettingsProjectComponent.class);
         this.sonarService = new SonarService();
     }
 

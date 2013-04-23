@@ -7,14 +7,14 @@ import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
 
 @State(
-        name = "SonarConfiguration",
+        name = "SonarSettingsProjectComponent",
         storages = {
                 @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
         }
 )
-public class SonarProjectSettingsComponent extends SonarSettingsComponent implements ProjectComponent {
+public class SonarSettingsProjectComponent extends SonarSettingsComponent implements ProjectComponent {
 
-    public SonarProjectSettingsComponent(Project project) {
+    public SonarSettingsProjectComponent(Project project) {
     }
 
 }

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * Time: 20:48
  */
 public class SonarSettingsComponent implements PersistentStateComponent<SonarSettingsBean> {
-    private SonarSettingsBean sonarSettings;
+    protected SonarSettingsBean sonarSettings;
 
     public void initComponent() {
     }

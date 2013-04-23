@@ -18,7 +18,7 @@ public class SonarSettingsUtils {
             if (null != virtualFile) {
                 Module module = ModuleUtil.findModuleForFile(virtualFile, project);
                 if (null != module) {
-                    SonarSettingsComponent component = module.getComponent(SonarModuleSettingsComponent.class);
+                    SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
                     sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
                 }
             }
@@ -35,7 +35,7 @@ public class SonarSettingsUtils {
     }
 
     public static SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
-        SonarProjectSettingsComponent sonarProjectComponent = project.getComponent(SonarProjectSettingsComponent.class);
+        SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
         return sonarProjectComponent.getState();
     }
 }

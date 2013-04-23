@@ -5,6 +5,7 @@ import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileTypes.StdFileTypes;
 import com.intellij.openapi.module.Module;
@@ -77,9 +78,9 @@ public class SonarLocalInspectionTool extends LocalInspectionTool {
         Map<String, Collection<Violation>> violationsMap = null;
         if (null != file) {
             Project project = file.getProject();
-            SonarViolationsComponent sonarViolationsComponent = project.getComponent(SonarViolationsComponent.class);
-            if (null != sonarViolationsComponent) {
-                violationsMap = sonarViolationsComponent.getState();
+            SonarViolationsService sonarViolationsService = ServiceManager.getService(project, SonarViolationsService.class);
+            if (null != sonarViolationsService) {
+                violationsMap = sonarViolationsService.mySonarViolations;
             }
         }
         return violationsMap;
@@ -129,7 +130,7 @@ public class SonarLocalInspectionTool extends LocalInspectionTool {
             if (null != virtualFile) {
                 Module module = ModuleUtil.findModuleForFile(virtualFile, file.getProject());
                 if (null != module) {
-                    SonarSettingsComponent component = module.getComponent(SonarModuleSettingsComponent.class);
+                    SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
                     sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
                 }
             }
@@ -181,7 +182,7 @@ public class SonarLocalInspectionTool extends LocalInspectionTool {
     }
 
     private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
-        SonarProjectSettingsComponent sonarProjectComponent = project.getComponent(SonarProjectSettingsComponent.class);
+        SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
         return sonarProjectComponent.getState();
     }
 

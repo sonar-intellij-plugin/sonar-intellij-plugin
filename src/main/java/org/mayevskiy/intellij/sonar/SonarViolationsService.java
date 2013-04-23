@@ -2,13 +2,16 @@ package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.*;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ContentIterator;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.services.Violation;
 
 import java.util.*;
@@ -20,46 +23,35 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 13:40
  */
 @State(
-        name = "SonarViolations",
+        name = "SonarViolationsService",
         storages = {
                 @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
         }
 )
-public class SonarViolationsComponent implements ProjectComponent, PersistentStateComponent<Map<String, Collection<Violation>>> {
+public class SonarViolationsService implements PersistentStateComponent<SonarViolationsService> {
 
-    private Map<String, Collection<Violation>> sonarViolations;
+    public Map<String, Collection<Violation>> mySonarViolations;
 
-    @Override
-    public void projectOpened() {
+    Project myProject;
+
+    public SonarViolationsService() {
+        mySonarViolations = new HashMap<>();
     }
 
-    @Override
-    public void projectClosed() {
-    }
-
-    @Override
-    public void initComponent() {
-    }
-
-    @Override
-    public void disposeComponent() {
+    public SonarViolationsService(Project project) {
+        this();
+        myProject = project;
     }
 
     @NotNull
     @Override
-    public String getComponentName() {
-        return "Sonar violations";
-    }
-
-    @Nullable
-    @Override
-    public Map<String, Collection<Violation>> getState() {
-        return sonarViolations;
+    public SonarViolationsService getState() {
+        return this;
     }
 
     @Override
-    public void loadState(Map<String, Collection<Violation>> state) {
-        this.sonarViolations = state;
+    public void loadState(SonarViolationsService state) {
+        XmlSerializerUtil.copyBean(state, this);
     }
 
     public void syncWithSonar(final Project project) {
@@ -67,13 +59,11 @@ public class SonarViolationsComponent implements ProjectComponent, PersistentSta
 
         Collection<SonarSettingsBean> allSonarSettingsBeans = getSonarSettingsBeans(project);
 
-        final Map<String, Collection<Violation>> violationsMap = getViolationsFromSonar(allSonarSettingsBeans);
-
-        loadState(violationsMap);
+        this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans);
     }
 
     private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans) {
-        Map<String, Collection<Violation>> violationsMap = getState();
+        Map<String, Collection<Violation>> violationsMap = this.mySonarViolations;
         if (null == violationsMap) {
             violationsMap = new ConcurrentHashMap<>();
         }
@@ -126,7 +116,7 @@ public class SonarViolationsComponent implements ProjectComponent, PersistentSta
             }
         });
         Collection<SonarSettingsBean> sonarSettingsBeansOfAllModules = sonarSettingsMap.values();
-        SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarProjectSettingsComponent.class).getState();
+        SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarSettingsProjectComponent.class).getState();
 
         Collection<SonarSettingsBean> allSonarSettingsBeans = new LinkedList<>();
         allSonarSettingsBeans.addAll(sonarSettingsBeansOfAllModules);
@@ -135,9 +125,8 @@ public class SonarViolationsComponent implements ProjectComponent, PersistentSta
     }
 
     private void clearState() {
-        Map<String, Collection<Violation>> state = getState();
-        if (null != state) {
-            state.clear();
+        if (null != this.mySonarViolations) {
+            mySonarViolations.clear();
         }
     }
 }
