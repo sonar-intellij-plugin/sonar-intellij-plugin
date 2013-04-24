@@ -67,7 +67,7 @@ public class SonarService {
         if (null != sonarSettingsBeans) {
             for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
                 // for all SettingsBeans do:
-                //find language
+                // find language
                 String resourceUrl = sonarSettingsBean.resource;
                 if (StringUtils.isNotBlank(resourceUrl)) {
                     Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);

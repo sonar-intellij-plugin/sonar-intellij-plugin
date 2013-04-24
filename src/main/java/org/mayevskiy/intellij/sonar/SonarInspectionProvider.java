@@ -1,6 +1,14 @@
 package org.mayevskiy.intellij.sonar;
 
 import com.intellij.codeInspection.InspectionToolProvider;
+import javassist.util.proxy.MethodFilter;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.ProxyFactory;
+import org.sonar.wsclient.services.Rule;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User: Oleg Mayevskiy
@@ -11,9 +19,63 @@ public class SonarInspectionProvider implements InspectionToolProvider {
 
     @Override
     public Class[] getInspectionClasses() {
+        //TODO get rules from persistent service
         //TODO Get all rules from sonar server/project configuration and register them as inspections
 //        ProjectManager.getInstance().getOpenProjects();
 //        return new Class[]{SonarLocalInspectionTool.class, SonarGlobalInspection.class};
-        return new Class[]{SonarLocalInspectionTool.class};
+
+        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
+
+        SonarService sonarService = new SonarService();
+        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+        List<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
+        for (Rule rule : allRules) {
+            try {
+                classes.add(getSonarLocalInspectionToolForOneRule(rule));
+            } catch (IllegalAccessException | InstantiationException e) {
+                // skip
+            }
+        }
+
+        return classes.toArray(new Class[classes.size()]);
+    }
+
+    private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final Rule rule) throws IllegalAccessException, InstantiationException {
+        ProxyFactory f = new ProxyFactory();
+        f.setSuperclass(SonarLocalInspectionTool.class);
+        f.setFilter(new MethodFilter() {
+            @Override
+            public boolean isHandled(Method method) {
+                return method.getName().equals("getDisplayName")
+                        || method.getName().equals("getStaticDescription")
+                        || method.getName().equals("getRuleKey")
+                        || method.getName().equals("hashCode");
+            }
+        });
+        f.setHandler(new MethodHandler() {
+            String myDisplayName = rule.getTitle();
+            String myStaticDescription = rule.getDescription();
+            String myRuleKey = rule.getKey();
+
+            @Override
+            public Object invoke(Object o, Method method, Method method2, Object[] objects) throws Throwable {
+                if (method.getName().equals("getDisplayName")) {
+                    return myDisplayName;
+                } else if (method.getName().equals("getStaticDescription")) {
+                    return myStaticDescription;
+                } else if (method.getName().equals("getRuleKey")) {
+                    return myRuleKey;
+                } else if (method.getName().equals("hashCode")) {
+                    return null != myRuleKey ? myRuleKey.hashCode() : 0;
+                } else {
+                    return null;
+                }
+            }
+        });
+
+        return f.createClass();
     }
 }

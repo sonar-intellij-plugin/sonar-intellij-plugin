@@ -32,7 +32,7 @@ import java.util.Map;
  * Date: 23.01.13
  * Time: 10:50
  */
-public class SonarLocalInspectionTool extends LocalInspectionTool {
+public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     @Nls
     @NotNull
     @Override
@@ -40,33 +40,25 @@ public class SonarLocalInspectionTool extends LocalInspectionTool {
         return "Sonar";
     }
 
+
     @NotNull
     @Override
     public String getShortName() {
-        //TODO replace shortName by rule name
-        return "SonarLocalInspectionTool";
+        return this.getDisplayName().replaceAll("[^a-zA-Z_0-9.-]", "");
+//        return this.getClass().getName().replaceAll("\\s|_|\\$","");
     }
 
     @Nls
     @NotNull
     @Override
-    public String getDisplayName() {
-        //TODO replace display name by rule name
-        return "todo display name";
-    }
+    abstract public String getDisplayName();
 
     @NotNull
     @Override
-    public String getStaticDescription() {
-        //TODO replace staticDescription by rule description
-        return "todo sonar static description";
-    }
+    abstract public String getStaticDescription();
 
     @NotNull
-    public String getRuleKey() {
-        //TODO: replace rule key by rule key from sonar
-        return "grvy:org.codenarc.rule.logging.PrintlnRule";
-    }
+    abstract public String getRuleKey();
 
     @Override
     public boolean isEnabledByDefault() {

@@ -3,10 +3,15 @@ package org.mayevskiy.intellij.sonar.javaassist;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
-import javassist.util.proxy.ProxyObject;
+import org.apache.commons.lang.StringUtils;
 import org.mayevskiy.intellij.sonar.SonarLocalInspectionTool;
+import org.mayevskiy.intellij.sonar.SonarService;
+import org.mayevskiy.intellij.sonar.SonarSettingsBean;
+import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Author: Oleg Mayevskiy
@@ -15,70 +20,61 @@ import java.lang.reflect.Method;
  */
 public class Test {
     public static void main(String[] args) throws IllegalAccessException, InstantiationException {
+        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
+        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
-//        Class clazz = getaClass("111");
-//        HelloWorld obj = (HelloWorld) clazz.newInstance();
-        SonarLocalInspectionTool doit1 = doit("111");
-        SonarLocalInspectionTool doit2 = doit("2222");
-        System.out.println(doit1.getDisplayName());
-        System.out.println(doit2.getDisplayName());
-
-        System.out.println(doit1.getDisplayName());
-        System.out.println(doit2.getDisplayName());
-
-        System.out.println(doit1.getDisplayName());
-        System.out.println(doit2.getDisplayName());
-
-        System.out.println(doit("111").getClass());
-        System.out.println(doit("1112").getClass());
-
-
-//        System.out.println(clazz.getName());
+        SonarService sonarService = new SonarService();
+        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+        List<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
+        for (Rule rule : allRules) {
+            classes.add(getSonarLocalInspectionToolForOneRule(rule));
+        }
+        for (Class clazz : classes) {
+            SonarLocalInspectionTool sonarLocalInspectionTool = (SonarLocalInspectionTool) clazz.newInstance();
+//            System.out.println(sonarLocalInspectionTool.getDisplayName() + " : " + sonarLocalInspectionTool.getShortName() + " : " + sonarLocalInspectionTool.getStaticDescription());
+            System.out.println(clazz.getName());
+        }
     }
 
-//    private static Class getaClass(String p) {
-//        Class clazz = null;
-//        try {
-//            ClassPool cp = ClassPool.getDefault();
-//            CtClass ctClass = cp.makeClass("Class" + p);
-//            ctClass.setSuperclass(cp.get("org.mayevskiy.intellij.sonar.javaassist.HelloWorld"));
-//
-//            CtMethod method1 = ctClass.addMethod(CtMethod.make());
-////            eagetMethod() DeclaredMethod("sayHello");
-//            method1.insertBefore("{ System.out.println(\"Code injected " + p + " before method\"); }");
-//            method1.insertAfter("{ System.out.println(\"Code injected " + p + " after method\"); }");
-////            method1.im
-//            clazz = ctClass.toClass();
-//
-//        } catch (NotFoundException e) {
-//            throw new RuntimeException(e);
-//        } catch (CannotCompileException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return clazz;
-//    }
-
-    private static SonarLocalInspectionTool doit(final String p) throws IllegalAccessException, InstantiationException {
+    private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final Rule rule) throws IllegalAccessException, InstantiationException {
         ProxyFactory f = new ProxyFactory();
         f.setSuperclass(SonarLocalInspectionTool.class);
         f.setFilter(new MethodFilter() {
             @Override
             public boolean isHandled(Method method) {
-                return method.getName().equals("getDisplayName");
+                return method.getName().equals("getDisplayName")
+                        || method.getName().equals("getStaticDescription")
+                        || method.getName().equals("getShortName")
+                        || method.getName().equals("getRuleKey");
             }
         });
-        Class c = f.createClass();
-
-        MethodHandler mi = new MethodHandler() {
-            String myDisplayName = "Das ist eine sehr schlechte Sache!";
+        f.setHandler(new MethodHandler() {
+            String myDisplayName = rule.getTitle();
+            String myStaticDescription = rule.getDescription();
+            String myShortName = rule.getKey();
+            String myRuleKey = rule.getKey();
 
             @Override
             public Object invoke(Object o, Method method, Method method2, Object[] objects) throws Throwable {
-                return myDisplayName;
+                if (method.getName().equals("getDisplayName")) {
+                    return myDisplayName;
+                } else if (method.getName().equals("getStaticDescription")) {
+                    return myStaticDescription;
+                } else if (method.getName().equals("getShortName")) {
+                    if (StringUtils.isNotBlank(myShortName)) {
+                        myShortName = myShortName.replaceAll("\\s", "");
+                    }
+                    return myShortName;
+                } else if (method.getName().equals("getRuleKey")) {
+                    return myRuleKey;
+                } else {
+                    return null;
+                }
             }
-        };
-        SonarLocalInspectionTool foo = (SonarLocalInspectionTool) c.newInstance();
-        ((ProxyObject) foo).setHandler(mi);
-        return foo;
+        });
+
+        return f.createClass();
     }
 }
