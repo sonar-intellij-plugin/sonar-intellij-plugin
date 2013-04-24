@@ -1,42 +1,64 @@
 <idea-plugin version="2">
-  <id>com.yourcompany.unique.plugin.id</id>
-  <name>Plugin display name here</name>
-  <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <id>org.mayevskiy.intellij.sonar</id>
+    <name>Sonar Connector</name>
 
-  <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <small>most HTML tags may be used</small>
+    <version>1.0</version>
+
+    <vendor email="omayevskiy@gmail.com, sonar-intellij-plugin@plushnikov.de"
+            url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov
+    </vendor>
+
+    <description><![CDATA[
+      Connects sonar to IntelliJ.<br>
+      <!--<small>most HTML tags may be used</small>-->
       ]]></description>
 
-  <change-notes><![CDATA[
-      Add change notes here.<br>
-      <small>most HTML tags may be used</small>
+    <change-notes><![CDATA[
+      10.03.2013 Added support for simple sonar projects.<br>
+      <!--<small>most HTML tags may be used</small>-->
       ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="107.105"/>
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="107.105"/>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
-  <depends>com.intellij.modules.lang</depends>
-  -->
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
+    <depends>com.intellij.modules.lang</depends>
 
-  <project-components>
-    <!-- Add your project components here -->
-  </project-components>
+    <application-components>
+        <!-- Add your application components here -->
+    </application-components>
 
-  <actions>
-    <!-- Add your actions here -->
-  </actions>
+    <project-components>
+        <!-- Add your project components here -->
+        <component>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarSettingsProjectComponent</implementation-class>
+        </component>
+        <!--<component>-->
+        <!--<implementation-class>org.mayevskiy.intellij.sonar.SonarViolationsServiceimplementation-class>-->
+        <!--</component>-->
+    </project-components>
+    <module-components>
+        <component>
+            <implementation-class>org.mayevskiy.intellij.sonar.SonarSettingsModuleComponent</implementation-class>
+        </component>
+    </module-components>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
+    <actions>
+        <action id="Show.SyncWithSonar" class="org.mayevskiy.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">
+            <add-to-group group-id="EditorPopupMenu"/>
+        </action>
+    </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable id="SonarProjectSettingsConfigurable"
+                             instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
+        <moduleConfigurable id="SonarModuleSettingsConfigurable"
+                            instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
+        <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionProvider"/>
+        <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsService"/>
+    </extensions>
+
 </idea-plugin>

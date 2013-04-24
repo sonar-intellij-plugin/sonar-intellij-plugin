@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.mayevskiy</groupId>
+    <artifactId>intellij.sonar</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>sonar-intellij-plugin</name>
+    <description>sonar intellij plugin</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.codehaus.sonar</groupId>
+            <artifactId>sonar-ws-client</artifactId>
+            <version>3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.17.1-GA</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>de.plushnikov.maven.plugin</groupId>
+                <artifactId>intellij-plugin-modul-importer-plugin</artifactId>
+                <version>0.1</version>
+                <configuration>
+                    <pathToMetaInfDirectory>src/main/resources</pathToMetaInfDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
