@@ -6,6 +6,16 @@ public class SonarSettingsBean {
     public String password;
     public String resource;
 
+    public SonarSettingsBean() {
+    }
+
+    public SonarSettingsBean(String host, String user, String password, String resource) {
+        this.host = host;
+        this.user = user;
+        this.password = password;
+        this.resource = resource;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

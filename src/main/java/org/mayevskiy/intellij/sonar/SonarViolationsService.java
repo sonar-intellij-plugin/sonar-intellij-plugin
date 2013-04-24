@@ -34,6 +34,7 @@ public class SonarViolationsService implements PersistentStateComponent<SonarVio
 
     Project myProject;
 
+    // fixes Could not save project: java.lang.InstantiationException
     public SonarViolationsService() {
         mySonarViolations = new HashMap<>();
     }
@@ -56,9 +57,7 @@ public class SonarViolationsService implements PersistentStateComponent<SonarVio
 
     public void syncWithSonar(final Project project) {
         clearState();
-
         Collection<SonarSettingsBean> allSonarSettingsBeans = getSonarSettingsBeans(project);
-
         this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans);
     }
 

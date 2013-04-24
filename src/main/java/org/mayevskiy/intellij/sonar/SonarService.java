@@ -1,13 +1,16 @@
 package org.mayevskiy.intellij.sonar;
 
+import org.apache.commons.lang.StringUtils;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.Violation;
-import org.sonar.wsclient.services.ViolationQuery;
+import org.sonar.wsclient.services.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class SonarService {
 
@@ -58,6 +61,42 @@ public class SonarService {
         return sonar.findAll(violationQuery);
     }
 
-    //TODO Oleg: getAllRules for Project/Module
-    //TODO Oleg: getAllProjects and subModules
+    public List<Rule> getAllRules(List<SonarSettingsBean> sonarSettingsBeans) {
+        List<Rule> rulesResult = new LinkedList<>();
+        Set<String> ruleKeys = new LinkedHashSet<>();
+        if (null != sonarSettingsBeans) {
+            for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
+                // for all SettingsBeans do:
+                //find language
+                String resourceUrl = sonarSettingsBean.resource;
+                if (StringUtils.isNotBlank(resourceUrl)) {
+                    Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
+                    ResourceQuery query = ResourceQuery.createForMetrics(resourceUrl, "language");
+                    List<Resource> resources = sonar.findAll(query);
+                    if (null != resources && !resources.isEmpty()) {
+                        for (Resource resource : resources) {
+                            // find rule
+                            String language = resource.getLanguage();
+                            if (StringUtils.isNotBlank(language)) {
+                                RuleQuery ruleQuery = new RuleQuery(language);
+                                List<Rule> rules = sonar.findAll(ruleQuery);
+                                if (null != rules) {
+                                    for (Rule rule : rules) {
+                                        if (!ruleKeys.contains(rule.getKey())) {
+                                            ruleKeys.add(rule.getKey());
+                                            rulesResult.add(rule);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return all collected rules
+        return rulesResult;
+    }
+
+    //TODO getAllProjects and subModules
 }
