@@ -20,10 +20,9 @@ public class SonarInspectionProvider implements InspectionToolProvider {
     @Override
     public Class[] getInspectionClasses() {
         //TODO get rules from persistent service
-        //TODO Get all rules from sonar server/project configuration and register them as inspections
 //        ProjectManager.getInstance().getOpenProjects();
-//        return new Class[]{SonarLocalInspectionTool.class, SonarGlobalInspection.class};
 
+        //TODO replace by project/module settings
         List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
@@ -55,6 +54,10 @@ public class SonarInspectionProvider implements InspectionToolProvider {
                         || method.getName().equals("hashCode");
             }
         });
+
+        // dunno why this is deprecated, this is better then
+        // object.setHandler(methodHandler);
+        // because we have no control over object instantiation
         f.setHandler(new MethodHandler() {
             String myDisplayName = rule.getTitle();
             String myStaticDescription = rule.getDescription();
