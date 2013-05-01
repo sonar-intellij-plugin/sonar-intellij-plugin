@@ -1,5 +1,7 @@
 package org.mayevskiy.intellij.sonar;
 
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.*;
@@ -96,6 +98,17 @@ public class SonarService {
         }
         // return all collected rules
         return rulesResult;
+    }
+
+    public void sync(Project project) {
+        SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+        if (null != sonarViolationsProvider) {
+            sonarViolationsProvider.syncWithSonar(project);
+        }
+        SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
+        if (null != sonarRulesProvider) {
+            sonarRulesProvider.syncWithSonar(project);
+        }
     }
 
     //TODO getAllProjects and subModules

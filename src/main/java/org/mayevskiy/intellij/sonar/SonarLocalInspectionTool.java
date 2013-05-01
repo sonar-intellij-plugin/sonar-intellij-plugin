@@ -70,9 +70,9 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         Map<String, Collection<Violation>> violationsMap = null;
         if (null != file) {
             Project project = file.getProject();
-            SonarViolationsService sonarViolationsService = ServiceManager.getService(project, SonarViolationsService.class);
-            if (null != sonarViolationsService) {
-                violationsMap = sonarViolationsService.mySonarViolations;
+            SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+            if (null != sonarViolationsProvider) {
+                violationsMap = sonarViolationsProvider.mySonarViolations;
             }
         }
         return violationsMap;

@@ -15,17 +15,17 @@ public class SyncWithSonarAction extends DumbAwareAction {
     public void actionPerformed(AnActionEvent e) {
         final Project project = e.getProject();
         if (null != project) {
-            SonarViolationsService sonarViolationsService = ServiceManager.getService(project, SonarViolationsService.class);
-            if (null != sonarViolationsService) {
-                sonarViolationsService.syncWithSonar(project);
+            SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+            if (null != sonarViolationsProvider) {
+                sonarViolationsProvider.syncWithSonar(project);
 
                /* final InspectionManagerEx managerEx = (InspectionManagerEx) InspectionManager.getInstance(project);
 
-                SonarInspectionProvider sonarInspectionProvider = null;
+                SonarInspectionToolProvider sonarInspectionProvider = null;
                 Object[] extensions = Extensions.getExtensions("com.intellij.inspectionToolProvider");
                 for (Object extension : extensions) {
-                    if (extension instanceof SonarInspectionProvider) {
-                        sonarInspectionProvider = (SonarInspectionProvider) extension;
+                    if (extension instanceof SonarInspectionToolProvider) {
+                        sonarInspectionProvider = (SonarInspectionToolProvider) extension;
                         break;
                     }
                 }

@@ -1,6 +1,7 @@
 package org.mayevskiy.intellij.sonar;
 
 import com.intellij.codeInspection.InspectionToolProvider;
+import com.intellij.openapi.components.ServiceManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
@@ -8,6 +9,7 @@ import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +17,7 @@ import java.util.List;
  * Date: 23.01.13
  * Time: 10:48
  */
-public class SonarInspectionProvider implements InspectionToolProvider {
+public class SonarInspectionToolProvider implements InspectionToolProvider {
 
     @Override
     public Class[] getInspectionClasses() {
@@ -28,9 +30,14 @@ public class SonarInspectionProvider implements InspectionToolProvider {
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
-        SonarService sonarService = new SonarService();
-        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
-        List<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
+//        SonarService sonarService = new SonarService();
+
+//        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+//        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+        SonarRulesProvider sonarRulesProvider = ServiceManager.getService(SonarRulesProvider.class);
+        Collection<Rule> allRules = sonarRulesProvider.sonarRules;
+        Collection<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
+
         for (Rule rule : allRules) {
             try {
                 classes.add(getSonarLocalInspectionToolForOneRule(rule));
