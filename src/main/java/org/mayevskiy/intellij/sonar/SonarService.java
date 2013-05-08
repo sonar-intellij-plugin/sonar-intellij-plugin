@@ -1,16 +1,16 @@
 package org.mayevskiy.intellij.sonar;
 
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SonarService {
 
@@ -18,6 +18,9 @@ public class SonarService {
     public static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
     public static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
     public static final String USER_AGENT = "Sonar IntelliJ Connector";
+
+    public SonarService() {
+    }
 
     private HttpURLConnection getHttpConnection(URL url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -49,6 +52,7 @@ public class SonarService {
         return stringBuilder.toString();
     }
 
+    @Nullable
     public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
         if (null == sonarSettingsBean) {
             return null;
@@ -61,7 +65,8 @@ public class SonarService {
         return sonar.findAll(violationQuery);
     }
 
-    public List<Rule> getAllRules(List<SonarSettingsBean> sonarSettingsBeans) {
+
+    public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans) {
         List<Rule> rulesResult = new LinkedList<>();
         Set<String> ruleKeys = new LinkedHashSet<>();
         if (null != sonarSettingsBeans) {
@@ -96,6 +101,17 @@ public class SonarService {
         }
         // return all collected rules
         return rulesResult;
+    }
+
+    public void sync(Project project) {
+        SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+        if (null != sonarViolationsProvider) {
+            sonarViolationsProvider.syncWithSonar(project);
+        }
+        SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
+        if (null != sonarRulesProvider) {
+            sonarRulesProvider.syncWithSonar(project);
+        }
     }
 
     //TODO getAllProjects and subModules

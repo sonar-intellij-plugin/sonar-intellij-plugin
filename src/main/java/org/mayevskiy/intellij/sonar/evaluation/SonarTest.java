@@ -5,6 +5,7 @@ import org.mayevskiy.intellij.sonar.SonarSettingsBean;
 import org.sonar.wsclient.services.Rule;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,6 +13,7 @@ import java.util.List;
  * Date: 24.04.13
  * Time: 13:00
  */
+@SuppressWarnings("UnusedDeclaration")
 public class SonarTest {
     public static void main(String[] args) {
         List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
@@ -20,7 +22,7 @@ public class SonarTest {
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
         SonarService sonarService = new SonarService();
-        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+        Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
         System.out.print("bla");
     }
 }

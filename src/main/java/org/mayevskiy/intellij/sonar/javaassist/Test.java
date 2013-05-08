@@ -11,6 +11,7 @@ import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ import java.util.List;
  * Date: 31.03.13
  * Time: 13:52
  */
+@SuppressWarnings("UnusedDeclaration")
 public class Test {
     public static void main(String[] args) throws IllegalAccessException, InstantiationException {
         List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
@@ -26,7 +28,7 @@ public class Test {
         sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
         SonarService sonarService = new SonarService();
-        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+        Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
         List<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
         for (Rule rule : allRules) {
             classes.add(getSonarLocalInspectionToolForOneRule(rule));
@@ -50,6 +52,7 @@ public class Test {
                         || method.getName().equals("getRuleKey");
             }
         });
+        //noinspection deprecation
         f.setHandler(new MethodHandler() {
             String myDisplayName = rule.getTitle();
             String myStaticDescription = rule.getDescription();
@@ -75,6 +78,7 @@ public class Test {
             }
         });
 
+        //noinspection unchecked
         return f.createClass();
     }
 }
