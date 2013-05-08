@@ -1,5 +1,6 @@
 package org.mayevskiy.intellij.sonar;
 
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
@@ -27,7 +28,7 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
     public SonarModuleSettingsConfigurable(Module module) {
         this.project = module.getProject();
         this.sonarComponent = module.getComponent(SonarSettingsModuleComponent.class);
-        this.sonarService = new SonarService();
+        this.sonarService = ServiceManager.getService(SonarService.class);
     }
 
 

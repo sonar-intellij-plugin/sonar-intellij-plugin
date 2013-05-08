@@ -1,9 +1,6 @@
 package org.mayevskiy.intellij.sonar;
 
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
+import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
@@ -27,16 +24,14 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
 
     public Map<String, Collection<Violation>> mySonarViolations;
 
-    public Project myProject;
-
     // fixes Could not save project: java.lang.InstantiationException
     public SonarViolationsProvider() {
         mySonarViolations = new HashMap<>();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public SonarViolationsProvider(Project project) {
         this();
-        myProject = project;
     }
 
     @NotNull
@@ -62,7 +57,8 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
             violationsMap = new ConcurrentHashMap<>();
         }
         for (SonarSettingsBean sonarSettingsBean : allSonarSettingsBeans) {
-            List<Violation> violations = new SonarService().getViolations(sonarSettingsBean);
+            SonarService sonarService = ServiceManager.getService(SonarService.class);
+            List<Violation> violations = sonarService.getViolations(sonarSettingsBean);
             if (null != violations) {
                 for (Violation violation : violations) {
                     String resourceKey = violation.getResourceKey();

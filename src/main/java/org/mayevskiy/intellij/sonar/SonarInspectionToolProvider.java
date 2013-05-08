@@ -2,15 +2,16 @@ package org.mayevskiy.intellij.sonar;
 
 import com.intellij.codeInspection.InspectionToolProvider;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.LinkedList;
 
 /**
  * User: Oleg Mayevskiy
@@ -22,29 +23,35 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
     @Override
     public Class[] getInspectionClasses() {
         //TODO get rules from persistent service
-//        ProjectManager.getInstance().getOpenProjects();
 
         //TODO replace by project/module settings
-        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
-        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
-        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
-        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
+//        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
+//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
+//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
+//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
 //        SonarService sonarService = new SonarService();
 
 //        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
 //        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
-        SonarRulesProvider sonarRulesProvider = ServiceManager.getService(SonarRulesProvider.class);
-        Collection<Rule> allRules = sonarRulesProvider.sonarRules;
-        Collection<Class<SonarLocalInspectionTool>> classes = new ArrayList<>(allRules.size());
 
-        for (Rule rule : allRules) {
-            try {
-                classes.add(getSonarLocalInspectionToolForOneRule(rule));
-            } catch (IllegalAccessException | InstantiationException e) {
-                // skip
+        Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
+        Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<>();
+        for (Project project : openProjects) {
+            SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class).getState();
+            if (null != sonarRulesProvider) {
+                Collection<Rule> allRules = sonarRulesProvider.sonarRules;
+
+                for (Rule rule : allRules) {
+                    try {
+                        classes.add(getSonarLocalInspectionToolForOneRule(rule));
+                    } catch (IllegalAccessException | InstantiationException e) {
+                        // skip
+                    }
+                }
             }
         }
+
 
         return classes.toArray(new Class[classes.size()]);
     }
@@ -62,9 +69,12 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
             }
         });
 
-        // dunno why this is deprecated, this is better then
-        // object.setHandler(methodHandler);
-        // because we have no control over object instantiation
+        /*
+        dunno why this is deprecated, this is better then
+        object.setHandler(methodHandler);
+        because we have no control over object instantiation
+        */
+        //noinspection deprecation
         f.setHandler(new MethodHandler() {
             String myDisplayName = rule.getTitle();
             String myStaticDescription = rule.getDescription();
@@ -86,6 +96,7 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
             }
         });
 
+        //noinspection unchecked
         return f.createClass();
     }
 }

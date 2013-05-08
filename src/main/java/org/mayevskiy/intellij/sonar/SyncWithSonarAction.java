@@ -4,6 +4,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
+import org.sonar.wsclient.connectors.ConnectionException;
 
 /**
  * Author: Oleg Mayevskiy
@@ -11,13 +13,25 @@ import com.intellij.openapi.project.Project;
  * Time: 14:00
  */
 public class SyncWithSonarAction extends DumbAwareAction {
+    public void showConnectionNotSuccessfulMessage() {
+        Messages.showMessageDialog("Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings", "Sonar Violations", Messages.getInformationIcon());
+    }
+
+
     @Override
     public void actionPerformed(AnActionEvent e) {
         final Project project = e.getProject();
         if (null != project) {
-            SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
-            if (null != sonarViolationsProvider) {
-                sonarViolationsProvider.syncWithSonar(project);
+            SonarService sonarService = ServiceManager.getService(SonarService.class);
+            if (null != sonarService) {
+                try {
+                    sonarService.sync(project);
+                } catch (ConnectionException ce) {
+                    showConnectionNotSuccessfulMessage();
+                }
+            }
+
+
 
                /* final InspectionManagerEx managerEx = (InspectionManagerEx) InspectionManager.getInstance(project);
 
@@ -60,7 +74,7 @@ public class SyncWithSonarAction extends DumbAwareAction {
 
                     }
                 }*/
-            }
+
         }
     }
 }

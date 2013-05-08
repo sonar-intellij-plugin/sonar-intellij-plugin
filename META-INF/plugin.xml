@@ -28,17 +28,12 @@
     <depends>com.intellij.modules.lang</depends>
 
     <application-components>
-        <!-- Add your application components here -->
     </application-components>
 
     <project-components>
-        <!-- Add your project components here -->
         <component>
             <implementation-class>org.mayevskiy.intellij.sonar.SonarSettingsProjectComponent</implementation-class>
         </component>
-        <!--<component>-->
-        <!--<implementation-class>org.mayevskiy.intellij.sonar.SonarViolationsServiceimplementation-class>-->
-        <!--</component>-->
     </project-components>
     <module-components>
         <component>
@@ -59,6 +54,8 @@
                             instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
         <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider"/>
         <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsProvider"/>
+        <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarRulesProvider"/>
+        <applicationService serviceImplementation="org.mayevskiy.intellij.sonar.SonarService"/>
     </extensions>
 
 </idea-plugin>
