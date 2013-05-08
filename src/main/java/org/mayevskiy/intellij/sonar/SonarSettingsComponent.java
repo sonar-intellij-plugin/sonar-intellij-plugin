@@ -47,7 +47,9 @@ public class SonarSettingsComponent implements PersistentStateComponent<SonarSet
 
         Collection<SonarSettingsBean> allSonarSettingsBeans = new LinkedList<>();
         allSonarSettingsBeans.addAll(sonarSettingsBeansOfAllModules);
-        allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
+        if (null != sonarSettingsBeanOfProject) {
+            allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
+        }
         return allSonarSettingsBeans;
     }
 

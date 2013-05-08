@@ -7,6 +7,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.sonar.wsclient.connectors.ConnectionException;
 
+import java.util.Collection;
+
 /**
  * Author: Oleg Mayevskiy
  * Date: 22.04.13
@@ -22,6 +24,11 @@ public class SyncWithSonarAction extends DumbAwareAction {
     public void actionPerformed(AnActionEvent e) {
         final Project project = e.getProject();
         if (null != project) {
+            Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
+            if (allSonarSettingsBeans.isEmpty()) {
+                Messages.showMessageDialog("Please configure sonar connection", "No Sonar Configuration", Messages.getWarningIcon());
+                return;
+            }
             SonarService sonarService = ServiceManager.getService(SonarService.class);
             if (null != sonarService) {
                 try {
