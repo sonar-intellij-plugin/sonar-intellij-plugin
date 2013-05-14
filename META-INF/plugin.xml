@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>Sonar Connector</name>
 
-    <version>1.0</version>
+    <version>1.1</version>
 
     <vendor email="omayevskiy@gmail.com, sonar-intellij-plugin@plushnikov.de"
             url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov
