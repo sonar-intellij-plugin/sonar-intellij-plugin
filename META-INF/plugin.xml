@@ -13,8 +13,8 @@
       ]]></description>
 
     <change-notes><![CDATA[
-      10.03.2013 Added support for simple sonar projects.<br>
       14.05.2013 Added support for multi module sonar projects.
+      10.03.2013 Added support for simple sonar projects.<br>
       ]]>
     </change-notes>
 
