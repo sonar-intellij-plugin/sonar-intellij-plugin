@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ContentIterator;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,26 +50,6 @@ public class SonarSettingsComponent implements PersistentStateComponent<SonarSet
             allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
         }
         return allSonarSettingsBeans;
-    }
-
-    public void initComponent() {
-    }
-
-    public void disposeComponent() {
-        // TODO: insert component disposal logic here
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return "Sonar";
-    }
-
-    public void projectOpened() {
-        // called when project is opened
-    }
-
-    public void projectClosed() {
-        // called when project is being closed
     }
 
     @Override

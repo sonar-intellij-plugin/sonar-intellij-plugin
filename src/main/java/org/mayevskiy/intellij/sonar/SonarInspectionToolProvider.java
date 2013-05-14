@@ -22,18 +22,6 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
 
     @Override
     public Class[] getInspectionClasses() {
-        //TODO get rules from persistent service
-
-        //TODO replace by project/module settings
-//        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
-//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
-//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
-//        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
-
-//        SonarService sonarService = new SonarService();
-
-//        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
-//        List<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
 
         Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
         Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<>();
