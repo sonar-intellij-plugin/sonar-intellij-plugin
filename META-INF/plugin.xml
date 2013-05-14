@@ -9,13 +9,12 @@
     </vendor>
 
     <description><![CDATA[
-      Connects sonar to IntelliJ.<br>
-      <!--<small>most HTML tags may be used</small>-->
+      Connects sonar to IntelliJ IDEA.<br>
       ]]></description>
 
     <change-notes><![CDATA[
       10.03.2013 Added support for simple sonar projects.<br>
-      <!--<small>most HTML tags may be used</small>-->
+      14.05.2013 Added support for multi module sonar projects.
       ]]>
     </change-notes>
 
