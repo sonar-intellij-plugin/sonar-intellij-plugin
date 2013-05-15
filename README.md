@@ -1,2 +1,4 @@
-sonar-intellij-plugin
+Sonar Connector
 =====================
+
+Usage is coming soon...
