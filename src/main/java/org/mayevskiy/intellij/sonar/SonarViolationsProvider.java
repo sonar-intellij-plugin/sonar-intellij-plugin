@@ -6,7 +6,10 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.services.Violation;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,7 +29,7 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
 
     // fixes Could not save project: java.lang.InstantiationException
     public SonarViolationsProvider() {
-        mySonarViolations = new HashMap<>();
+        mySonarViolations = new ConcurrentHashMap<>();
     }
 
     @SuppressWarnings("UnusedDeclaration")
