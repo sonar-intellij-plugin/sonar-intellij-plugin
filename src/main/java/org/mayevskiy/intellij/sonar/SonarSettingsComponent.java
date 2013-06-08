@@ -9,9 +9,9 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: Oleg Mayevskiy
@@ -22,7 +22,7 @@ public class SonarSettingsComponent implements PersistentStateComponent<SonarSet
     protected SonarSettingsBean sonarSettings;
 
     public static Collection<SonarSettingsBean> getSonarSettingsBeans(final Project project) {
-        final Map<String, SonarSettingsBean> sonarSettingsMap = new HashMap<>();
+        final Map<String, SonarSettingsBean> sonarSettingsMap = new ConcurrentHashMap<>();
         ProjectRootManager.getInstance(project).getFileIndex().iterateContent(new ContentIterator() {
             @Override
             public boolean processFile(VirtualFile fileOrDir) {

@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.services.Rule;
 
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: Oleg Mayevskiy
@@ -25,10 +26,10 @@ import java.util.LinkedList;
 )
 public class SonarRulesProvider implements PersistentStateComponent<SonarRulesProvider> {
 
-    public Collection<Rule> sonarRules;
+    public Map<String, Rule> sonarRulesByRuleKey;
 
     public SonarRulesProvider() {
-        this.sonarRules = new LinkedList<>();
+        this.sonarRulesByRuleKey = new ConcurrentHashMap<>();
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -41,7 +42,7 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
     public SonarRulesProvider getState() {
         // workaround NullPointerException of XmlSerializerUtil during serialisation
         // can be set to null because we don't need this info
-        for (Rule sonarRule : sonarRules) {
+        for (Rule sonarRule : sonarRulesByRuleKey.values()) {
             sonarRule.setParams(null);
         }
         return this;
@@ -53,16 +54,19 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
     }
 
     public void syncWithSonar(Project project) {
+        Collection<Rule> sonarRules = this.sonarRulesByRuleKey.values();
         int oldSize = sonarRules.size();
         clearState();
         Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
         SonarService sonarService = ServiceManager.getService(SonarService.class);
         if (null != allSonarSettingsBeans) {
-            this.sonarRules.addAll(sonarService.getAllRules(allSonarSettingsBeans));
-            int newSize = sonarRules.size();
+            for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
+                this.sonarRulesByRuleKey.put(rule.getKey(), rule);
+            }
+            int newSize = sonarRulesByRuleKey.values().size();
             if (oldSize != newSize) {
                 // show restart ide dialog
-                final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings.\\nRestart?",
+                final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings. Restart?",
                         IdeBundle.message("title.restart.needed"), Messages.getQuestionIcon());
                 if (ret == 0) {
                     if (ApplicationManager.getApplication().isRestartCapable()) {
@@ -76,8 +80,8 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
     }
 
     private void clearState() {
-        if (null != this.sonarRules) {
-            this.sonarRules.clear();
+        if (null != this.sonarRulesByRuleKey) {
+            this.sonarRulesByRuleKey.clear();
         }
     }
 }

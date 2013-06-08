@@ -1,5 +1,6 @@
 package org.mayevskiy.intellij.sonar;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
@@ -111,6 +112,23 @@ public class SonarService {
         SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
         if (null != sonarRulesProvider) {
             sonarRulesProvider.syncWithSonar(project);
+        }
+    }
+
+    public ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
+        if (StringUtils.isBlank(sonarSeverity)) {
+            return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+        } else {
+            sonarSeverity = sonarSeverity.toUpperCase();
+            if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity)) {
+                return ProblemHighlightType.ERROR;
+            } else if (SonarSeverity.CRITICAL.toString().equals(sonarSeverity) || SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
+                return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+            } else if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString().equals(sonarSeverity)) {
+                return ProblemHighlightType.WEAK_WARNING;
+            } else {
+                return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+            }
         }
     }
 
