@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>Sonar Connector</name>
 
-    <version>1.0</version>
+    <version>1.1</version>
 
     <vendor email="omayevskiy@gmail.com, sonar-intellij-plugin@plushnikov.de"
             url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov
@@ -13,7 +13,8 @@
       ]]></description>
 
     <change-notes><![CDATA[
-      14.05.2013 Added support for multi module sonar projects.
+      20.06.2013 Transformation of sonar violations severity to intellij inspection highlight level (avoids to show every violation unnecessary as warning) <br>
+      14.05.2013 Added support for multi module sonar projects.<br>
       10.03.2013 Added support for simple sonar projects.<br>
       ]]>
     </change-notes>
