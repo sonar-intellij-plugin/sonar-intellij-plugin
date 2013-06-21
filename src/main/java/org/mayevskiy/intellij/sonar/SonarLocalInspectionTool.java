@@ -1,6 +1,5 @@
 package org.mayevskiy.intellij.sonar;
 
-import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -21,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.sonar.wsclient.services.Rule;
 import org.sonar.wsclient.services.Violation;
 
 import java.util.ArrayList;
@@ -33,6 +33,9 @@ import java.util.Map;
  * Time: 10:50
  */
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
+
+    private SonarService sonarService = ServiceManager.getService(SonarService.class);
+
     @Nls
     @NotNull
     @Override
@@ -45,7 +48,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     @Override
     public String getShortName() {
         return this.getDisplayName().replaceAll("[^a-zA-Z_0-9.-]", "");
-//        return this.getClass().getName().replaceAll("\\s|_|\\$","");
     }
 
     @Nls
@@ -138,6 +140,8 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     @Nullable
     @Override
     public ProblemDescriptor[] checkFile(@NotNull PsiFile psiFile, @NotNull InspectionManager manager, boolean isOnTheFly) {
+        Project project = psiFile.getProject();
+
         final Collection<ProblemDescriptor> result = new ArrayList<>();
 
         SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(psiFile);
@@ -151,10 +155,12 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
                     if (this.getRuleKey().equals(violation.getRuleKey())) {
                         PsiElement element = getElementAtLine(psiFile, violation.getLine() - 1);
                         if (null != element) {
+                            ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
+
                             result.add(manager.createProblemDescriptor(
                                     element,
                                     violation.getMessage(),
-                                    ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                                    problemHighlightType,
                                     null,
                                     isOnTheFly));
                         }
@@ -166,11 +172,18 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         return result.toArray(new ProblemDescriptor[result.size()]);
     }
 
-    @NotNull
-    @Override
-    public HighlightDisplayLevel getDefaultLevel() {
-        //TODO: replace by sonar severity
-        return super.getDefaultLevel();
+    private ProblemHighlightType getProblemHighlightTypeForRuleKey(Project project, String ruleKey) {
+        SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
+        if (null != sonarRulesProvider) {
+            SonarRulesProvider sonarRulesProviderState = sonarRulesProvider.getState();
+            if (null != sonarRulesProviderState) {
+                Rule rule = sonarRulesProviderState.sonarRulesByRuleKey.get(ruleKey);
+                if (null != rule) {
+                    return sonarService.sonarSeverityToProblemHighlightType(rule.getSeverity());
+                }
+            }
+        }
+        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
     }
 
     private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {

@@ -26,9 +26,9 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
         Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
         Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<>();
         for (Project project : openProjects) {
-            SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class).getState();
-            if (null != sonarRulesProvider) {
-                Collection<Rule> allRules = sonarRulesProvider.sonarRules;
+            SonarRulesProvider sonarRulesProviderState = ServiceManager.getService(project, SonarRulesProvider.class).getState();
+            if (null != sonarRulesProviderState) {
+                Collection<Rule> allRules = sonarRulesProviderState.sonarRulesByRuleKey.values();
 
                 for (Rule rule : allRules) {
                     try {
