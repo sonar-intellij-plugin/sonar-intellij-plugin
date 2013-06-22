@@ -1,5 +1,7 @@
 package org.mayevskiy.intellij.sonar;
 
+import org.apache.commons.lang.StringUtils;
+
 public class SonarSettingsBean {
     public String host;
     public String user;
@@ -43,5 +45,9 @@ public class SonarSettingsBean {
     @Override
     public String toString() {
         return host + user + password + resource;
+    }
+
+    public boolean isEmpty() {
+        return StringUtils.isBlank(host) && StringUtils.isBlank(user) && StringUtils.isBlank(password) && StringUtils.isBlank(resource);
     }
 }
