@@ -13,10 +13,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
-      22.06.2013 Support for phpstorm
+      22.06.2013 Support for phpstorm<br>
       20.06.2013 Transformation of sonar violations severity to intellij inspection highlight level (avoids to show every violation unnecessary as warning) <br>
-      14.05.2013 Added support for multi module sonar projects.<br>
-      10.03.2013 Added support for simple sonar projects.<br>
+      14.05.2013 Added support for multi module sonar projects<br>
+      10.03.2013 Added support for simple sonar projects<br>
       ]]>
     </change-notes>
 
