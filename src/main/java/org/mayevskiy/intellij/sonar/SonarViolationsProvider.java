@@ -3,6 +3,7 @@ package org.mayevskiy.intellij.sonar;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.intellij.util.xmlb.annotations.Transient;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.services.Violation;
 
@@ -26,6 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SonarViolationsProvider implements PersistentStateComponent<SonarViolationsProvider> {
 
     public Map<String, Collection<Violation>> mySonarViolations;
+
+    @Transient
+    private Project project;
 
     // fixes Could not save project: java.lang.InstantiationException
     public SonarViolationsProvider() {
@@ -85,6 +89,7 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
                 }
             }
         }
+
         return violationsMap;
     }
 
