@@ -6,26 +6,25 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileTypes.StdFileTypes;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.services.Rule;
 import org.sonar.wsclient.services.Violation;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
+
+//import com.intellij.psi.PsiJavaFile;
 
 /**
  * User: Oleg Mayevskiy
@@ -34,7 +33,15 @@ import java.util.Map;
  */
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
-    private SonarService sonarService = ServiceManager.getService(SonarService.class);
+    private SonarService sonarService;
+
+    protected SonarLocalInspectionTool() {
+        sonarService = ServiceManager.getService(SonarService.class);
+    }
+
+    protected SonarLocalInspectionTool(SonarService sonarService) {
+        this.sonarService = sonarService;
+    }
 
     @Nls
     @NotNull
@@ -42,7 +49,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     public String getGroupDisplayName() {
         return "Sonar";
     }
-
 
     @NotNull
     @Override
@@ -80,40 +86,61 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         return violationsMap;
     }
 
-    public String convertPsiFileToSonarKey(@NotNull PsiFile file, @NotNull String sonarProjectKey) {
+    public Collection<String> getSonarKeyCandidatesForPsiFile(@NotNull PsiFile file, @NotNull String sonarProjectKey) {
+        Collection<String> sonarKeyCandidates = new LinkedHashSet<>();
+
+        String genericSonarKeyCandidate = createGenericSonarKeyCandidate(file, sonarProjectKey);
+        sonarKeyCandidates.add(genericSonarKeyCandidate);
+
+        String javaSonarKeyCandidate = createJavaSonarKeyCandidate(file, sonarProjectKey);
+        sonarKeyCandidates.add(javaSonarKeyCandidate);
+
+        String phpSonarKeyCandidate = createPhpSonarKeyCandidate(file, sonarProjectKey);
+        sonarKeyCandidates.add(phpSonarKeyCandidate);
+        return sonarKeyCandidates;
+    }
+
+    private String createJavaSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
+        String result = createGenericSonarKeyCandidate(file, sonarProjectKey);
+        result = result.replace("[root]", "[default]");
+        result = result.replaceAll("\\.java$", "");
+        result = result.replace("/", ".");
+
+        return result;
+    }
+
+    private String createPhpSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
+        String result = createGenericSonarKeyCandidate(file, sonarProjectKey);
+        result = result.replace("[root]/", "");
+
+        return result;
+    }
+
+    private String createGenericSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
         final StringBuilder result = new StringBuilder();
         result.append(sonarProjectKey).append(":");
-        if (StdFileTypes.JAVA.equals(file.getFileType())) {
-            final PsiJavaFile javaFile = (PsiJavaFile) file;
-            String packageName = javaFile.getPackageName();
-            if (StringUtils.isBlank(packageName)) {
-                result.append("[default]");
-            } else {
-                result.append(packageName);
-            }
-            final VirtualFile virtualFile = javaFile.getVirtualFile();
-            if (null != virtualFile) {
-                result.append(".").append(virtualFile.getNameWithoutExtension());
-            }
-        } else {
-            final VirtualFile virtualFile = file.getVirtualFile();
-            if (null != virtualFile) {
-                final String filePath = virtualFile.getPath();
+        final VirtualFile virtualFile = file.getVirtualFile();
+        if (null != virtualFile) {
+            final String filePath = virtualFile.getPath();
 
-                final VirtualFile sourceRootForFile = ProjectRootManager.getInstance(file.getProject()).getFileIndex().getSourceRootForFile(virtualFile);
-                if (null != sourceRootForFile) {
-                    final String sourceRootForFilePath = sourceRootForFile.getPath() + "/";
+            VirtualFile sourceRootForFile = ProjectFileIndex.SERVICE.getInstance(file.getProject()).getSourceRootForFile(virtualFile);
+            // getSourceRootForFile doesn't work in phpstorm for some reasons
+            if (null == sourceRootForFile)
+                sourceRootForFile = ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(virtualFile);
 
-                    String baseFileName = filePath.replace(sourceRootForFilePath, "");
+            if (null != sourceRootForFile) {
+                final String sourceRootForFilePath = sourceRootForFile.getPath() + "/";
 
-                    if (baseFileName.equals(file.getName())) {
-                        result.append("[root]/");
-                    }
+                String baseFileName = filePath.replace(sourceRootForFilePath, "");
 
-                    result.append(baseFileName);
+                if (baseFileName.equals(file.getName())) {
+                    result.append("[root]/");
                 }
+
+                result.append(baseFileName);
             }
         }
+//        }
         return result.toString();
     }
 
@@ -125,7 +152,9 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
                 Module module = ModuleUtil.findModuleForFile(virtualFile, file.getProject());
                 if (null != module) {
                     SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
-                    sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
+                    SonarSettingsBean moduleSonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
+                    if (null != moduleSonarSettingsBean && !moduleSonarSettingsBean.isEmpty())
+                        sonarSettingsBean = moduleSonarSettingsBean;
                 }
             }
             if (null == sonarSettingsBean) {
@@ -136,19 +165,24 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         return sonarSettingsBean;
     }
 
+    // some strange behavior in phpstorm calls checkFile of same inspectionTool twice
+    // this is workaround to show every violation only once
+    final Collection<Violation> alreadyProcessedViolations = new LinkedHashSet<>();
 
     @Nullable
     @Override
-    public ProblemDescriptor[] checkFile(@NotNull PsiFile psiFile, @NotNull InspectionManager manager, boolean isOnTheFly) {
-        Project project = psiFile.getProject();
+    public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
+        final Project project = psiFile.getProject();
+        final Collection<ProblemDescriptor> result = new LinkedHashSet<>();
+        final SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(psiFile);
 
-        final Collection<ProblemDescriptor> result = new ArrayList<>();
-
-        SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(psiFile);
         if (null != sonarSettingsBean) {
-            String resourceKey = convertPsiFileToSonarKey(psiFile, sonarSettingsBean.resource);
+            Collection<String> sonarKeyCandidates = getSonarKeyCandidatesForPsiFile(psiFile, sonarSettingsBean.resource);
             Map<String, Collection<Violation>> violationsMapFromPsiFile = getViolationsMapFromPsiFile(psiFile);
-            Collection<Violation> violations = violationsMapFromPsiFile != null ? violationsMapFromPsiFile.get(resourceKey) : null;
+
+            String sonarKey = getFirstSonarKeyCandidateForFileToViolationsMap(sonarKeyCandidates, violationsMapFromPsiFile);
+            Collection<Violation> violations = null != sonarKey && null != violationsMapFromPsiFile ? violationsMapFromPsiFile.get(sonarKey) : null;
+
             if (null != violations) {
                 for (Violation violation : violations) {
                     // add only violations of this rule
@@ -157,12 +191,24 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
                         if (null != element) {
                             ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
 
-                            result.add(manager.createProblemDescriptor(
-                                    element,
-                                    violation.getMessage(),
-                                    problemHighlightType,
-                                    null,
-                                    isOnTheFly));
+                            boolean alreadyProcessed = false;
+                            for (Violation alreadyProcessedViolation : alreadyProcessedViolations) {
+                                if (SonarViolationUtils.isEqual(violation, alreadyProcessedViolation)) {
+                                    alreadyProcessed = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alreadyProcessed) {
+                                result.add(manager.createProblemDescriptor(
+                                        element,
+                                        violation.getMessage(),
+                                        problemHighlightType,
+                                        null,
+                                        isOnTheFly)
+                                );
+                                alreadyProcessedViolations.add(violation);
+                            }
                         }
                     }
                 }
@@ -170,6 +216,18 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         }
 
         return result.toArray(new ProblemDescriptor[result.size()]);
+    }
+
+    @Nullable
+    private String getFirstSonarKeyCandidateForFileToViolationsMap(Collection<String> sonarKeyCandidates, Map<String, Collection<Violation>> violationsMapFromPsiFile) {
+        if (null != sonarKeyCandidates && null != violationsMapFromPsiFile) {
+            for (String sonarKeyCandidate : sonarKeyCandidates) {
+                if (violationsMapFromPsiFile.containsKey(sonarKeyCandidate)) {
+                    return sonarKeyCandidate;
+                }
+            }
+        }
+        return null;
     }
 
     private ProblemHighlightType getProblemHighlightTypeForRuleKey(Project project, String ruleKey) {
@@ -202,7 +260,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         if (null != document) {
             int offset = document.getLineStartOffset(line);
             element = file.getViewProvider().findElementAt(offset);
-            if (element != null && document.getLineNumber(element.getTextOffset()) != line) {
+            if (null != element && document.getLineNumber(element.getTextOffset()) != line) {
                 element = element.getNextSibling();
             }
         }
