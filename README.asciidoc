@@ -1,6 +1,7 @@
-= IntelliJ IDEA plugin for SonarQube
+== IntelliJ IDEA plugin for SonarQube
 
-*This is a temporary README*
+*NOTE: This is a temporary README*
+
 This repository will soon hold the merge of https://github.com/omayevskiy/sonar-intellij-plugin/ and https://github.com/gshakhn/sonar-intellij-plugin/, the two existing http://www.sonarqube.org/[SonarQube] plugins for http://www.jetbrains.com/idea/[IntelliJ IDEA].
 
 If you want to contribute to this plugin, please feel free to join our http://sonar-intellij-plugin.55862.x6.nabble.com/[mailing list].
