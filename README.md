@@ -53,3 +53,12 @@ Please note: you must NOT create a separate inspection profile, you can mix sona
 One more tip: to quick run only one inspection, press Ctrl+Alt+Shift+I. Type "Sonar" to show all available sonar rules or the name of a rule.
 
 Have fun!
+
+PHPSTORM
+------------------------
+There is no concept of source directories in PHPSTORM. This means your source root is equal to content root of all project files.
+The consequences are you must configure your sonar source to content route directory. To do so make sure your sonar.properties is located in content root directory and edit:
+```
+sonar.sources=.
+```
+Run sonar-runner (this is out of the scope of this plugin) and sync with sonar in PHPSTORM. Now you should be able to see php inspections in phpstorm in the same way as in IntelliJ IDEA.
