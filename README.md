@@ -24,3 +24,29 @@ Go to File -> Project Structure (Ctrl+Alt+Shift+S)
 ![alt text][moduleConfiguration]
 
 [moduleConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14228.png "Example module configuration"
+
+After the configuration of your project, go to any source file in your project, right click over the source code and press *Sync with sonar*
+![alt text][syncWithSonar]
+[syncWithSonar]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/sonar%20connector%20screenshots/sync_with_sonar.jpg?raw=true
+
+If sync is complete (this should take some while depends on your project size and connection), then you can start inspect your code.
+Before inspecting I suggest you to create an inspection profile for all those sonar inspections to separate them from live IntelliJ inspections.
+Go to Analyze -> In the window at bottom right to Inspection Profile select box click onto "..." button.
+![alt text][specifyInspectionScope]
+[specifyInspectionScope]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/sonar%20connector%20screenshots/specify_inspection_scope.jpg?raw=true
+
+In the Inspections window click at the top onto the "Add" button and create a new profile, e.g.: Sonar.
+Now deselect everything but not the sonar rules for this profile and click "OK"
+![alt text][specifyInspectionScope]
+[specifyInspectionScope]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/sonar%20connector%20screenshots/sonar_profile.jpg?raw=true
+
+To inspect your code you can now
+Go to Analyze -> Inspect Code ... -> Choose Sonar Inspection Profile and Inspection Scope -> OK
+You should now see something like:
+![alt text][sonarInspectionResult]
+[sonarInspectionResult]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/sonar%20connector%20screenshots/sonar_inspection_result.jpg?raw=true
+
+Please note: you must NOT create a separate inspection profile, you can mix sonar inspection like you want.
+One more tip: to run quick only one inspection, press Ctrl+Alt+Shift+I. Type "Sonar" to show all available sonar rules or the name of a rule.
+
+Have fun!
