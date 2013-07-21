@@ -2,72 +2,73 @@ package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 
 import javax.swing.*;
 
 public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable {
 
-    private JButton testConnectionButton;
-    private JPanel jPanel;
-    private JTextField sonarServerUrlTextField;
-    private JTextField sonarUserTextField;
-    private JTextField sonarPasswordTextField;
-    private JTextField sonarResourceTextField;
+  private JButton testConnectionButton;
+  private JPanel jPanel;
+  private JTextField sonarServerUrlTextField;
+  private JTextField sonarUserTextField;
+  private JTextField sonarPasswordTextField;
+  private JTextField sonarResourceTextField;
 
-    private SonarSettingsComponent sonarSettingsComponent;
-    private SonarService sonarService;
-    private Project project;
+  private SonarSettingsComponent sonarSettingsComponent;
+  private SonarService sonarService;
+  private Project project;
 
-    @Override
-    public JButton getTestConnectionButton() {
-        return testConnectionButton;
-    }
+  @Override
+  public JButton getTestConnectionButton() {
+    return testConnectionButton;
+  }
 
-    @Override
-    public SonarService getSonarService() {
-        return sonarService;
-    }
+  @Override
+  public SonarService getSonarService() {
+    return sonarService;
+  }
 
-    @Override
-    public SonarSettingsComponent getSonarSettingsComponent() {
-        return sonarSettingsComponent;
-    }
+  @Override
+  public SonarSettingsComponent getSonarSettingsComponent() {
+    return sonarSettingsComponent;
+  }
 
-    @Override
-    public Project getProject() {
-        return project;
-    }
+  @Override
+  public Project getProject() {
+    return project;
+  }
 
-    @Override
-    public JPanel getjPanel() {
-        return jPanel;
-    }
+  @Override
+  public JPanel getJPanel() {
+    return jPanel;
+  }
 
-    @Override
-    public JTextField getSonarServerUrlTextField() {
-        return sonarServerUrlTextField;
-    }
+  @Override
+  public JTextField getSonarServerUrlTextField() {
+    return sonarServerUrlTextField;
+  }
 
-    @Override
-    public JTextField getSonarUserTextField() {
-        return sonarUserTextField;
-    }
+  @Override
+  public JTextField getSonarUserTextField() {
+    return sonarUserTextField;
+  }
 
-    @Override
-    public JTextField getSonarPasswordTextField() {
-        return sonarPasswordTextField;
-    }
+  @Override
+  public JTextField getSonarPasswordTextField() {
+    return sonarPasswordTextField;
+  }
 
-    @Override
-    public JTextField getSonarResourceTextField() {
-        return sonarResourceTextField;
-    }
+  @Override
+  public JTextField getSonarResourceTextField() {
+    return sonarResourceTextField;
+  }
 
-    public SonarProjectSettingsConfigurable(Project project) {
-        this.project = project;
-        this.sonarSettingsComponent = project.getComponent(SonarSettingsProjectComponent.class);
-        this.sonarService = ServiceManager.getService(SonarService.class);
-    }
+  public SonarProjectSettingsConfigurable(Project project) {
+    this.project = project;
+    this.sonarSettingsComponent = project.getComponent(SonarSettingsProjectComponent.class);
+    this.sonarService = ServiceManager.getService(SonarService.class);
+  }
 
 
 }

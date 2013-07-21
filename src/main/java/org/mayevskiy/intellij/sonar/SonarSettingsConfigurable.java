@@ -9,6 +9,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarServerConnectionException;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -16,134 +18,153 @@ import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 
 /**
- * Author: Oleg Mayevskiy
- * Date: 13.03.13
- * Time: 00:36
+ * @author Oleg Mayevskiy
+ * @author Michail Plushnikov
  */
 public abstract class SonarSettingsConfigurable implements Configurable {
-    private static final String DEFAULT_SERVER_URL = "";
-    private static final String DEFAULT_USER = "";
-    private static final String DEFAULT_PASSWORD = "";
-    private static final String DEFAULT_RESOURCE = "";
-    public static String SONAR_SERVER_VERSION;
+  private static final String DEFAULT_SERVER_URL = "";
+  private static final String DEFAULT_USER = "";
+  private static final String DEFAULT_PASSWORD = "";
+  private static final String DEFAULT_RESOURCE = "";
 
-    public abstract JButton getTestConnectionButton();
+  private String sonarServerVersion;
+  private String sonarServerError;
 
-    public abstract SonarService getSonarService();
+  public String getSonarServerVersion() {
+    return sonarServerVersion;
+  }
 
-    public abstract SonarSettingsComponent getSonarSettingsComponent();
+  public void setSonarServerVersion(String sonarServerVersion) {
+    this.sonarServerVersion = sonarServerVersion;
+  }
 
-    public abstract Project getProject();
+  public String getSonarServerError() {
+    return sonarServerError;
+  }
 
-    public abstract JPanel getjPanel();
+  public void setSonarServerError(String sonarServerError) {
+    this.sonarServerError = sonarServerError;
+  }
 
-    public abstract JTextField getSonarServerUrlTextField();
+  public abstract JButton getTestConnectionButton();
 
-    public abstract JTextField getSonarUserTextField();
+  public abstract SonarService getSonarService();
 
-    public abstract JTextField getSonarPasswordTextField();
+  public abstract SonarSettingsComponent getSonarSettingsComponent();
 
-    public abstract JTextField getSonarResourceTextField();
+  public abstract Project getProject();
 
-    @Nls
-    @Override
-    public String getDisplayName() {
-        return "Sonar Connector";
-    }
+  public abstract JPanel getJPanel();
 
-    @Nullable
-    @Override
-    public String getHelpTopic() {
-        return null;
-    }
+  public abstract JTextField getSonarServerUrlTextField();
 
-    @Nullable
-    @Override
-    public JComponent createComponent() {
-        fromSettingsBean(getSonarSettingsComponent().getState());
+  public abstract JTextField getSonarUserTextField();
 
-        getTestConnectionButton().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+  public abstract JTextField getSonarPasswordTextField();
 
-                boolean processed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                        new TestConnectionRunnable(),
-                        "Testing Connection", true, getProject()
-                );
+  public abstract JTextField getSonarResourceTextField();
 
-                if (processed) {
-                    Messages.showMessageDialog(MessageFormat.format("Connection successful\nSonar v.{0}", SONAR_SERVER_VERSION), "Connection Test", Messages.getInformationIcon());
-                } else {
-                    Messages.showMessageDialog("Connection not successful", "Connection Test", Messages.getInformationIcon());
-                }
+  @Nls
+  @Override
+  public String getDisplayName() {
+    return "Sonar Connector";
+  }
 
-            }
-        });
-        return getjPanel();
-    }
+  @Nullable
+  @Override
+  public String getHelpTopic() {
+    return null;
+  }
 
-    private void fromSettingsBean(SonarSettingsBean state) {
-        if (null == state) {
-            getSonarServerUrlTextField().setText(DEFAULT_SERVER_URL);
-            getSonarUserTextField().setText(DEFAULT_USER);
-            getSonarPasswordTextField().setText(DEFAULT_PASSWORD);
-            getSonarResourceTextField().setText(DEFAULT_RESOURCE);
+  @Nullable
+  @Override
+  public JComponent createComponent() {
+    fromSettingsBean(getSonarSettingsComponent().getState());
+
+    getTestConnectionButton().addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+
+        boolean processed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+            new TestConnectionRunnable(),
+            "Testing Connection", true, getProject()
+        );
+
+        if (processed) {
+          Messages.showMessageDialog(MessageFormat.format("Connection successful\nSonar v.{0}", getSonarServerVersion()), "Connection Test", Messages.getInformationIcon());
         } else {
-            getSonarServerUrlTextField().setText(state.host);
-            getSonarUserTextField().setText(state.user);
-            getSonarPasswordTextField().setText(state.password);
-            getSonarResourceTextField().setText(state.resource);
+          Messages.showMessageDialog(MessageFormat.format("Connection not successful\n\n{0}", getSonarServerError()), "Connection Test", Messages.getErrorIcon());
         }
-    }
+      }
+    });
+    return getJPanel();
+  }
 
-    private SonarSettingsBean toSettingsBean() {
-        SonarSettingsBean result = new SonarSettingsBean();
-        result.host = getSonarServerUrlTextField().getText();
-        result.user = getSonarUserTextField().getText();
-        result.password = getSonarPasswordTextField().getText();
-        result.resource = getSonarResourceTextField().getText();
-        return result;
+  private void fromSettingsBean(SonarSettingsBean state) {
+    if (null == state) {
+      getSonarServerUrlTextField().setText(DEFAULT_SERVER_URL);
+      getSonarUserTextField().setText(DEFAULT_USER);
+      getSonarPasswordTextField().setText(DEFAULT_PASSWORD);
+      getSonarResourceTextField().setText(DEFAULT_RESOURCE);
+    } else {
+      getSonarServerUrlTextField().setText(state.host);
+      getSonarUserTextField().setText(state.user);
+      getSonarPasswordTextField().setText(state.password);
+      getSonarResourceTextField().setText(state.resource);
     }
+  }
+
+  private SonarSettingsBean toSettingsBean() {
+    SonarSettingsBean result = new SonarSettingsBean();
+    result.host = getSonarServerUrlTextField().getText();
+    result.user = getSonarUserTextField().getText();
+    result.password = getSonarPasswordTextField().getText();
+    result.resource = getSonarResourceTextField().getText();
+    return result;
+  }
+
+  @Override
+  public boolean isModified() {
+    SonarSettingsBean state = getSonarSettingsComponent().getState();
+    return null == state || !state.equals(toSettingsBean());
+  }
+
+  @Override
+  public void apply() throws ConfigurationException {
+    getSonarSettingsComponent().loadState(toSettingsBean());
+  }
+
+  @Override
+  public void reset() {
+    fromSettingsBean(getSonarSettingsComponent().getState());
+  }
+
+  @Override
+  public void disposeUIResources() {
+  }
+
+  private class TestConnectionRunnable implements Runnable {
 
     @Override
-    public boolean isModified() {
-        SonarSettingsBean state = getSonarSettingsComponent().getState();
-        return null == state || !state.equals(toSettingsBean());
+    public void run() {
+      ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+      indicator.setText("Testing Connection");
+      indicator.setText2(String.format("connecting to %s", getSonarServerUrlTextField().getText()));
+      indicator.setFraction(0.5);
+      indicator.setIndeterminate(true);
+
+      try {
+        setSonarServerVersion(getSonarService().verifySonarConnection(toSettingsBean()));
+      } catch (SonarServerConnectionException ex) {
+        setSonarServerError(ex.getMessage());
+        throw new ProcessCanceledException();
+      } catch (Exception re) {
+        throw new ProcessCanceledException();
+      }
+
+      if (indicator.isCanceled()) {
+        throw new ProcessCanceledException();
+      }
     }
-
-    @Override
-    public void apply() throws ConfigurationException {
-        getSonarSettingsComponent().loadState(toSettingsBean());
-    }
-
-    @Override
-    public void reset() {
-        fromSettingsBean(getSonarSettingsComponent().getState());
-    }
-
-    @Override
-    public void disposeUIResources() {
-    }
-
-    private class TestConnectionRunnable implements Runnable {
-
-        @Override
-        public void run() {
-            ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-            indicator.setText("Testing Connection");
-            indicator.setText2(String.format("connecting to %s", getSonarServerUrlTextField().getText()));
-            indicator.setFraction(0.5);
-            indicator.setIndeterminate(true);
-
-            try {
-                SONAR_SERVER_VERSION = getSonarService().testConnectionByGettingSonarServerVersion(toSettingsBean());
-            } catch (Exception re) {
-                throw new ProcessCanceledException();
-            }
-
-            if (indicator.isCanceled()) {
-                throw new ProcessCanceledException();
-            }
-        }
-    }
+  }
 }
