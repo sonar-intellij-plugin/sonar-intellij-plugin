@@ -19,46 +19,46 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 20:48
  */
 public class SonarSettingsComponent implements PersistentStateComponent<SonarSettingsBean> {
-    protected SonarSettingsBean sonarSettings;
+  protected SonarSettingsBean sonarSettings;
 
-    public static Collection<SonarSettingsBean> getSonarSettingsBeans(final Project project) {
-        final Map<String, SonarSettingsBean> sonarSettingsMap = new ConcurrentHashMap<>();
-        ProjectRootManager.getInstance(project).getFileIndex().iterateContent(new ContentIterator() {
-            @Override
-            public boolean processFile(VirtualFile fileOrDir) {
-                final AccessToken readAccessToken = ApplicationManager.getApplication().acquireReadActionLock();
+  public static Collection<SonarSettingsBean> getSonarSettingsBeans(final Project project) {
+    final Map<String, SonarSettingsBean> sonarSettingsMap = new ConcurrentHashMap<String, SonarSettingsBean>();
+    ProjectRootManager.getInstance(project).getFileIndex().iterateContent(new ContentIterator() {
+      @Override
+      public boolean processFile(VirtualFile fileOrDir) {
+        final AccessToken readAccessToken = ApplicationManager.getApplication().acquireReadActionLock();
 
-                try {
-                    SonarSettingsBean sonarSettingsBean = SonarSettingsUtils.getSonarSettingsBeanForFile(fileOrDir, project);
-                    if (null != sonarSettingsBean) {
-                        if (!sonarSettingsMap.containsKey(sonarSettingsBean.toString())) {
-                            sonarSettingsMap.put(sonarSettingsBean.toString(), sonarSettingsBean);
-                        }
-                    }
-                } finally {
-                    readAccessToken.finish();
-                }
-                return true;
+        try {
+          SonarSettingsBean sonarSettingsBean = SonarSettingsUtils.getSonarSettingsBeanForFile(fileOrDir, project);
+          if (null != sonarSettingsBean) {
+            if (!sonarSettingsMap.containsKey(sonarSettingsBean.toString())) {
+              sonarSettingsMap.put(sonarSettingsBean.toString(), sonarSettingsBean);
             }
-        });
-        Collection<SonarSettingsBean> sonarSettingsBeansOfAllModules = sonarSettingsMap.values();
-        SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarSettingsProjectComponent.class).getState();
-
-        Collection<SonarSettingsBean> allSonarSettingsBeans = new LinkedList<>();
-        allSonarSettingsBeans.addAll(sonarSettingsBeansOfAllModules);
-        if (null != sonarSettingsBeanOfProject) {
-            allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
+          }
+        } finally {
+          readAccessToken.finish();
         }
-        return allSonarSettingsBeans;
-    }
+        return true;
+      }
+    });
+    Collection<SonarSettingsBean> sonarSettingsBeansOfAllModules = sonarSettingsMap.values();
+    SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarSettingsProjectComponent.class).getState();
 
-    @Override
-    public SonarSettingsBean getState() {
-        return sonarSettings;
+    Collection<SonarSettingsBean> allSonarSettingsBeans = new LinkedList<SonarSettingsBean>();
+    allSonarSettingsBeans.addAll(sonarSettingsBeansOfAllModules);
+    if (null != sonarSettingsBeanOfProject) {
+      allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
     }
+    return allSonarSettingsBeans;
+  }
 
-    @Override
-    public void loadState(SonarSettingsBean state) {
-        this.sonarSettings = state;
-    }
+  @Override
+  public SonarSettingsBean getState() {
+    return sonarSettings;
+  }
+
+  @Override
+  public void loadState(SonarSettingsBean state) {
+    this.sonarSettings = state;
+  }
 }
