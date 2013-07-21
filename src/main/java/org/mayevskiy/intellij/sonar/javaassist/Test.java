@@ -5,8 +5,8 @@ import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import org.apache.commons.lang.StringUtils;
 import org.mayevskiy.intellij.sonar.SonarLocalInspectionTool;
-import org.mayevskiy.intellij.sonar.SonarService;
 import org.mayevskiy.intellij.sonar.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;

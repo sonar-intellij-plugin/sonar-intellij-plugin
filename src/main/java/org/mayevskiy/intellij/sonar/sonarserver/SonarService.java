@@ -1,10 +1,15 @@
-package org.mayevskiy.intellij.sonar;
+package org.mayevskiy.intellij.sonar.sonarserver;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.SonarRulesProvider;
+import org.mayevskiy.intellij.sonar.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.SonarSeverity;
+import org.mayevskiy.intellij.sonar.SonarViolationsProvider;
+import org.mayevskiy.intellij.sonar.util.GuaveStreamUtil;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
@@ -13,12 +18,9 @@ import org.sonar.wsclient.services.RuleQuery;
 import org.sonar.wsclient.services.Violation;
 import org.sonar.wsclient.services.ViolationQuery;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -26,44 +28,50 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author Oleg Mayevskiy
+ * @author Michail Plushnikov
+ */
 public class SonarService {
 
-  private final static String VERSION_URL = "/api/server/version";
-  public static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
-  public static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
-  public static final String USER_AGENT = "Sonar IntelliJ Connector";
+  private static final String VERSION_URL = "api/server/version";
+  private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
+  private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
+  private static final String USER_AGENT = "Sonar IntelliJ Connector";
 
   public SonarService() {
   }
 
-  private HttpURLConnection getHttpConnection(URL url) throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
-    connection.setReadTimeout(READ_TIMEOUT_IN_MILLISECONDS);
-    connection.setInstanceFollowRedirects(true);
-    connection.setRequestMethod("GET");
-    connection.setRequestProperty("User-Agent", USER_AGENT);
-    return connection;
+  public String verifySonarConnection(SonarSettingsBean sonarSettingsBean) throws SonarServerConnectionException {
+    HttpURLConnection httpURLConnection = getHttpConnection(sonarSettingsBean.host);
+
+    try {
+      int statusCode = httpURLConnection.getResponseCode();
+      if (statusCode != HttpURLConnection.HTTP_OK) {
+        throw new SonarServerConnectionException("ResponseCode: %d Url: %s", statusCode, httpURLConnection.getURL());
+      }
+      return GuaveStreamUtil.toString(httpURLConnection.getInputStream());
+    } catch (IOException e) {
+      throw new SonarServerConnectionException("Couldn't read data from url: %s", e, httpURLConnection.getURL());
+    }
   }
 
-  public String testConnectionByGettingSonarServerVersion(SonarSettingsBean sonarSettingsBean) throws Exception {
-    String fullUrl = sonarSettingsBean.host + VERSION_URL;
-    HttpURLConnection httpURLConnection = getHttpConnection(new URL(fullUrl));
-    int statusCode = httpURLConnection.getResponseCode();
-    if (statusCode != HttpURLConnection.HTTP_OK) {
-      throw new Exception();
-    }
-    Reader reader = new InputStreamReader((InputStream) httpURLConnection.getContent());
-    BufferedReader bufferedReader = new BufferedReader(reader);
+  private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
+    URL sonarServerUrl = null;
+    try {
+      sonarServerUrl = new URL((hostName.endsWith("/") ? hostName : (hostName + "/")) + VERSION_URL);
 
-    StringBuilder stringBuilder = new StringBuilder();
-    String line = bufferedReader.readLine();
-    while (null != line) {
-      stringBuilder.append(line).append("\n");
-      line = bufferedReader.readLine();
+      HttpURLConnection connection = (HttpURLConnection) sonarServerUrl.openConnection();
+      connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
+      connection.setReadTimeout(READ_TIMEOUT_IN_MILLISECONDS);
+      connection.setInstanceFollowRedirects(true);
+      connection.setRequestProperty("User-Agent", USER_AGENT);
+      return connection;
+    } catch (MalformedURLException e) {
+      throw new SonarServerConnectionException("Invalid url: %s", e, hostName);
+    } catch (IOException e) {
+      throw new SonarServerConnectionException("Couldn't connect to url: %s", e, sonarServerUrl.toString());
     }
-
-    return stringBuilder.toString();
   }
 
   @Nullable

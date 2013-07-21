@@ -1,7 +1,7 @@
 package org.mayevskiy.intellij.sonar.evaluation;
 
-import org.mayevskiy.intellij.sonar.SonarService;
 import org.mayevskiy.intellij.sonar.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Rule;
 
 import java.util.ArrayList;
