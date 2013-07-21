@@ -2,6 +2,7 @@ package org.mayevskiy.intellij.sonar;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.Nullable;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 
 import javax.swing.*;
@@ -70,5 +71,9 @@ public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable 
     this.sonarService = ServiceManager.getService(SonarService.class);
   }
 
-
+  @Nullable
+  //for backward compatibility
+  public Icon getIcon() {
+    return null;
+  }
 }

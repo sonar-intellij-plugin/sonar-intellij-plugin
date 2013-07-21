@@ -4,7 +4,6 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
@@ -26,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @State(
     name = "SonarViolationsProvider",
     storages = {
-        @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
+        @Storage(id = "other")
     }
 )
 public class SonarViolationsProvider implements PersistentStateComponent<SonarViolationsProvider> {
