@@ -4,6 +4,7 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.Nullable;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 
 import javax.swing.*;
@@ -76,5 +77,11 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
   @Override
   public JTextField getSonarResourceTextField() {
     return sonarResourceTextField;
+  }
+
+  @Nullable
+  //for backward compatibility
+  public Icon getIcon() {
+    return null;
   }
 }
