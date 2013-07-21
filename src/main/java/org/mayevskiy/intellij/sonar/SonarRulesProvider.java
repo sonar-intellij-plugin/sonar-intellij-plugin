@@ -2,7 +2,11 @@ package org.mayevskiy.intellij.sonar;
 
 import com.intellij.ide.IdeBundle;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.*;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.xmlb.XmlSerializerUtil;
@@ -19,69 +23,69 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 12:42
  */
 @State(
-        name = "SonarRulesProvider",
-        storages = {
-                @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
-        }
+    name = "SonarRulesProvider",
+    storages = {
+        @Storage(id = "other", file = StoragePathMacros.PROJECT_FILE)
+    }
 )
 public class SonarRulesProvider implements PersistentStateComponent<SonarRulesProvider> {
 
-    public Map<String, Rule> sonarRulesByRuleKey;
+  public Map<String, Rule> sonarRulesByRuleKey;
 
-    public SonarRulesProvider() {
-        this.sonarRulesByRuleKey = new ConcurrentHashMap<>();
+  public SonarRulesProvider() {
+    this.sonarRulesByRuleKey = new ConcurrentHashMap<String, Rule>();
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public SonarRulesProvider(Project project) {
+    this();
+  }
+
+  @Nullable
+  @Override
+  public SonarRulesProvider getState() {
+    // workaround NullPointerException of XmlSerializerUtil during serialisation
+    // can be set to null because we don't need this info
+    for (Rule sonarRule : sonarRulesByRuleKey.values()) {
+      sonarRule.setParams(null);
     }
+    return this;
+  }
 
-    @SuppressWarnings("UnusedDeclaration")
-    public SonarRulesProvider(Project project) {
-        this();
-    }
+  @Override
+  public void loadState(SonarRulesProvider state) {
+    XmlSerializerUtil.copyBean(state, this);
+  }
 
-    @Nullable
-    @Override
-    public SonarRulesProvider getState() {
-        // workaround NullPointerException of XmlSerializerUtil during serialisation
-        // can be set to null because we don't need this info
-        for (Rule sonarRule : sonarRulesByRuleKey.values()) {
-            sonarRule.setParams(null);
+  public void syncWithSonar(Project project) {
+    Collection<Rule> sonarRules = this.sonarRulesByRuleKey.values();
+    int oldSize = sonarRules.size();
+    clearState();
+    Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
+    SonarService sonarService = ServiceManager.getService(SonarService.class);
+    if (null != allSonarSettingsBeans) {
+      for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
+        this.sonarRulesByRuleKey.put(rule.getKey(), rule);
+      }
+      int newSize = sonarRulesByRuleKey.values().size();
+      if (oldSize != newSize) {
+        // show restart ide dialog
+        final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings. Restart?",
+            IdeBundle.message("title.restart.needed"), Messages.getQuestionIcon());
+        if (ret == 0) {
+          if (ApplicationManager.getApplication().isRestartCapable()) {
+            ApplicationManager.getApplication().restart();
+          } else {
+            ApplicationManager.getApplication().exit();
+          }
         }
-        return this;
+      }
     }
+  }
 
-    @Override
-    public void loadState(SonarRulesProvider state) {
-        XmlSerializerUtil.copyBean(state, this);
+  private void clearState() {
+    if (null != this.sonarRulesByRuleKey) {
+      this.sonarRulesByRuleKey.clear();
     }
-
-    public void syncWithSonar(Project project) {
-        Collection<Rule> sonarRules = this.sonarRulesByRuleKey.values();
-        int oldSize = sonarRules.size();
-        clearState();
-        Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
-        SonarService sonarService = ServiceManager.getService(SonarService.class);
-        if (null != allSonarSettingsBeans) {
-            for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
-                this.sonarRulesByRuleKey.put(rule.getKey(), rule);
-            }
-            int newSize = sonarRulesByRuleKey.values().size();
-            if (oldSize != newSize) {
-                // show restart ide dialog
-                final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings. Restart?",
-                        IdeBundle.message("title.restart.needed"), Messages.getQuestionIcon());
-                if (ret == 0) {
-                    if (ApplicationManager.getApplication().isRestartCapable()) {
-                        ApplicationManager.getApplication().restart();
-                    } else {
-                        ApplicationManager.getApplication().exit();
-                    }
-                }
-            }
-        }
-    }
-
-    private void clearState() {
-        if (null != this.sonarRulesByRuleKey) {
-            this.sonarRulesByRuleKey.clear();
-        }
-    }
+  }
 }

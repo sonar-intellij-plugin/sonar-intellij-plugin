@@ -15,16 +15,16 @@ import java.util.List;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class SonarTest {
-    public static void main(String[] args) {
-        List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<>(3);
+  public static void main(String[] args) {
+    List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<SonarSettingsBean>(3);
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
-        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "org.codehaus.sonar:php-sonar-runner"));
+    sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "org.codehaus.sonar:php-sonar-runner"));
 
 
-        SonarService sonarService = new SonarService();
-        Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
-        System.out.print("foo");
-    }
+    SonarService sonarService = new SonarService();
+    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+    System.out.print("foo");
+  }
 }
