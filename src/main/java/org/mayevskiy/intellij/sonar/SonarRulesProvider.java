@@ -1,5 +1,13 @@
 package org.mayevskiy.intellij.sonar;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
+import org.sonar.wsclient.services.Rule;
+
 import com.intellij.ide.IdeBundle;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -9,13 +17,6 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import org.jetbrains.annotations.Nullable;
-import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
-import org.sonar.wsclient.services.Rule;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: Oleg Mayevskiy
@@ -25,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @State(
     name = "SonarRulesProvider",
     storages = {
-        @Storage(id = "other")
+        @Storage(id = "other", file = "$PROJECT_FILE$")
     }
 )
 public class SonarRulesProvider implements PersistentStateComponent<SonarRulesProvider> {

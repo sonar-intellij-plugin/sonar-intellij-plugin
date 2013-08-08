@@ -1,15 +1,16 @@
 package org.mayevskiy.intellij.sonar;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
 
 @State(
     name = "SonarSettingsProjectComponent",
     storages = {
-        @Storage(id = "other")
+        @Storage(id = "other", file = "$PROJECT_FILE$")
     }
 )
 public class SonarSettingsProjectComponent extends SonarSettingsComponent implements ProjectComponent {
