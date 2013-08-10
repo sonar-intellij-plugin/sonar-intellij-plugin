@@ -9,6 +9,7 @@
   <description>Connects sonar to IntelliJ IDEA</description>
 
   <change-notes><![CDATA[
+      10.08.2013 Fix: IllegalArgumentException when IntelliJ IDEA 12 loses focus<br>
       08.08.2013 Fix: Connection test unsuccesful if serverurl ends with "/"<br>
       08.08.2013 Fix: Exception with Intellij11 on "Open Module Settings"<br>
       08.08.2013 Fix: Password is visible<br>
