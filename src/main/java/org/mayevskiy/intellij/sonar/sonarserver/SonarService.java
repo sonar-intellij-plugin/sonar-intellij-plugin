@@ -1,5 +1,8 @@
 package org.mayevskiy.intellij.sonar.sonarserver;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
@@ -160,5 +163,28 @@ public class SonarService {
     }
   }
 
-  //TODO getAllProjects and subModules
+  public Collection<String> getProjects(final SonarSettingsBean sonarSettingsBean) {
+    return getSonarResources(sonarSettingsBean, null);
+  }
+
+  public Collection<String> getProjectModules(SonarSettingsBean sonarSettingsBean, String projectKey) {
+    return getSonarResources(sonarSettingsBean, projectKey);
+  }
+
+  private Collection<String> getSonarResources(final SonarSettingsBean sonarSettingsBean, String projectKey) {
+    Sonar sonar = createSonar(sonarSettingsBean);
+
+    ResourceQuery resourceQuery = new ResourceQuery(projectKey);
+    resourceQuery.setScopes("PRJ");
+    List<Resource> resources = sonar.findAll(resourceQuery);
+
+    return Lists.newArrayList(Collections2.transform(resources, new ResourceToStringFunction()));
+  }
+
+  private static class ResourceToStringFunction implements Function<Resource, String> {
+    @Override
+    public String apply(Resource resource) {
+      return null == resource ? null : resource.getKey();
+    }
+  }
 }

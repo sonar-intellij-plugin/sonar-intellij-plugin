@@ -15,7 +15,10 @@ import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.text.MessageFormat;
+import java.util.Collection;
 
 /**
  * @author Oleg Mayevskiy
@@ -29,6 +32,8 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
   private String sonarServerVersion;
   private String sonarServerError;
+
+  private ResourcesComboBoxItemListener resourcesComboBoxItemListener;
 
   public String getSonarServerVersion() {
     return sonarServerVersion;
@@ -48,6 +53,8 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
   public abstract JButton getTestConnectionButton();
 
+  public abstract JButton getUpdateResourcesButton();
+
   public abstract SonarService getSonarService();
 
   public abstract SonarSettingsComponent getSonarSettingsComponent();
@@ -63,6 +70,8 @@ public abstract class SonarSettingsConfigurable implements Configurable {
   public abstract JTextField getSonarPasswordTextField();
 
   public abstract JTextField getSonarResourceTextField();
+
+  public abstract JComboBox<String> getSonarResourceComboBox();
 
   @Nls
   @Override
@@ -83,7 +92,7 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
     getTestConnectionButton().addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
+      public void actionPerformed(ActionEvent actionEvent) {
 
         boolean processed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
             new TestConnectionRunnable(),
@@ -97,6 +106,16 @@ public abstract class SonarSettingsConfigurable implements Configurable {
         }
       }
     });
+
+    getUpdateResourcesButton().addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        fillSonarResourceCombobox(getSonarService(), toSettingsBean());
+      }
+    });
+
+    resourcesComboBoxItemListener = new ResourcesComboBoxItemListener();
+
     return getJPanel();
   }
 
@@ -164,6 +183,26 @@ public abstract class SonarSettingsConfigurable implements Configurable {
 
       if (indicator.isCanceled()) {
         throw new ProcessCanceledException();
+      }
+    }
+  }
+
+  private void fillSonarResourceCombobox(SonarService sonarService, SonarSettingsBean sonarSettingsBean) {
+    Collection<String> sonarProjects = sonarService.getProjects(sonarSettingsBean);
+    JComboBox<String> sonarResourceComboBox = getSonarResourceComboBox();
+    sonarResourceComboBox.removeItemListener(resourcesComboBoxItemListener);
+    sonarResourceComboBox.removeAllItems();
+    for (String sonarProjectKey : sonarProjects) {
+      sonarResourceComboBox.addItem(sonarProjectKey);
+    }
+    sonarResourceComboBox.addItemListener(resourcesComboBoxItemListener);
+  }
+
+  private class ResourcesComboBoxItemListener implements ItemListener {
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        getSonarResourceTextField().setText((String) e.getItem());
       }
     }
   }

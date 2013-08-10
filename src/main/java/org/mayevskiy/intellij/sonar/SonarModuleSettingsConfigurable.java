@@ -10,9 +10,8 @@ import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import javax.swing.*;
 
 /**
- * Author: Oleg Mayevskiy
- * Date: 10.03.13
- * Time: 20:53
+ * @author Oleg Mayevskiy
+ * @author Michail Plushnikov
  */
 public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable implements Configurable {
 
@@ -21,6 +20,8 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
   private JTextField sonarServerUrlTextField;
   private JTextField sonarUserTextField;
   private JTextField sonarPasswordTextField;
+  private JComboBox<String> sonarResourceComboBox;
+  private JButton resourcesUpdateButton;
   private JTextField sonarResourceTextField;
 
   private SonarSettingsModuleComponent sonarComponent;
@@ -37,6 +38,11 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
   @Override
   public JButton getTestConnectionButton() {
     return testConnectionButton;
+  }
+
+  @Override
+  public JButton getUpdateResourcesButton() {
+    return resourcesUpdateButton;
   }
 
   @Override
@@ -79,9 +85,18 @@ public class SonarModuleSettingsConfigurable extends SonarSettingsConfigurable i
     return sonarResourceTextField;
   }
 
+  @Override
+  public JComboBox<String> getSonarResourceComboBox() {
+    return sonarResourceComboBox;
+  }
+
   @Nullable
   //for backward compatibility
   public Icon getIcon() {
     return null;
+  }
+
+  private void createUIComponents() {
+    // TODO: place custom component creation code here
   }
 }

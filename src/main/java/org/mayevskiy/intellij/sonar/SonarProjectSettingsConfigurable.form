@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable">
-  <grid id="27dc6" binding="jPanel" layout-manager="GridLayoutManager" row-count="10" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="jPanel" layout-manager="GridLayoutManager" row-count="11" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
@@ -62,27 +62,18 @@
       </component>
       <component id="47afb" class="javax.swing.JSeparator">
         <constraints>
-          <grid row="4" column="0" row-span="6" col-span="4" vsize-policy="6" hsize-policy="6" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="0" row-span="6" col-span="4" vsize-policy="6" hsize-policy="6" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <opaque value="false"/>
         </properties>
-      </component>
-      <component id="f8044" class="javax.swing.JTextField" binding="sonarResourceTextField" default-binding="true">
-        <constraints>
-          <grid row="3" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-        </constraints>
-        <properties/>
       </component>
       <component id="61b32" class="javax.swing.JLabel">
         <constraints>
           <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <labelFor value="f8044"/>
-          <text value="Resource"/>
+          <text value="Selected resource"/>
         </properties>
       </component>
       <component id="75e84" class="javax.swing.JPasswordField" binding="sonarPasswordTextField">
@@ -92,6 +83,36 @@
           </grid>
         </constraints>
         <properties/>
+      </component>
+      <component id="ed7bf" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Available resources"/>
+        </properties>
+      </component>
+      <component id="a3e7f" class="javax.swing.JComboBox" binding="sonarResourceComboBox">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="2e6a5" class="javax.swing.JTextField" binding="sonarResourceTextField">
+        <constraints>
+          <grid row="3" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="1201c" class="javax.swing.JButton" binding="resourcesUpdateButton">
+        <constraints>
+          <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Update resources"/>
+        </properties>
       </component>
     </children>
   </grid>

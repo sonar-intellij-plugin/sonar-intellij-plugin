@@ -7,6 +7,10 @@ import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 
 import javax.swing.*;
 
+/**
+ * @author Oleg Mayevskiy
+ * @author Michail Plushnikov
+ */
 public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable {
 
   private JButton testConnectionButton;
@@ -15,6 +19,8 @@ public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable 
   private JTextField sonarUserTextField;
   private JTextField sonarPasswordTextField;
   private JTextField sonarResourceTextField;
+  private JComboBox<String> sonarResourceComboBox;
+  private JButton resourcesUpdateButton;
 
   private SonarSettingsComponent sonarSettingsComponent;
   private SonarService sonarService;
@@ -23,6 +29,11 @@ public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable 
   @Override
   public JButton getTestConnectionButton() {
     return testConnectionButton;
+  }
+
+  @Override
+  public JButton getUpdateResourcesButton() {
+    return resourcesUpdateButton;
   }
 
   @Override
@@ -63,6 +74,11 @@ public class SonarProjectSettingsConfigurable extends SonarSettingsConfigurable 
   @Override
   public JTextField getSonarResourceTextField() {
     return sonarResourceTextField;
+  }
+
+  @Override
+  public JComboBox<String> getSonarResourceComboBox() {
+    return sonarResourceComboBox;
   }
 
   public SonarProjectSettingsConfigurable(Project project) {
