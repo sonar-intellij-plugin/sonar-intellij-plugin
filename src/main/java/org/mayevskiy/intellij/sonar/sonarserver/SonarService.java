@@ -4,7 +4,7 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.mayevskiy.intellij.sonar.SonarRulesProvider;
 import org.mayevskiy.intellij.sonar.SonarSettingsBean;
 import org.mayevskiy.intellij.sonar.SonarSeverity;
@@ -23,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +35,7 @@ import java.util.Set;
  */
 public class SonarService {
 
-  private static final String VERSION_URL = "api/server/version";
+  private static final String VERSION_URL = "/api/server/version";
   private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "Sonar IntelliJ Connector";
@@ -59,7 +60,7 @@ public class SonarService {
   private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
     URL sonarServerUrl = null;
     try {
-      sonarServerUrl = new URL((hostName.endsWith("/") ? hostName : (hostName + "/")) + VERSION_URL);
+      sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);
 
       HttpURLConnection connection = (HttpURLConnection) sonarServerUrl.openConnection();
       connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
@@ -74,45 +75,51 @@ public class SonarService {
     }
   }
 
-  @Nullable
+  private String getHostSafe(String hostName) {
+    return StringUtils.removeEnd(hostName, "/");
+  }
+
+  @NotNull
   public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
     if (null == sonarSettingsBean) {
-      return null;
+      return Collections.emptyList();
     }
-    Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
-    ViolationQuery violationQuery = ViolationQuery.createForResource(sonarSettingsBean.resource);
-    violationQuery.setDepth(-1);
-    violationQuery.setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
+    final Sonar sonar = createSonar(sonarSettingsBean);
+    ViolationQuery violationQuery = ViolationQuery
+        .createForResource(sonarSettingsBean.resource)
+        .setDepth(-1)
+        .setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
 
     return sonar.findAll(violationQuery);
   }
 
+  private Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
+    return Sonar.create(getHostSafe(sonarSettingsBean.host), sonarSettingsBean.user, sonarSettingsBean.password);
+  }
 
   public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans) {
     List<Rule> rulesResult = new LinkedList<Rule>();
     Set<String> ruleKeys = new LinkedHashSet<String>();
-    if (null != sonarSettingsBeans) {
-      for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
-        // for all SettingsBeans do:
-        // find language
-        String resourceUrl = sonarSettingsBean.resource;
-        if (StringUtils.isNotBlank(resourceUrl)) {
-          Sonar sonar = Sonar.create(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
-          ResourceQuery query = ResourceQuery.createForMetrics(resourceUrl, "language");
-          List<Resource> resources = sonar.findAll(query);
-          if (null != resources && !resources.isEmpty()) {
-            for (Resource resource : resources) {
-              // find rule
-              String language = resource.getLanguage();
-              if (StringUtils.isNotBlank(language)) {
-                RuleQuery ruleQuery = new RuleQuery(language);
-                List<Rule> rules = sonar.findAll(ruleQuery);
-                if (null != rules) {
-                  for (Rule rule : rules) {
-                    if (!ruleKeys.contains(rule.getKey())) {
-                      ruleKeys.add(rule.getKey());
-                      rulesResult.add(rule);
-                    }
+    for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
+      final Sonar sonar = createSonar(sonarSettingsBean);
+
+      // for all SettingsBeans do:  find language
+      String resourceUrl = sonarSettingsBean.resource;
+      if (StringUtils.isNotBlank(resourceUrl)) {
+        ResourceQuery query = ResourceQuery.createForMetrics(resourceUrl, "language");
+        List<Resource> resources = sonar.findAll(query);
+        if (null != resources && !resources.isEmpty()) {
+          for (Resource resource : resources) {
+            // find rule
+            String language = resource.getLanguage();
+            if (StringUtils.isNotBlank(language)) {
+              RuleQuery ruleQuery = new RuleQuery(language);
+              List<Rule> rules = sonar.findAll(ruleQuery);
+              if (null != rules) {
+                for (Rule rule : rules) {
+                  if (!ruleKeys.contains(rule.getKey())) {
+                    ruleKeys.add(rule.getKey());
+                    rulesResult.add(rule);
                   }
                 }
               }

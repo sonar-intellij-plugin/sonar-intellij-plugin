@@ -1,13 +1,5 @@
 package org.mayevskiy.intellij.sonar;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.jetbrains.annotations.Nullable;
-import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
-import org.sonar.wsclient.services.Rule;
-
 import com.intellij.ide.IdeBundle;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -17,6 +9,13 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
+import org.sonar.wsclient.services.Rule;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: Oleg Mayevskiy
@@ -59,34 +58,32 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
   }
 
   public void syncWithSonar(Project project) {
-    Collection<Rule> sonarRules = this.sonarRulesByRuleKey.values();
-    int oldSize = sonarRules.size();
+    final int previousRuleCount = sonarRulesByRuleKey.size();
+
     clearState();
     Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
     SonarService sonarService = ServiceManager.getService(SonarService.class);
-    if (null != allSonarSettingsBeans) {
-      for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
-        this.sonarRulesByRuleKey.put(rule.getKey(), rule);
-      }
-      int newSize = sonarRulesByRuleKey.values().size();
-      if (oldSize != newSize) {
-        // show restart ide dialog
-        final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings. Restart?",
-            IdeBundle.message("title.restart.needed"), Messages.getQuestionIcon());
-        if (ret == 0) {
-          if (ApplicationManager.getApplication().isRestartCapable()) {
-            ApplicationManager.getApplication().restart();
-          } else {
-            ApplicationManager.getApplication().exit();
-          }
+
+    for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
+      sonarRulesByRuleKey.put(rule.getKey(), rule);
+    }
+
+    int newRuleCount = sonarRulesByRuleKey.size();
+    if (previousRuleCount != newRuleCount) {
+      // show restart ide dialog
+      final int ret = Messages.showOkCancelDialog("Detected new sonar rules. You have to restart IDE to reload the settings. Restart?",
+          IdeBundle.message("title.restart.needed"), Messages.getQuestionIcon());
+      if (ret == 0) {
+        if (ApplicationManager.getApplication().isRestartCapable()) {
+          ApplicationManager.getApplication().restart();
+        } else {
+          ApplicationManager.getApplication().exit();
         }
       }
     }
   }
 
   private void clearState() {
-    if (null != this.sonarRulesByRuleKey) {
-      this.sonarRulesByRuleKey.clear();
-    }
+    sonarRulesByRuleKey.clear();
   }
 }
