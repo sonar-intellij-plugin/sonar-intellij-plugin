@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @State(
     name = "SonarViolationsProvider",
     storages = {
-        @Storage(id = "other")
+        @Storage(id = "other", file = "$PROJECT_FILE$")
     }
 )
 public class SonarViolationsProvider implements PersistentStateComponent<SonarViolationsProvider> {
