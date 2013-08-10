@@ -2,13 +2,11 @@
   <id>org.mayevskiy.intellij.sonar</id>
   <name>Sonar Connector</name>
 
-  <version>1.3</version>
+  <version>1.3.1</version>
 
   <vendor email="omayevskiy@gmail.com" url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov</vendor>
 
-  <description><![CDATA[
-      Connects sonar to IntelliJ IDEA.<br>
-      ]]></description>
+  <description>Connects sonar to IntelliJ IDEA</description>
 
   <change-notes><![CDATA[
       08.08.2013 Fix: Connection test unsuccesful if serverurl ends with "/"<br>
@@ -24,12 +22,9 @@
 
   <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
   <!--<idea-version since-build="99.18" until-build="111"/> &lt;!&ndash; Intellij 10 &ndash;&gt;-->
-  <!--<idea-version since-build="111.69" until-build="123"/> &lt;!&ndash; Intellij 11 &ndash;&gt;-->
-  <idea-version since-build="123.72" />
+  <!--<idea-version since-build="111.69" until-build="123.0"/> &lt;!&ndash; Intellij 11 &ndash;&gt;-->
+  <idea-version since-build="123.0"/>
   <!-- Intellij 12+ -->
-
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
 
   <depends>com.intellij.modules.lang</depends>
 
@@ -49,19 +44,19 @@
 
   <actions>
     <action id="Show.SyncWithSonar" class="org.mayevskiy.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">
-      <add-to-group group-id="EditorPopupMenu" />
+      <add-to-group group-id="EditorPopupMenu"/>
     </action>
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable id="SonarProjectSettingsConfigurable"
-                         instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable" />
+                         instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
     <moduleConfigurable id="SonarModuleSettingsConfigurable"
-                        instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable" />
-    <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider" />
-    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsProvider" />
-    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarRulesProvider" />
-    <applicationService serviceImplementation="org.mayevskiy.intellij.sonar.sonarserver.SonarService" />
+                        instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
+    <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider"/>
+    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsProvider"/>
+    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarRulesProvider"/>
+    <applicationService serviceImplementation="org.mayevskiy.intellij.sonar.sonarserver.SonarService"/>
   </extensions>
 
 </idea-plugin>
