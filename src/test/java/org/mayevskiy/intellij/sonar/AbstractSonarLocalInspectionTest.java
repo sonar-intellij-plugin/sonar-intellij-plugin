@@ -34,9 +34,9 @@ public abstract class AbstractSonarLocalInspectionTest extends LightCodeInsightF
 //    // Change testdata directory to local root
 //    System.setProperty(PathManager.PROPERTY_HOME_PATH, ".");
 //  }
-
-  @Override
-  protected String getTestDataPath() {
-    return "." + getBasePath();
-  }
+//
+//  @Override
+//  protected String getTestDataPath() {
+//    return "." + getBasePath();
+//  }
 }

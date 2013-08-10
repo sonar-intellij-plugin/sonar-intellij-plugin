@@ -43,9 +43,6 @@ public class SonarService {
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "Sonar IntelliJ Connector";
 
-  public SonarService() {
-  }
-
   public String verifySonarConnection(SonarSettingsBean sonarSettingsBean) throws SonarServerConnectionException {
     HttpURLConnection httpURLConnection = getHttpConnection(sonarSettingsBean.host);
 
@@ -106,10 +103,11 @@ public class SonarService {
     for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
       final Sonar sonar = createSonar(sonarSettingsBean);
 
+      //TODO why not just use RuleQuery to get all Rules?
       // for all SettingsBeans do:  find language
-      String resourceUrl = sonarSettingsBean.resource;
-      if (StringUtils.isNotBlank(resourceUrl)) {
-        ResourceQuery query = ResourceQuery.createForMetrics(resourceUrl, "language");
+      String resourceKey = sonarSettingsBean.resource;
+      if (StringUtils.isNotBlank(resourceKey)) {
+        ResourceQuery query = ResourceQuery.createForMetrics(resourceKey, "language");
         List<Resource> resources = sonar.findAll(query);
         if (null != resources && !resources.isEmpty()) {
           for (Resource resource : resources) {
