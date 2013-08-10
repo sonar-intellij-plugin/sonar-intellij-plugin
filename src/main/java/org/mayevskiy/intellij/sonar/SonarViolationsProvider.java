@@ -67,29 +67,27 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     if (null == violationsMap) {
       violationsMap = new ConcurrentHashMap<String, Collection<Violation>>();
     }
+    SonarService sonarService = ServiceManager.getService(SonarService.class);
     for (SonarSettingsBean sonarSettingsBean : allSonarSettingsBeans) {
-      SonarService sonarService = ServiceManager.getService(SonarService.class);
       List<Violation> violations = sonarService.getViolations(sonarSettingsBean);
-      if (null != violations) {
-        for (Violation violation : violations) {
-          String resourceKey = violation.getResourceKey();
-          Collection<Violation> violationsOfFile = violationsMap.get(resourceKey);
-          if (null == violationsOfFile) {
-            violationsOfFile = new LinkedList<Violation>();
-            violationsMap.put(resourceKey, violationsOfFile);
-          }
+      for (Violation violation : violations) {
+        String resourceKey = violation.getResourceKey();
+        Collection<Violation> violationsOfFile = violationsMap.get(resourceKey);
+        if (null == violationsOfFile) {
+          violationsOfFile = new LinkedList<Violation>();
+          violationsMap.put(resourceKey, violationsOfFile);
+        }
 
-          boolean violationAlreadyExists = false;
-          for (Violation alreadyExistingViolation : violationsOfFile) {
-            if (SonarViolationUtils.isEqual(alreadyExistingViolation, violation)) {
-              violationAlreadyExists = true;
-              break;
-            }
+        boolean violationAlreadyExists = false;
+        for (Violation alreadyExistingViolation : violationsOfFile) {
+          if (SonarViolationUtils.isEqual(alreadyExistingViolation, violation)) {
+            violationAlreadyExists = true;
+            break;
           }
+        }
 
-          if (!violationAlreadyExists) {
-            violationsOfFile.add(violation);
-          }
+        if (!violationAlreadyExists) {
+          violationsOfFile.add(violation);
         }
       }
     }
