@@ -5,6 +5,8 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsComponent;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.connectors.ConnectionException;
 

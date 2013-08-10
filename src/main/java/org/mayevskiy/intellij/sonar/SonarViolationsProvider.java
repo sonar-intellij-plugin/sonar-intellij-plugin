@@ -8,6 +8,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.jetbrains.annotations.NotNull;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsComponent;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Violation;
 

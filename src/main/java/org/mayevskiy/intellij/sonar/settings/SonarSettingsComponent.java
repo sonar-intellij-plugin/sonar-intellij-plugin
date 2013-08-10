@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar;
+package org.mayevskiy.intellij.sonar.settings;
 
 import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.ApplicationManager;

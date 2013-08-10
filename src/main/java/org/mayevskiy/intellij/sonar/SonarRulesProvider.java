@@ -10,6 +10,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsComponent;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Rule;
 

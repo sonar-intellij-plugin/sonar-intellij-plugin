@@ -17,6 +17,10 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsBean;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsComponent;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsModuleComponent;
+import org.mayevskiy.intellij.sonar.settings.SonarSettingsProjectComponent;
 import org.mayevskiy.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Rule;
 import org.sonar.wsclient.services.Violation;
@@ -24,8 +28,6 @@ import org.sonar.wsclient.services.Violation;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
-
-//import com.intellij.psi.PsiJavaFile;
 
 /**
  * User: Oleg Mayevskiy
@@ -141,7 +143,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         result.append(baseFileName);
       }
     }
-//        }
     return result.toString();
   }
 

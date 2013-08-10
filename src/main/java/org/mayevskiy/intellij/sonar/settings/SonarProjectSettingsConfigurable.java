@@ -1,4 +1,4 @@
-package org.mayevskiy.intellij.sonar;
+package org.mayevskiy.intellij.sonar.settings;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
