@@ -1,0 +1,63 @@
+<idea-plugin version="2">
+  <id>org.mayevskiy.intellij.sonar</id>
+  <name>Sonar Connector</name>
+
+  <version>1.3.1</version>
+
+  <vendor email="omayevskiy@gmail.com" url="https://github.com/omayevskiy/sonar-intellij-plugin">Oleg Mayevskiy, Michail Plushnikov</vendor>
+
+  <description>Connects sonar to IntelliJ IDEA</description>
+
+  <change-notes><![CDATA[
+      10.08.2013 Fix: IllegalArgumentException when IntelliJ IDEA 12 loses focus<br>
+      08.08.2013 Fix: Connection test unsuccesful if serverurl ends with "/"<br>
+      08.08.2013 Fix: Exception with Intellij11 on "Open Module Settings"<br>
+      08.08.2013 Fix: Password is visible<br>
+      08.08.2013 Fix: Invalid major/minor version exception<br>
+      22.06.2013 Support for phpstorm<br>
+      20.06.2013 Transformation of sonar violations severity to intellij inspection highlight level (avoids to show every violation unnecessary as warning) <br>
+      14.05.2013 Added support for multi module sonar projects<br>
+      10.03.2013 Added support for simple sonar projects<br>
+      ]]>
+  </change-notes>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+  <!--<idea-version since-build="99.18" until-build="111"/> &lt;!&ndash; Intellij 10 &ndash;&gt;-->
+  <!--<idea-version since-build="111.69" until-build="123.0"/> &lt;!&ndash; Intellij 11 &ndash;&gt;-->
+  <idea-version since-build="123.0"/>
+  <!-- Intellij 12+ -->
+
+  <depends>com.intellij.modules.lang</depends>
+
+  <application-components>
+  </application-components>
+
+  <project-components>
+    <component>
+      <implementation-class>org.mayevskiy.intellij.sonar.settings.SonarSettingsProjectComponent</implementation-class>
+    </component>
+  </project-components>
+  <module-components>
+    <component>
+      <implementation-class>org.mayevskiy.intellij.sonar.settings.SonarSettingsModuleComponent</implementation-class>
+    </component>
+  </module-components>
+
+  <actions>
+    <action id="Show.SyncWithSonar" class="org.mayevskiy.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">
+      <add-to-group group-id="EditorPopupMenu"/>
+    </action>
+  </actions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectConfigurable id="SonarProjectSettingsConfigurable"
+                         instance="org.mayevskiy.intellij.sonar.settings.SonarProjectSettingsConfigurable"/>
+    <moduleConfigurable id="SonarModuleSettingsConfigurable"
+                        instance="org.mayevskiy.intellij.sonar.settings.SonarModuleSettingsConfigurable"/>
+    <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider"/>
+    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsProvider"/>
+    <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarRulesProvider"/>
+    <applicationService serviceImplementation="org.mayevskiy.intellij.sonar.sonarserver.SonarService"/>
+  </extensions>
+
+</idea-plugin>
