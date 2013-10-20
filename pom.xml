@@ -10,26 +10,182 @@
     <name>sonar-intellij-plugin</name>
     <description>sonar intellij plugin</description>
 
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/gshakhn/sonar-intellij-plugin/issues</url>
+    </issueManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.min.version>1.6</jdk.min.version>
+        <ij.plugin>true</ij.plugin>
+        <idea.version>12.1.6</idea.version>
+        <idea.build>129.1359</idea.build>
+        <sonar.version>3.4.1</sonar.version>
+        <sonar.language>java</sonar.language>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>org.codehaus.sonar</groupId>
-            <artifactId>sonar-ws-client</artifactId>
-            <version>3.4</version>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.17.1-GA</version>
         </dependency>
+
+
+
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>openapi</artifactId>
+            <version>${idea.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>extensions</artifactId>
+            <version>${idea.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${idea.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>util</artifactId>
+            <version>${idea.version}</version>
+            <scope>provided</scope>
+        </dependency>
+<!--
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>${idea.version}</version>
+            <scope>compile</scope>
+        </dependency>
+-->
+
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.2.2</version>
         </dependency>
         <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.17.1-GA</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swingx-core</artifactId>
+            <version>1.6.2-2</version>
+        </dependency>
+
+        <dependency>
+            <!-- Note that sonar-ws-client supports both of httpclient 3.x and 4.x -->
+            <groupId>org.codehaus.sonar</groupId>
+            <artifactId>sonar-ws-client</artifactId>
+            <version>${sonar.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jgoodies</groupId>
+            <artifactId>forms</artifactId>
+            <version>1.1-preview</version>
+        </dependency>
+        <dependency>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r05</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.6</version>
+        </dependency>
+
+
+        <!-- Test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>idea</artifactId>
+            <version>${idea.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- needed by idea.jar -->
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>trove4j</artifactId>
+            <version>${idea.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>local.com.intellij</groupId>
+            <artifactId>picocontainer</artifactId>
+            <version>${idea.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+<!--
             <plugin>
                 <groupId>de.plushnikov.maven.plugin</groupId>
                 <artifactId>intellij-plugin-modul-importer-plugin</artifactId>
@@ -38,7 +194,30 @@
                     <pathToMetaInfDirectory>src/main/resources</pathToMetaInfDirectory>
                 </configuration>
             </plugin>
+-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
+<repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+        <id>local-intellij</id>
+        <name>intellij-jars</name>
+        <url>file:${project.basedir}/intellij-repo</url>
+        <layout>default</layout>
+    </repository>     
+</repositories>
 </project>
