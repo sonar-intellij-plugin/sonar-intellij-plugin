@@ -4,5 +4,5 @@
 
 This repository will soon hold the merge of https://github.com/omayevskiy/sonar-intellij-plugin/ and https://github.com/gshakhn/sonar-intellij-plugin/, the two existing http://www.sonarqube.org/[SonarQube] plugins for http://www.jetbrains.com/idea/[IntelliJ IDEA].
 
-If you're a user of the plugin, we'd love to hear your feedback either on https://groups.google.com/forum/#!forum/sonarcube-intellij-plugin[the mailing list], via issues for missing or broken functionality or even via code contributions. Please feel free to join.
+If you're a user of the plugin, we'd love to hear your feedback either on https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin[the mailing list], via issues for missing or broken functionality or even via code contributions. Please feel free to join.
 
