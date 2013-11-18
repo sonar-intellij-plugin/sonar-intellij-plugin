@@ -35,19 +35,19 @@ Before I suggest you to create an inspection profile for all those sonar inspect
 
 Go to Analyze -> In the window at bottom right to Inspection Profile select box click onto "..." button.
 ![alt text][specifyInspectionScope]
-[specifyInspectionScope]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/screenshots/specify_inspection_scope.jpg?raw=true
+[specifyInspectionScope]: https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/blob/master/screenshots/specify_inspection_scope.jpg?raw=true
 
 In the Inspections window click at the top onto the "Add" button and create a new profile, e.g.: Sonar.
 Now deselect everything but not the sonar rules for this profile and click "OK"
 ![alt text][sonarProfile]
-[sonarProfile]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/screenshots/sonar_profile.jpg?raw=true
+[sonarProfile]: https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/blob/master/screenshots/sonar_profile.jpg?raw=true
 
 To inspect your code:
 
 Go to Analyze -> Inspect Code ... -> Choose just created *Sonar* Inspection Profile and Inspection Scope -> OK
 You should now see something like:
 ![alt text][sonarInspectionResult]
-[sonarInspectionResult]: https://github.com/omayevskiy/sonar-intellij-plugin/blob/master/screenshots/sonar_inspection_result.jpg?raw=true
+[sonarInspectionResult]: https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/blob/master/screenshots/sonar_inspection_result.jpg?raw=true
 
 Please note: you must NOT create a separate inspection profile, you can mix sonar inspection like you want.
 One more tip: to quick run only one inspection, press Ctrl+Alt+Shift+I. Type "Sonar" to show all available sonar rules or the name of a rule.
