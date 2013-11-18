@@ -26,13 +26,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
-//import com.intellij.psi.PsiJavaFile;
-
-/**
- * User: Oleg Mayevskiy
- * Date: 23.01.13
- * Time: 10:50
- */
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
   private SonarService sonarService;
