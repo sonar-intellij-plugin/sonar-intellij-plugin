@@ -13,11 +13,6 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
 
-/**
- * User: Oleg Mayevskiy
- * Date: 23.01.13
- * Time: 10:48
- */
 public class SonarInspectionToolProvider implements InspectionToolProvider {
 
   @Override
