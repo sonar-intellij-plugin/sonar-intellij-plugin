@@ -63,7 +63,7 @@ public abstract class SonarSettingsConfigurable implements Configurable {
   @Nls
   @Override
   public String getDisplayName() {
-    return "Sonar Connector";
+    return "SonarQube";
   }
 
   @Nullable

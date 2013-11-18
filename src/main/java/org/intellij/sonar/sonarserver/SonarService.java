@@ -34,7 +34,7 @@ public class SonarService {
   private static final String VERSION_URL = "/api/server/version";
   private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
-  private static final String USER_AGENT = "Sonar IntelliJ Connector";
+  private static final String USER_AGENT = "SonarQube Community Plugin";
 
   public SonarService() {
   }
