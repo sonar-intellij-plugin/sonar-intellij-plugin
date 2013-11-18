@@ -54,7 +54,7 @@
                          instance="org.mayevskiy.intellij.sonar.SonarProjectSettingsConfigurable"/>
     <moduleConfigurable id="SonarModuleSettingsConfigurable"
                         instance="org.mayevskiy.intellij.sonar.SonarModuleSettingsConfigurable"/>
-    <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider"/>
+    <inspectionToolProvider implementation="org.mayevskiy.intellij.sonar.SonarInspectionToolProvider" order=""/>
     <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarViolationsProvider"/>
     <projectService serviceImplementation="org.mayevskiy.intellij.sonar.SonarRulesProvider"/>
     <applicationService serviceImplementation="org.mayevskiy.intellij.sonar.sonarserver.SonarService"/>

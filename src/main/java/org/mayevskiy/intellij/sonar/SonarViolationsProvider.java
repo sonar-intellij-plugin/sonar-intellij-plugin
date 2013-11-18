@@ -69,6 +69,9 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     }
     SonarService sonarService = ServiceManager.getService(SonarService.class);
     for (SonarSettingsBean sonarSettingsBean : allSonarSettingsBeans) {
+      if (sonarSettingsBean.isEmpty()) {
+        continue;
+      }
       List<Violation> violations = sonarService.getViolations(sonarSettingsBean);
       for (Violation violation : violations) {
         String resourceKey = violation.getResourceKey();
