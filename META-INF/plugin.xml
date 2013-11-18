@@ -1,5 +1,5 @@
 <idea-plugin version="2">
-  <id>org.intellij.sonar</id>
+  <id>org.mayevskiy.intellij.sonar</id>
   <name>SonarQube Community Plugin</name>
 
   <version>1.3.2</version>
