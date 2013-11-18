@@ -10,6 +10,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -141,7 +142,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         result.append(baseFileName);
       }
     }
-//        }
     return result.toString();
   }
 
@@ -166,16 +166,28 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     return sonarSettingsBean;
   }
 
-  // some strange behavior in phpstorm calls checkFile of same inspectionTool twice
-  // this is workaround to show every violation only once
-  final Collection<Violation> alreadyProcessedViolations = new LinkedHashSet<Violation>();
+  @NotNull
+  private TextRange getTextRange(@NotNull Document document, int line) {
+    int lineStartOffset = document.getLineStartOffset(line - 1);
+    int lineEndOffset = document.getLineEndOffset(line - 1);
+    return new TextRange(lineStartOffset, lineEndOffset);
+  }
 
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
+    // don't care about non physical files
+    if (psiFile.getVirtualFile() == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getSourceRootForFile(psiFile.getVirtualFile()) == null) {
+      return null;
+    }
     final Project project = psiFile.getProject();
     final Collection<ProblemDescriptor> result = new LinkedHashSet<ProblemDescriptor>();
     final SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(psiFile);
+    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(psiFile.getProject());
+    Document document = documentManager.getDocument(psiFile.getContainingFile());
+    if (document == null) {
+      return null;
+    }
 
     if (null != sonarSettingsBean) {
       Collection<String> sonarKeyCandidates = getSonarKeyCandidatesForPsiFile(psiFile, sonarSettingsBean.resource);
@@ -188,29 +200,14 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         for (Violation violation : violations) {
           // add only violations of this rule
           if (this.getRuleKey().equals(violation.getRuleKey())) {
-            PsiElement element = getElementAtLine(psiFile, violation.getLine() - 1);
-            if (null != element) {
-              ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
+            TextRange textRange = getTextRange(document, violation.getLine());
+            ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
 
-              boolean alreadyProcessed = false;
-              for (Violation alreadyProcessedViolation : alreadyProcessedViolations) {
-                if (SonarViolationUtils.isEqual(violation, alreadyProcessedViolation)) {
-                  alreadyProcessed = true;
-                  break;
-                }
-              }
-
-              if (!alreadyProcessed) {
-                result.add(manager.createProblemDescriptor(
-                    element,
-                    violation.getMessage(),
-                    problemHighlightType,
-                    null,
-                    isOnTheFly)
-                );
-                alreadyProcessedViolations.add(violation);
-              }
-            }
+            result.add(manager.createProblemDescriptor(psiFile, textRange,
+                violation.getMessage(),
+                problemHighlightType,
+                false
+            ));
           }
         }
       }
