@@ -1,12 +1,5 @@
 package foo.bar
 
-/**
- * Created with IntelliJ IDEA.
- * User: Oleg
- * Date: 10.03.13
- * Time: 20:18
- * To change this template use File | Settings | File Templates.
- */
 class VeryBadClass {
 
     /* public void veryBadMethod() {
