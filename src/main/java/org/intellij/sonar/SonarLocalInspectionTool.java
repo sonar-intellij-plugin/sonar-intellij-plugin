@@ -170,7 +170,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
     // don't care about non physical files
-    if (psiFile.getVirtualFile() == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getSourceRootForFile(psiFile.getVirtualFile()) == null) {
+    if (psiFile.getVirtualFile() == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(psiFile.getVirtualFile()) == null) {
       return null;
     }
     final Project project = psiFile.getProject();
