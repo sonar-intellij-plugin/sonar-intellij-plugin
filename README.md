@@ -1,10 +1,12 @@
-SonarQube Community Plugin
-=====================
+SonarQube IntelliJ Community Plugin
+===================================
 
-The main goal of this plugin is to show sonar violations directly from within the IntelliJ IDE.
-This plugin should work in any IDE of the IntelliJ family and for any programming language.
-Each sonar violation and rule is converted to an IntelliJ inspection 
-and makes it possible to use inspection features like for any other IntelliJ inspection.
+The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues directly from within the IntelliJ IDE.
+This plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode or Android Studio and for any programming language you use in these IDE that SonarQube can analyze.
+Each sonar issue and rule is converted to an IntelliJ inspection which makes it possible to use inspection features like for any other IntelliJ inspection.
+
+If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarcube-intellij-plugin) or even sending a pull request. Thanks for your support.
+
 
 Usage
 --------------------
@@ -12,11 +14,14 @@ Usage
 At first you need to configure your sonar server connection. You can use a remote server or a local one on your machine, depends on how you work with sonar.
 For a project configuration:
 
-Go to File -> Settings (Ctrl+Alt+S)-> SonarQube
-and test your configuration. 
+Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube` and test your configuration. 
 ![alt text][projectConfiguration]
+You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the dashboard of SonarQube, click on "Projects" in the menu so a dropdown menu with all configured projects appears. When you hover the mouse arrow over a project name in this dropdown menu, you can see the project keys in the URL. For Maven projects it mostly consists of "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
+
+**NOTE: We will simplify the configuration in a future version.**
 
 [projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
+
 
 If your project has multiple modules, then you can configure each module as well:
 
