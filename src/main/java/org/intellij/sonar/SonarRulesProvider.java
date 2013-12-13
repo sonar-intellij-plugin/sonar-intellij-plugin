@@ -6,10 +6,12 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.intellij.sonar.sonarserver.SonarService;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.services.Rule;
 
@@ -58,20 +60,22 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
         XmlSerializerUtil.copyBean(state, this);
     }
 
-    public void syncWithSonar(Project project) {
-        Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
-        SonarService sonarService = ServiceManager.getService(SonarService.class);
+    public int syncWithSonar(Project project, @NotNull ProgressIndicator indicator) {
+      Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
+      SonarService sonarService = ServiceManager.getService(SonarService.class);
 
-        Map<String, Rule> sonarRulesByRuleKeyFromServer = new HashMap<String, Rule>();
-        for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans)) {
-            sonarRulesByRuleKeyFromServer.put(rule.getKey(), rule);
-        }
+      Map<String, Rule> sonarRulesByRuleKeyFromServer = new HashMap<String, Rule>();
+      for (Rule rule : sonarService.getAllRules(allSonarSettingsBeans, indicator)) {
+        sonarRulesByRuleKeyFromServer.put(rule.getKey(), rule);
+      }
 
-        if (!equalMaps(sonarRulesByRuleKey, sonarRulesByRuleKeyFromServer)) {
-            sonarRulesByRuleKey.clear();
-            sonarRulesByRuleKey.putAll(sonarRulesByRuleKeyFromServer);
-            showRestartIdeDialog();
-        }
+      if (!equalMaps(sonarRulesByRuleKey, sonarRulesByRuleKeyFromServer)) {
+        sonarRulesByRuleKey.clear();
+        sonarRulesByRuleKey.putAll(sonarRulesByRuleKeyFromServer);
+        showRestartIdeDialog();
+      }
+
+      return sonarRulesByRuleKey.size();
     }
 
     private void showRestartIdeDialog() {
