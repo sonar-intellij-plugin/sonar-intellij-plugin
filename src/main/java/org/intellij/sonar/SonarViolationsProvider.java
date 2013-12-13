@@ -4,6 +4,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
@@ -56,24 +57,29 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     XmlSerializerUtil.copyBean(state, this);
   }
 
-  public void syncWithSonar(final Project project) {
+  public int syncWithSonar(final Project project, @NotNull ProgressIndicator indicator) {
     clearState();
     Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
-    this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans);
+    this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans, indicator);
+    return this.mySonarViolations.size();
   }
 
-  private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans) {
+  private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     Map<String, Collection<Violation>> violationsMap = this.mySonarViolations;
     if (null == violationsMap) {
       violationsMap = new ConcurrentHashMap<String, Collection<Violation>>();
     }
     SonarService sonarService = ServiceManager.getService(SonarService.class);
     for (SonarSettingsBean sonarSettingsBean : allSonarSettingsBeans) {
+      indicator.checkCanceled();
+
       if (sonarSettingsBean.isEmpty()) {
         continue;
       }
       List<Violation> violations = sonarService.getViolations(sonarSettingsBean);
       for (Violation violation : violations) {
+        indicator.checkCanceled();
+
         String resourceKey = violation.getResourceKey();
         Collection<Violation> violationsOfFile = violationsMap.get(resourceKey);
         if (null == violationsOfFile) {

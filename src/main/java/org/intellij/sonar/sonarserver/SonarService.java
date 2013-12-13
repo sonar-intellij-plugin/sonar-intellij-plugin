@@ -2,8 +2,10 @@ package org.intellij.sonar.sonarserver;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
+import org.intellij.sonar.SyncWithSonarResult;
 import org.jetbrains.annotations.NotNull;
 import org.intellij.sonar.SonarRulesProvider;
 import org.intellij.sonar.SonarSettingsBean;
@@ -93,10 +95,12 @@ public class SonarService {
     return Sonar.create(getHostSafe(sonarSettingsBean.host), sonarSettingsBean.user, sonarSettingsBean.password);
   }
 
-  public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans) {
+  public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     List<Rule> rulesResult = new LinkedList<Rule>();
     Set<String> ruleKeys = new LinkedHashSet<String>();
     for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
+      indicator.checkCanceled();
+
       final Sonar sonar = createSonar(sonarSettingsBean);
 
       // for all SettingsBeans do:  find language
@@ -106,6 +110,8 @@ public class SonarService {
         List<Resource> resources = sonar.findAll(query);
         if (null != resources && !resources.isEmpty()) {
           for (Resource resource : resources) {
+            indicator.checkCanceled();
+
             // find rule
             String language = resource.getLanguage();
             if (StringUtils.isNotBlank(language)) {
@@ -113,6 +119,8 @@ public class SonarService {
               List<Rule> rules = sonar.findAll(ruleQuery);
               if (null != rules) {
                 for (Rule rule : rules) {
+                  indicator.checkCanceled();
+
                   if (!ruleKeys.contains(rule.getKey())) {
                     ruleKeys.add(rule.getKey());
                     rulesResult.add(rule);
@@ -128,15 +136,19 @@ public class SonarService {
     return rulesResult;
   }
 
-  public void sync(Project project) {
-    SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+  public SyncWithSonarResult sync(Project project, @NotNull ProgressIndicator indicator) {
+    SyncWithSonarResult syncWithSonarResult = new SyncWithSonarResult();
+    SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project,
+        SonarViolationsProvider.class);
     if (null != sonarViolationsProvider) {
-      sonarViolationsProvider.syncWithSonar(project);
+      syncWithSonarResult.violationsCount = sonarViolationsProvider.syncWithSonar(project, indicator);
     }
     SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
     if (null != sonarRulesProvider) {
-      sonarRulesProvider.syncWithSonar(project);
+      syncWithSonarResult.rulesCount = sonarRulesProvider.syncWithSonar(project, indicator);
     }
+
+    return syncWithSonarResult;
   }
 
   public ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
