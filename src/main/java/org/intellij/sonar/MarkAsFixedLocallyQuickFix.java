@@ -20,7 +20,7 @@ public class MarkAsFixedLocallyQuickFix extends LocalQuickFixBase {
     private Violation violationToBeMarkedAsFixed;
 
     public MarkAsFixedLocallyQuickFix(@NotNull Violation violationToBeMarkedAsFixed, @NotNull String sonarFileResourceKey) {
-        super("Mark as fixed locally", "SonarQube");
+        super("Mark as fixed locally - " + violationToBeMarkedAsFixed.getMessage(), "SonarQube");
         this.violationToBeMarkedAsFixed = violationToBeMarkedAsFixed;
         this.sonarFileResourceKey = sonarFileResourceKey;
     }
