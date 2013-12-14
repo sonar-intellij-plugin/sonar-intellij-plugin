@@ -8,11 +8,13 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.sonar.sonarserver.SonarService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.connectors.ConnectionException;
 
+import javax.swing.*;
 import java.text.MessageFormat;
 import java.util.Collection;
 
@@ -39,38 +41,45 @@ public class SyncWithSonarAction extends DumbAwareAction {
       return;
     }
 
-    new SyncWithSonarInBackground(project, "Sync with sonar", true, PerformInBackgroundOption.DEAF).
-        setCancelText("Stop sync").
+    new SyncWithSonarInBackground(project, "Sync with sonar", true, PerformInBackgroundOption.ALWAYS_BACKGROUND).
         queue();
   }
 
   private class SyncWithSonarInBackground extends Task.Backgroundable {
+
+    public String message;
+    public String title;
+    public Icon icon;
 
     private SyncWithSonarInBackground(@Nullable Project project, @NotNull String title, boolean canBeCancelled, @Nullable PerformInBackgroundOption backgroundOption) {
       super(project, title, canBeCancelled, backgroundOption);
     }
 
     @Override
-    public void run(@NotNull ProgressIndicator indicator) {
-
-      indicator.setIndeterminate(true);
-      indicator.start();
-
-      SonarService sonarService = ServiceManager.getService(SonarService.class);
-
-      try {
-        SyncWithSonarResult syncWithSonarResult = sonarService.sync(project, indicator);
-
-        Messages.showMessageDialog(
-            MessageFormat.format("Successfully synced with sonar\nDownloaded {0} violations and {1} rules", syncWithSonarResult.violationsCount, syncWithSonarResult.rulesCount),
-            "Sonar Sync",
-            Messages.getInformationIcon());
-      } catch (ConnectionException ce) {
-        Messages.showMessageDialog("Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings",
-            "Sonar Violations", Messages.getErrorIcon());
-      } catch (Exception e) {
-        Messages.showMessageDialog("Sync with sonar not successful", "Sonar Sync", Messages.getErrorIcon());
+    public void onSuccess() {
+      if (!StringUtil.isEmpty(message)) {
+        Messages.showMessageDialog(project, message, title, icon);
       }
     }
+
+    @Override
+    public void run(@NotNull final ProgressIndicator indicator) {
+      indicator.setIndeterminate(true);
+      SonarService sonarService = ServiceManager.getService(SonarService.class);
+
+      title = "Sonar Sync";
+      try {
+        SyncWithSonarResult syncWithSonarResult = sonarService.sync(project, indicator);
+        message = MessageFormat.format("Successfully synced with sonar\nDownloaded {0} violations and {1} rules", syncWithSonarResult.violationsCount, syncWithSonarResult.rulesCount);
+        icon = Messages.getInformationIcon();
+      } catch (ConnectionException ce) {
+        message = "Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings";
+        icon = Messages.getErrorIcon();
+      } catch (Exception e) {
+        message = "Sync with sonar not successful";
+        icon = Messages.getErrorIcon();
+      }
+    }
+
   }
 }
