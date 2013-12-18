@@ -1,1 +1,6 @@
 .idea
+*.iml
+atlassian-ide-plugin.xml
+classes/
+*.zip
+target/
