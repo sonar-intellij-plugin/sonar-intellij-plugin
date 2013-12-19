@@ -87,7 +87,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
         getAddResourcesButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                new ResourcesSelectionConfigurable(true).show();
+                new ResourcesSelectionConfigurable(project, true).show();
             }
         });
 
