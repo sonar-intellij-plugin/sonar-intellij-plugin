@@ -2,47 +2,26 @@ package org.intellij.sonar.configuration;
 
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-public class LoadConfiguration extends DialogWrapper implements Configurable {
-    private JComboBox projectOrModule;
+public class ResourcesSelectionConfigurable extends DialogWrapper implements Configurable {
+    private JList list1;
+    private JButton updateListButton;
 
-    public LoadConfiguration(boolean canBeParent) {
+    protected ResourcesSelectionConfigurable(boolean canBeParent) {
         super(canBeParent);
         init();
-    }
-
-    public JCheckBox getLoadFromProjectModuleCheckBox() {
-        return loadFromProjectModuleCheckBox;
-    }
-
-    private JCheckBox loadFromProjectModuleCheckBox;
-    private JTextField configurationFilePath;
-    private JButton selectFileButton;
-    private JPanel rootJPanel;
-
-    public JTextField getConfigurationFilePath() {
-        return configurationFilePath;
     }
 
     public JPanel getRootJPanel() {
         return rootJPanel;
     }
 
-    public JButton getSelectFileButton() {
-        return selectFileButton;
-    }
-
-    public JComboBox getProjectOrModule() {
-        return projectOrModule;
-    }
+    private JPanel rootJPanel;
 
     @Nls
     @Override
@@ -59,14 +38,6 @@ public class LoadConfiguration extends DialogWrapper implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        getLoadFromProjectModuleCheckBox().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent changeEvent) {
-                getProjectOrModule().setEnabled(getLoadFromProjectModuleCheckBox().isSelected());
-                getConfigurationFilePath().setEnabled(!getLoadFromProjectModuleCheckBox().isSelected());
-                getSelectFileButton().setEnabled(!getLoadFromProjectModuleCheckBox().isSelected());
-            }
-        });
         return getRootJPanel();
     }
 
