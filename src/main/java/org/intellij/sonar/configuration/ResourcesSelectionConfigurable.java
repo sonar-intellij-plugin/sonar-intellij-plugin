@@ -1,37 +1,24 @@
 package org.intellij.sonar.configuration;
 
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
-import org.intellij.sonar.sonarserver.SonarService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.Resource;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class ResourcesSelectionConfigurable extends DialogWrapper implements Configurable {
 
   private Project project;
 
-
-
   private JList resourcesList;
 
-  public JList getResourcesList() {
-    return resourcesList;
-  }
-
   public JButton getUpdateListButton() {
-
     return updateListButton;
   }
 
@@ -41,6 +28,10 @@ public class ResourcesSelectionConfigurable extends DialogWrapper implements Con
     super(project, canBeParent);
     this.project = project;
     init();
+  }
+
+  public Project getProject() {
+    return project;
   }
 
   public JPanel getRootJPanel() {
@@ -64,40 +55,17 @@ public class ResourcesSelectionConfigurable extends DialogWrapper implements Con
   @Nullable
   @Override
   public JComponent createComponent() {
-    getUpdateListButton().addChangeListener(new ChangeListener() {
+    getUpdateListButton().addActionListener(new ActionListener() {
+
       @Override
-      public void stateChanged(ChangeEvent changeEvent) {
-        loadAllSonarProjectsWithModules();
+      public void actionPerformed(ActionEvent actionEvent) {
+
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(
+            new LoadAllSonarProjectsWithModulesRunnable(project, resourcesList),
+            "Loading sonar resources", true, getProject());
       }
     });
     return getRootJPanel();
-  }
-
-  private void loadAllSonarProjectsWithModules() {
-
-    Collection<Object> resourcesListData = new LinkedList<Object>();
-
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
-    ProjectSettingsBean projectSettingsBean = projectSettingsComponent.getState();
-    if (null != projectSettingsBean) {
-      SonarService sonarService = ServiceManager.getService(SonarService.class);
-      Sonar sonar = projectSettingsBean.useAnonymous ?
-          sonarService.createSonar(projectSettingsBean.sonarServerHostUrl, null, null) :
-          sonarService.createSonar(projectSettingsBean.sonarServerHostUrl, projectSettingsBean.user, projectSettingsBean.password);
-      List<Resource> allProjectsWithModules = sonarService.getAllProjectsWithModules(sonar);
-      if (null != allProjectsWithModules) {
-        for (Resource projectOrModule : allProjectsWithModules) {
-          if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
-            resourcesListData.add(projectOrModule.getName() + " ("+projectOrModule.getKey()+")");
-          } else if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
-            resourcesListData.add("          "+projectOrModule.getName() + " ("+projectOrModule.getKey()+")");
-          }
-        }
-      }
-    }
-
-    getResourcesList().setListData(resourcesListData.toArray());
-    //To change body of created methods use File | Settings | File Templates.
   }
 
   @Override
