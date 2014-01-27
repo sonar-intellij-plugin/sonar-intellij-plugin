@@ -5,6 +5,7 @@ import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
@@ -26,6 +27,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
+
+    private static final Logger LOG = Logger.getInstance("SonarLocalInspectionTool");
 
     private SonarService sonarService;
 
@@ -196,6 +199,10 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
                 for (Violation violation : violations) {
                     // add only violations of this rule
                     if (this.getRuleKey().equals(violation.getRuleKey())) {
+                       if (violation.getLine() == null) {
+                                LOG.warn("Null line for Violation - " + violation.getRuleKey());
+                                continue;
+                        }
                         TextRange textRange = getTextRange(document, violation.getLine());
                         ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
 //                        sonarKey: sonar file resource key
