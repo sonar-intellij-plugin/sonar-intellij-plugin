@@ -1,5 +1,6 @@
 package org.intellij.sonar.evaluation;
 
+import com.intellij.openapi.progress.util.CommandLineProgress;
 import org.intellij.sonar.SonarSettingsBean;
 import org.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.services.Rule;
@@ -24,7 +25,7 @@ public class SonarTest {
 
 
     SonarService sonarService = new SonarService();
-    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans, new CommandLineProgress());
     System.out.print("foo");
   }
 }
