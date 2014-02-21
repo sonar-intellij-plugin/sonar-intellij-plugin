@@ -1,5 +1,6 @@
 package org.intellij.sonar.javaassist;
 
+import com.intellij.openapi.progress.util.CommandLineProgress;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
@@ -28,7 +29,7 @@ public class Test {
     sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
     SonarService sonarService = new SonarService();
-    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans);
+    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans, new CommandLineProgress());
     List<Class<SonarLocalInspectionTool>> classes = new ArrayList<Class<SonarLocalInspectionTool>>(allRules.size());
     for (Rule rule : allRules) {
       classes.add(getSonarLocalInspectionToolForOneRule(rule));
