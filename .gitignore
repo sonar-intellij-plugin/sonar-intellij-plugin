@@ -1,6 +1,10 @@
 .idea
+.gradle
+out
 *.iml
+*.ipr
+*.iws
 atlassian-ide-plugin.xml
-classes/
+classes
 *.zip
-target/
+target
