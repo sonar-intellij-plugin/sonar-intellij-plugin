@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.*;
 import org.intellij.sonar.util.GuaveStreamUtil;
+import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.*;
