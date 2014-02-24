@@ -33,12 +33,13 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
 
   public Map<String, Collection<Violation>> mySonarViolations;
 
+  @SuppressWarnings("UnusedDeclaration")
   @Transient
   private Project project;
 
   // fixes Could not save project: java.lang.InstantiationException
   public SonarViolationsProvider() {
-    mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
+    this.mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
   }
 
   @SuppressWarnings("UnusedDeclaration")
@@ -61,11 +62,11 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     clearState();
     Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
     this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans, indicator);
-    return this.mySonarViolations.size();
+    return getMySonarViolations().size();
   }
 
   private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans, @NotNull ProgressIndicator indicator) {
-    Map<String, Collection<Violation>> violationsMap = this.mySonarViolations;
+    Map<String, Collection<Violation>> violationsMap = getMySonarViolations();
     if (null == violationsMap) {
       violationsMap = new ConcurrentHashMap<String, Collection<Violation>>();
     }
@@ -81,10 +82,12 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
         indicator.checkCanceled();
 
         String resourceKey = violation.getResourceKey();
-        Collection<Violation> violationsOfFile = violationsMap.get(resourceKey);
+        Collection<Violation> violationsOfFile = null != resourceKey ? violationsMap.get(resourceKey) : null;
         if (null == violationsOfFile) {
           violationsOfFile = new LinkedList<Violation>();
-          violationsMap.put(resourceKey, violationsOfFile);
+          if (null != resourceKey) {
+            violationsMap.put(resourceKey, violationsOfFile);
+          }
         }
 
         boolean violationAlreadyExists = false;
@@ -104,9 +107,16 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     return violationsMap;
   }
 
-  private void clearState() {
-    if (null != this.mySonarViolations) {
-      mySonarViolations.clear();
+    private Map<String, Collection<Violation>> getMySonarViolations() {
+        if (null == mySonarViolations) {
+            mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
+        }
+        return mySonarViolations;
+    }
+
+    private void clearState() {
+    if (null != getMySonarViolations()) {
+      getMySonarViolations().clear();
     }
   }
 }

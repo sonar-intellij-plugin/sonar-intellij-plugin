@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>1.4.0</version>
+    <version>1.4.1</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">SonarQube Community Intellij Plugin Team
@@ -11,6 +11,7 @@
     <description>Connects SonarQube to IntelliJ IDEA</description>
 
     <change-notes><![CDATA[
+      24.02.2014 Fix: NullPointerException running inspection
       20.11.2013 Improvement: Better detection of new rules<br>
       20.11.2013 Feature: Mark as fixed locally quick fix<br>
       19.11.2013 Fix: No violations found in non intellij IDEs<br>
@@ -61,7 +62,7 @@
                              instance="org.intellij.sonar.SonarProjectSettingsConfigurable"/>
         <moduleConfigurable id="SonarModuleSettingsConfigurable"
                             instance="org.intellij.sonar.SonarModuleSettingsConfigurable"/>
-        <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider" order=""/>
+        <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarViolationsProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarRulesProvider"/>
         <applicationService serviceImplementation="org.intellij.sonar.sonarserver.SonarService"/>

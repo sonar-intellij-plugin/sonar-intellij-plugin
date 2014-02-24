@@ -9,6 +9,7 @@ dependencies {
     compile 'org.codehaus.sonar:sonar-ws-client:3.4'
     compile 'org.apache.httpcomponents:httpclient:4.2.2'
     compile 'org.javassist:javassist:3.17.1-GA'
+    compile 'com.google.guava:guava:16.0.1'
 }
 
 idea {

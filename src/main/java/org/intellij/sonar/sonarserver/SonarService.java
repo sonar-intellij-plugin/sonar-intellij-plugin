@@ -6,6 +6,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SyncWithSonarResult;
+import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.intellij.sonar.SonarRulesProvider;
 import org.intellij.sonar.SonarSettingsBean;
@@ -51,11 +52,11 @@ public class SonarService {
       }
       return GuaveStreamUtil.toString(httpURLConnection.getInputStream());
     } catch (IOException e) {
-      throw new SonarServerConnectionException("Couldn't read data from url: %s", e, httpURLConnection.getURL());
+        throw new SonarServerConnectionException("Cannot read data from url: %s\n\n Cause: \n%s", httpURLConnection.getURL(), ThrowableUtils.getPrettyStackTraceAsString(e));
     }
   }
 
-  private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
+    private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
     URL sonarServerUrl = null;
     try {
       sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);

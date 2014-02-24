@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.connectors.ConnectionException;
@@ -73,10 +74,12 @@ public class SyncWithSonarAction extends DumbAwareAction {
         message = MessageFormat.format("Successfully synced with sonar\nDownloaded {0} violations and {1} rules", syncWithSonarResult.violationsCount, syncWithSonarResult.rulesCount);
         icon = Messages.getInformationIcon();
       } catch (ConnectionException ce) {
-        message = "Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings";
+        message = "Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings" +
+                "\n\nCause:\n"+ ThrowableUtils.getPrettyStackTraceAsString(ce);
         icon = Messages.getErrorIcon();
       } catch (Exception e) {
-        message = "Sync with sonar not successful";
+        message = "Sync with sonar not successful" +
+                "\n\nCause:\n"+ ThrowableUtils.getPrettyStackTraceAsString(e);
         icon = Messages.getErrorIcon();
       }
     }
