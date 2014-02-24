@@ -5,32 +5,17 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SyncWithSonarResult;
-import org.intellij.sonar.util.ThrowableUtils;
-import org.jetbrains.annotations.NotNull;
-import org.intellij.sonar.SonarRulesProvider;
-import org.intellij.sonar.SonarSettingsBean;
-import org.intellij.sonar.SonarSeverity;
-import org.intellij.sonar.SonarViolationsProvider;
+import org.intellij.sonar.*;
 import org.intellij.sonar.util.GuaveStreamUtil;
+import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.Resource;
-import org.sonar.wsclient.services.ResourceQuery;
-import org.sonar.wsclient.services.Rule;
-import org.sonar.wsclient.services.RuleQuery;
-import org.sonar.wsclient.services.Violation;
-import org.sonar.wsclient.services.ViolationQuery;
+import org.sonar.wsclient.services.*;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SonarService {
 
@@ -92,8 +77,13 @@ public class SonarService {
     return sonar.findAll(violationQuery);
   }
 
-  private Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
-    return Sonar.create(getHostSafe(sonarSettingsBean.host), sonarSettingsBean.user, sonarSettingsBean.password);
+  public Sonar createSonar(String host, String user, String password) {
+    host = getHostSafe(host);
+    return StringUtils.isEmpty(user) ? Sonar.create(host) : Sonar.create(host, user, password);
+  }
+
+  public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
+    return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean. password);
   }
 
   public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
@@ -169,5 +159,34 @@ public class SonarService {
     }
   }
 
-  //TODO getAllProjects and subModules
+  public List<Resource> getAllProjectsWithModules(Sonar sonar) {
+    List<Resource> allResources = new LinkedList<Resource>();
+    List<Resource> projects = getAllProjects(sonar);
+    if (null != projects) {
+      for (Resource project : projects) {
+        allResources.add(project);
+        List<Resource> modules = getAllModules(sonar, project.getId());
+        if (null != modules) {
+          for (Resource module: modules) {
+            allResources.add(module);
+          }
+        }
+      }
+    }
+    return allResources;
+  }
+
+  public List<Resource> getAllProjects(Sonar sonar) {
+    ResourceQuery projectResourceQuery = new ResourceQuery();
+    projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT);
+    return sonar.findAll(projectResourceQuery);
+  }
+
+  public List<Resource> getAllModules(Sonar sonar, Integer projectResourceId) {
+    ResourceQuery moduleResourceQuery = new ResourceQuery(projectResourceId);
+    moduleResourceQuery.setDepth(-1);
+    moduleResourceQuery.setQualifiers(Resource.QUALIFIER_MODULE);
+    return sonar.findAll(moduleResourceQuery);
+  }
+
 }

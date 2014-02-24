@@ -42,7 +42,7 @@
 
     <project-components>
         <component>
-            <implementation-class>org.intellij.sonar.SonarSettingsProjectComponent</implementation-class>
+            <implementation-class>org.intellij.sonar.configuration.ProjectSettingsComponent</implementation-class>
         </component>
     </project-components>
     <module-components>
@@ -58,8 +58,8 @@
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable id="SonarProjectSettingsConfigurable"
-                             instance="org.intellij.sonar.SonarProjectSettingsConfigurable"/>
+        <projectConfigurable id="projectSettingsConfigurable"
+                             instance="org.intellij.sonar.configuration.ProjectSettingsConfigurable"/>
         <moduleConfigurable id="SonarModuleSettingsConfigurable"
                             instance="org.intellij.sonar.SonarModuleSettingsConfigurable"/>
         <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>

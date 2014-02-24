@@ -249,6 +249,9 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
     private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
         SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
+        if (null == sonarProjectComponent) {
+            return null;
+        }
         return sonarProjectComponent.getState();
     }
 
