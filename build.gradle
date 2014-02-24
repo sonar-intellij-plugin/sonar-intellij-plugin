@@ -1,0 +1,35 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.sonar:sonar-ws-client:3.4'
+    compile 'org.apache.httpcomponents:httpclient:4.2.2'
+    compile 'org.javassist:javassist:3.17.1-GA'
+}
+
+idea {
+    project.ipr.beforeMerged { project ->
+        project.modulePaths.clear()
+    }
+
+    workspace.iws.withXml {
+        def runManagerComponent = it.node.component.find { it.@name == 'RunManager' }
+        runManagerComponent.@selected = 'Plugin.run-sonar-plugin'
+        def configuration = runManagerComponent.appendNode("configuration", [default:"false", name:"run-sonar-plugin", type:"#org.jetbrains.idea.devkit.run.PluginConfigurationType", factoryName:"Plugin", singleton:"true"])
+        configuration.appendNode("module", [name: 'sonar-intellij-plugin'])
+        configuration.appendNode("option", [name: "VM_PARAMETERS", value: "-Xms128m -Xmx750m -XX:MaxPermSize=350m -XX:ReservedCodeCacheSize=96m -XX:+UseCompressedOops"])
+        configuration.appendNode("option", [name: "PROGRAM_PARAMETERS", value: ""])
+        configuration.appendNode("method")
+    }
+    module.iml.withXml {
+        it.node.@type = 'PLUGIN_MODULE'
+        it.node.appendNode('component', [name: 'DevKit.ModuleBuildProperties', url: 'file://$MODULE_DIR$/META-INF/plugin.xml'])
+    }
+
+}
+
+
