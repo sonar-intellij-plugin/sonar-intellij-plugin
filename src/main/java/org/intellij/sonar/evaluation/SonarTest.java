@@ -32,9 +32,9 @@ public class SonarTest {
     for (Resource projectOrModule : allProjectsWithModules) {
       if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
         System.out.println("##################################################");
-        System.out.println(projectOrModule.getName() + " ("+projectOrModule.getKey()+")");
+        System.out.println(projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
       } else if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
-        System.out.println("     " + projectOrModule.getName() + " ("+projectOrModule.getKey()+")");
+        System.out.println("     " + projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
       } else {
         System.out.println("!!!UNKNOWN RESOURCE!!! ::: " + projectOrModule.toString() + " ::: " + projectOrModule.getQualifier());
       }

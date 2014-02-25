@@ -4,8 +4,8 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.Nullable;
 import org.intellij.sonar.sonarserver.SonarService;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 

@@ -16,19 +16,19 @@ import java.util.Collection;
  */
 public class MarkAsFixedLocallyQuickFix extends LocalQuickFixBase {
 
-    private String sonarFileResourceKey;
-    private Violation violationToBeMarkedAsFixed;
+  private String sonarFileResourceKey;
+  private Violation violationToBeMarkedAsFixed;
 
-    public MarkAsFixedLocallyQuickFix(@NotNull Violation violationToBeMarkedAsFixed, @NotNull String sonarFileResourceKey) {
-        super("Mark as fixed locally - " + violationToBeMarkedAsFixed.getMessage(), "SonarQube");
-        this.violationToBeMarkedAsFixed = violationToBeMarkedAsFixed;
-        this.sonarFileResourceKey = sonarFileResourceKey;
-    }
+  public MarkAsFixedLocallyQuickFix(@NotNull Violation violationToBeMarkedAsFixed, @NotNull String sonarFileResourceKey) {
+    super("Mark as fixed locally - " + violationToBeMarkedAsFixed.getMessage(), "SonarQube");
+    this.violationToBeMarkedAsFixed = violationToBeMarkedAsFixed;
+    this.sonarFileResourceKey = sonarFileResourceKey;
+  }
 
-    @Override
-    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-        SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
-        Collection<Violation> violationsOfFile = sonarViolationsProvider.mySonarViolations.get(sonarFileResourceKey);
-        violationsOfFile.remove(violationToBeMarkedAsFixed);
-    }
+  @Override
+  public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+    SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
+    Collection<Violation> violationsOfFile = sonarViolationsProvider.mySonarViolations.get(sonarFileResourceKey);
+    violationsOfFile.remove(violationToBeMarkedAsFixed);
+  }
 }

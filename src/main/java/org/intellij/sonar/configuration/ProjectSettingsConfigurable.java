@@ -14,203 +14,224 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
-    private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
+  private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
 
-    private Project project;
+  private Project project;
 
-    private JCheckBox shareConfigurationMakesVisibleCheckBox;
+  private JButton testConfigurationButton;
 
-    private JButton testConfigurationButton;
+  private JList resourcesList;
 
-    private JList resourcesList;
+  public JButton getAddResourcesButton() {
+    return addResourcesButton;
+  }
 
-    public JButton getAddResourcesButton() {
-        return addResourcesButton;
+  public ProjectSettingsConfigurable(Project project) {
+    this.project = project;
+  }
+
+  private JButton addResourcesButton;
+
+  private JCheckBox useAnonymousCheckBox;
+
+  private JTextField sonarServerTextField;
+
+  public Project getProject() {
+    return project;
+  }
+
+  public JList getResourcesList() {
+    return resourcesList;
+  }
+
+  public JTextField getSonarServerTextField() {
+    return sonarServerTextField;
+  }
+
+  private JTextField userTextField;
+
+  private JPasswordField passwordField;
+
+  public JPasswordField getPasswordField() {
+    return passwordField;
+  }
+
+  public JTextField getUserTextField() {
+    return userTextField;
+  }
+
+  public JPanel getRootJPanel() {
+    final ProjectSettingsConfigurable projectSettingsConfigurable = this;
+    getAddResourcesButton().addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        new ResourcesSelectionConfigurable(project, true, projectSettingsConfigurable).show();
+      }
+    });
+
+    return rootJPanel;
+  }
+
+  private JPanel rootJPanel;
+
+  public JCheckBox getShowPasswordCheckBox() {
+    return showPasswordCheckBox;
+  }
+
+  private JCheckBox showPasswordCheckBox;
+
+  @Nls
+  @Override
+  public String getDisplayName() {
+    return "SonarQube";
+  }
+
+  @Nullable
+  @Override
+  public String getHelpTopic() {
+    return null;
+  }
+
+  public JCheckBox getUseAnonymousCheckBox() {
+    return useAnonymousCheckBox;
+  }
+
+  @Nullable
+  @Override
+  public JComponent createComponent() {
+    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    if (null != projectSettingsComponent) {
+      ProjectSettingsBean projectSettingsBean = projectSettingsComponent.getState();
+      this.setValuesFromProjectSettingsBean(projectSettingsBean);
+      setCredentialsEnabled();
     }
 
-    public ProjectSettingsConfigurable(Project project) {
-        this.project = project;
-    }
+    getUseAnonymousCheckBox().addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(ChangeEvent changeEvent) {
+        setCredentialsEnabled();
+      }
+    });
 
-    private JButton addResourcesButton;
-
-    private JCheckBox useAnonymousCheckBox;
-
-    private JTextField sonarServerTextField;
-
-    public Project getProject() {
-        return project;
-    }
-
-    public JList getResourcesList() {
-        return resourcesList;
-    }
-
-    public JCheckBox getShareConfigurationMakesVisibleCheckBox() {
-        return shareConfigurationMakesVisibleCheckBox;
-    }
-
-    public JTextField getSonarServerTextField() {
-        return sonarServerTextField;
-    }
-
-    private JTextField userTextField;
-
-    private JPasswordField passwordField;
-
-    public JButton getLoadConfigurationButton() {
-        return loadConfigurationButton;
-    }
-
-    private JButton loadConfigurationButton;
-
-    public JPasswordField getPasswordField() {
-        return passwordField;
-    }
-
-    public JTextField getUserTextField() {
-        return userTextField;
-    }
-
-    public JPanel getRootJPanel() {
-        getLoadConfigurationButton().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                new LoadConfigurationConfigurable(true).show();
-            }
-        });
-
-        getAddResourcesButton().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                new ResourcesSelectionConfigurable(project, true).show();
-            }
-        });
-
-        return rootJPanel;
-    }
-
-    private JPanel rootJPanel;
-
-    public JCheckBox getShowPasswordCheckBox() {
-        return showPasswordCheckBox;
-    }
-
-    private JCheckBox showPasswordCheckBox;
-
-    @Nls
-    @Override
-    public String getDisplayName() {
-        return "SonarQube";
-    }
-
-    @Nullable
-    @Override
-    public String getHelpTopic() {
-        return null;
-    }
-
-    public JCheckBox getUseAnonymousCheckBox() {
-        return useAnonymousCheckBox;
-    }
-
-    @Nullable
-    @Override
-    public JComponent createComponent() {
-        ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
-        if (null != projectSettingsComponent) {
-            ProjectSettingsBean projectSettingsBean = projectSettingsComponent.getState();
-            ProjectSettingsConfigurableBeanConverter.convertFromBean(projectSettingsBean, this);
-            setCredentialsEnabled();
+    getShowPasswordCheckBox().addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(ChangeEvent changeEvent) {
+        if (getShowPasswordCheckBox().isSelected()) {
+          makePasswordVisible();
+        } else {
+          makePasswordInvisible();
         }
+      }
+    });
 
-        getUseAnonymousCheckBox().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent changeEvent) {
-                setCredentialsEnabled();
-            }
-        });
+    return getRootJPanel();
+  }
 
-        getShowPasswordCheckBox().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent changeEvent) {
-                if (getShowPasswordCheckBox().isSelected()) {
-                    makePasswordVisible();
-                } else {
-                    makePasswordInvisible();
-                }
-            }
-        });
+  private void makePasswordInvisible() {
+    getPasswordField().setEchoChar('•');
+  }
 
-        return getRootJPanel();
+  private void makePasswordVisible() {
+    getPasswordField().setEchoChar('\u0000');
+  }
+
+  private void setCredentialsEnabled() {
+    getUserTextField().setEnabled(!getUseAnonymousCheckBox().isSelected());
+    getPasswordField().setEnabled(!getUseAnonymousCheckBox().isSelected());
+  }
+
+  @Override
+  public boolean isModified() {
+    ProjectSettingsBean state = project.getComponent(ProjectSettingsComponent.class).getState();
+    return null == state || !state.equals(this.toProjectSettingsBean());
+  }
+
+  @Override
+  public void apply() throws ConfigurationException {
+    ProjectSettingsBean projectSettingsBean = this.toProjectSettingsBean();
+    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    projectSettingsComponent.loadState(projectSettingsBean);
+    PasswordManager.storePassword(project, projectSettingsBean);
+  }
+
+  @Override
+  public void reset() {
+    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
+      ProjectSettingsBean persistedState = projectSettingsComponent.getState();
+      this.setValuesFromProjectSettingsBean(persistedState);
     }
+  }
 
-    private void makePasswordInvisible() {
-        getPasswordField().setEchoChar('•');
-    }
+  @Override
+  public void disposeUIResources() {
+    // To change body of implemented methods use File | Settings | File Templates.
+  }
 
-    private void makePasswordVisible() {
-        getPasswordField().setEchoChar('\u0000');
-    }
+  @Override
+  public void projectOpened() {
+    // To change body of implemented methods use File | Settings | File Templates.
+  }
 
-    private void setCredentialsEnabled() {
-        getUserTextField().setEnabled(!getUseAnonymousCheckBox().isSelected());
-        getPasswordField().setEnabled(!getUseAnonymousCheckBox().isSelected());
-    }
+  @Override
+  public void projectClosed() {
+    // To change body of implemented methods use File | Settings | File Templates.
+  }
 
-    @Override
-    public boolean isModified() {
-        ProjectSettingsBean state = project.getComponent(ProjectSettingsComponent.class).getState();
-        return null == state || !state.equals(ProjectSettingsConfigurableBeanConverter.convertToBean(this));
-    }
+  @Override
+  public void initComponent() {
+    // To change body of implemented methods use File | Settings | File Templates.
+  }
 
-    @Override
-    public void apply() throws ConfigurationException {
-        ProjectSettingsBean projectSettingsBean = ProjectSettingsConfigurableBeanConverter.convertToBean(this);
-        ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
-        projectSettingsComponent.loadState(projectSettingsBean);
-        PasswordManager.storePassword(project, projectSettingsBean);
-    }
+  @Override
+  public void disposeComponent() {
+    // To change body of implemented methods use File | Settings | File Templates.
+  }
 
-    @Override
-    public void reset() {
-        ProjectSettingsBean persistedState = project.getComponent(ProjectSettingsComponent.class).getState();
-        ProjectSettingsConfigurableBeanConverter.convertFromBean(persistedState, this);
-    }
+  @NotNull
+  @Override
+  public String getComponentName() {
+    return "SonarQube";
+  }
 
-    @Override
-    public void disposeUIResources() {
-        // To change body of implemented methods use File | Settings | File Templates.
-    }
+  public ProjectSettingsBean toProjectSettingsBean() {
 
-    @Override
-    public void projectOpened() {
-        // To change body of implemented methods use File | Settings | File Templates.
-    }
+    ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
+    projectSettingsBean.sonarServerHostUrl = this.getSonarServerTextField().getText();
+    projectSettingsBean.useAnonymous = this.getUseAnonymousCheckBox().isSelected();
+    projectSettingsBean.user = this.getUserTextField().getText();
+    projectSettingsBean.password = String.valueOf(this.getPasswordField().getPassword());
 
-    @Override
-    public void projectClosed() {
-        // To change body of implemented methods use File | Settings | File Templates.
+    ProjectSettingsBean persistedProjectSettingsBean = project.getComponent(ProjectSettingsComponent.class).getState();
+    if (persistedProjectSettingsBean != null) {
+      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
     }
+    convertResourcesListToBean(projectSettingsBean);
 
-    @Override
-    public void initComponent() {
-        // To change body of implemented methods use File | Settings | File Templates.
-    }
+    return projectSettingsBean;
+  }
 
-    @Override
-    public void disposeComponent() {
-        // To change body of implemented methods use File | Settings | File Templates.
+  private void convertResourcesListToBean(ProjectSettingsBean projectSettingsBean) {
+    ListModel model = this.getResourcesList().getModel();
+    projectSettingsBean.resources = new ArrayList<String>(model.getSize());
+    for (int i = 0; i < model.getSize(); i++) {
+      projectSettingsBean.resources.add((String) model.getElementAt(i));
     }
+  }
 
-    @NotNull
-    @Override
-    public String getComponentName() {
-        return "SonarQube";
-    }
+  public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
+    if (null == projectSettingsBean) return;
+
+    this.getSonarServerTextField().setText(projectSettingsBean.sonarServerHostUrl);
+    this.getUseAnonymousCheckBox().setSelected(projectSettingsBean.useAnonymous);
+    this.getUserTextField().setText(projectSettingsBean.user);
+    this.getPasswordField().setText(projectSettingsBean.password);
+    this.getResourcesList().setListData(projectSettingsBean.resources.toArray());
+  }
 
 }

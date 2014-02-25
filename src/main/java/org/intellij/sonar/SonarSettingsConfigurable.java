@@ -7,10 +7,10 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.Nullable;
 import org.intellij.sonar.sonarserver.SonarServerConnectionException;
 import org.intellij.sonar.sonarserver.SonarService;
+import org.jetbrains.annotations.Nls;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

@@ -1,5 +1,6 @@
 package org.intellij.sonar.configuration;
 
+import com.google.common.collect.Iterables;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
@@ -9,25 +10,31 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class ResourcesSelectionConfigurable extends DialogWrapper implements Configurable {
 
   private Project project;
 
   private JList resourcesList;
+  private JButton updateListButton;
+  private JPanel rootJPanel;
+  private ProjectSettingsConfigurable projectSettingsConfigurable;
+
+  public ResourcesSelectionConfigurable(@Nullable Project project, boolean canBeParent, ProjectSettingsConfigurable projectSettingsConfigurable) {
+    super(project, canBeParent);
+    this.project = project;
+    this.projectSettingsConfigurable = projectSettingsConfigurable;
+    init();
+  }
 
   public JButton getUpdateListButton() {
     return updateListButton;
-  }
-
-  private JButton updateListButton;
-
-  public ResourcesSelectionConfigurable(@Nullable Project project, boolean canBeParent) {
-    super(project, canBeParent);
-    this.project = project;
-    init();
   }
 
   public Project getProject() {
@@ -37,8 +44,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper implements Con
   public JPanel getRootJPanel() {
     return rootJPanel;
   }
-
-  private JPanel rootJPanel;
 
   @Nls
   @Override
@@ -59,12 +64,36 @@ public class ResourcesSelectionConfigurable extends DialogWrapper implements Con
 
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
-
         ProgressManager.getInstance().runProcessWithProgressSynchronously(
-            new LoadAllSonarProjectsWithModulesRunnable(project, resourcesList),
+            new LoadAllSonarProjectsWithModulesRunnable(project, resourcesList, projectSettingsConfigurable),
             "Loading sonar resources", true, getProject());
       }
     });
+
+    final ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    final ProjectSettingsBean persistedProjectSettingsBean = projectSettingsComponent.getState();
+    if (persistedProjectSettingsBean != null && persistedProjectSettingsBean.downloadedResources != null) {
+      this.resourcesList.setListData(LoadAllSonarProjectsWithModulesRunnable.toResourcesListDataFrom(persistedProjectSettingsBean.downloadedResources).toArray());
+    }
+
+    resourcesList.addListSelectionListener(new ListSelectionListener() {
+      @Override
+      public void valueChanged(ListSelectionEvent listSelectionEvent) {
+        ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+        if (projectSettingsComponent != null && projectSettingsComponent.getState() != null && projectSettingsComponent.getState().downloadedResources != null) {
+          int[] selectedIndices = ((JList) (listSelectionEvent).getSource()).getSelectedIndices();
+          Collection<SonarResourceBean> selectedSonarResources = new ArrayList<SonarResourceBean>(selectedIndices.length);
+          for (int selectedIndex: selectedIndices) {
+            SonarResourceBean sonarResourceBean = Iterables.get(projectSettingsComponent.getState().downloadedResources, selectedIndex);
+            selectedSonarResources.add(sonarResourceBean);
+          }
+
+          Collection<Object> resourcesListData = LoadAllSonarProjectsWithModulesRunnable.toResourcesListDataFrom(selectedSonarResources);
+          projectSettingsConfigurable.getResourcesList().setListData(resourcesListData.toArray());
+        }
+      }
+    });
+
     return getRootJPanel();
   }
 

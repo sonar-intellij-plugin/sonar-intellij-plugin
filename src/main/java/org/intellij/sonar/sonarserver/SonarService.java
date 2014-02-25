@@ -38,11 +38,11 @@ public class SonarService {
       }
       return GuaveStreamUtil.toString(httpURLConnection.getInputStream());
     } catch (IOException e) {
-        throw new SonarServerConnectionException("Cannot read data from url: %s\n\n Cause: \n%s", httpURLConnection.getURL(), ThrowableUtils.getPrettyStackTraceAsString(e));
+      throw new SonarServerConnectionException("Cannot read data from url: %s\n\n Cause: \n%s", httpURLConnection.getURL(), ThrowableUtils.getPrettyStackTraceAsString(e));
     }
   }
 
-    private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
+  private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
     URL sonarServerUrl = null;
     try {
       sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);
@@ -84,7 +84,7 @@ public class SonarService {
   }
 
   public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
-    return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean. password);
+    return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
   }
 
   public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
@@ -168,7 +168,7 @@ public class SonarService {
         allResources.add(project);
         List<Resource> modules = getAllModules(sonar, project.getId());
         if (null != modules) {
-          for (Resource module: modules) {
+          for (Resource module : modules) {
             allResources.add(module);
           }
         }

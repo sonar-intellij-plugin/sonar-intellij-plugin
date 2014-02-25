@@ -75,11 +75,11 @@ public class SyncWithSonarAction extends DumbAwareAction {
         icon = Messages.getInformationIcon();
       } catch (ConnectionException ce) {
         message = "Connection to sonar not successful.\nPlease check if sonar server is running and your project/module connection settings" +
-                "\n\nCause:\n"+ ThrowableUtils.getPrettyStackTraceAsString(ce);
+            "\n\nCause:\n" + ThrowableUtils.getPrettyStackTraceAsString(ce);
         icon = Messages.getErrorIcon();
       } catch (Exception e) {
         message = "Sync with sonar not successful" +
-                "\n\nCause:\n"+ ThrowableUtils.getPrettyStackTraceAsString(e);
+            "\n\nCause:\n" + ThrowableUtils.getPrettyStackTraceAsString(e);
         icon = Messages.getErrorIcon();
       }
     }

@@ -6,9 +6,9 @@ package org.intellij.sonar;
  * Time: 13:51
  */
 public enum SonarSeverity {
-    BLOCKER,
-    CRITICAL,
-    MAJOR,
-    MINOR,
-    INFO
+  BLOCKER,
+  CRITICAL,
+  MAJOR,
+  MINOR,
+  INFO
 }

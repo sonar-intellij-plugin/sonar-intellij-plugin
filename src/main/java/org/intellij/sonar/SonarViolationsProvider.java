@@ -8,8 +8,8 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import org.jetbrains.annotations.NotNull;
 import org.intellij.sonar.sonarserver.SonarService;
+import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.services.Violation;
 
 import java.util.Collection;
@@ -107,14 +107,14 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
     return violationsMap;
   }
 
-    private Map<String, Collection<Violation>> getMySonarViolations() {
-        if (null == mySonarViolations) {
-            mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
-        }
-        return mySonarViolations;
+  private Map<String, Collection<Violation>> getMySonarViolations() {
+    if (null == mySonarViolations) {
+      mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
     }
+    return mySonarViolations;
+  }
 
-    private void clearState() {
+  private void clearState() {
     if (null != getMySonarViolations()) {
       getMySonarViolations().clear();
     }

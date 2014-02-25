@@ -6,8 +6,8 @@ package org.intellij.sonar.javaassist;
  * Time: 13:53
  */
 public class HelloWorld {
-    public String sayHello() {
-        return "Hello worlds";
-    }
+  public String sayHello() {
+    return "Hello worlds";
+  }
 }
 
