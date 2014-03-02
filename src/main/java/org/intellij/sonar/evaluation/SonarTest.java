@@ -1,12 +1,16 @@
 package org.intellij.sonar.evaluation;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.progress.util.CommandLineProgress;
+import com.ning.http.client.*;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.Future;
 import org.intellij.sonar.SonarSettingsBean;
 import org.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.Resource;
-import org.sonar.wsclient.services.ResourceQuery;
-import org.sonar.wsclient.services.Rule;
+import org.sonar.wsclient.services.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +26,32 @@ public class SonarTest {
   public static void main(String[] args) {
 //      testGetRules();
 //        testGetResources();
-    testGetAllProjectsAndModulesBySonarService();
+//    testGetAllProjectsAndModulesBySonarService();
+    testGetIssues();
+  }
+
+  private static void testGetIssues() {
+//    sonar.create(ManualMeasureCreateQuery.create("de.mobile:mobile-multimodule-pom"));
+    AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+    try {
+      asyncHttpClient.prepareGet("https://sonar.corp.mobile.de/sonar/api/issues/search?pageSize=10&componentRoots=de.mobile:mobile-multimodule-pom").execute(new AsyncCompletionHandler<Response>(){
+
+        @Override
+        public Response onCompleted(Response response) throws Exception{
+          String responseBody = response.getResponseBody();
+          System.out.println(responseBody);
+          Gson gson = new Gson();
+          return response;
+        }
+
+        @Override
+        public void onThrowable(Throwable t){
+          // Something wrong happened.
+        }
+      });
+    } catch (IOException e) {
+      // something wrong with IO
+    }
   }
 
   private static void testGetAllProjectsAndModulesBySonarService() {

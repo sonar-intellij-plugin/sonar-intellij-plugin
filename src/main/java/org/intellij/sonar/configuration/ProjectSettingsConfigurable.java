@@ -101,6 +101,10 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return useAnonymousCheckBox;
   }
 
+  public JButton getTestConfigurationButton() {
+    return testConfigurationButton;
+  }
+
   @Nullable
   @Override
   public JComponent createComponent() {
@@ -126,6 +130,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
         } else {
           makePasswordInvisible();
         }
+      }
+    });
+
+    getTestConfigurationButton().addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        String foo = ";";
       }
     });
 

@@ -10,6 +10,8 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.2.2'
     compile 'org.javassist:javassist:3.17.1-GA'
     compile 'com.google.guava:guava:16.0.1'
+    compile 'com.google.code.gson:gson:2.2.4'
+    compile 'com.ning:async-http-client:1.8.3'
 }
 
 idea {
