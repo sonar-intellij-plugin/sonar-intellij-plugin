@@ -1,10 +1,16 @@
-package org.intellij.sonar.configuration;
+package org.intellij.sonar.configuration.project;
 
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.ToolbarDecorator;
+import com.intellij.ui.table.TableView;
+import org.intellij.sonar.configuration.IncrementalScriptsMapping;
+import org.intellij.sonar.configuration.PasswordManager;
+import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
+import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -20,26 +27,30 @@ import java.util.ArrayList;
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
-
+  private final TableView<SonarResourceMapping> sonarResourcesTable;
+  private final TableView<IncrementalScriptsMapping> incrementalAnalysisScriptsTable;
   private Project project;
-
   private JButton testConfigurationButton;
-
   private JList resourcesList;
+  private JButton addResourcesButton;
+  private JCheckBox useAnonymousCheckBox;
+  private JTextField sonarServerTextField;
+  private JTextField userTextField;
+  private JPasswordField passwordField;
+  private JPanel rootJPanel;
+  private JCheckBox showPasswordCheckBox;
+  private JPanel panelForSonarResources;
+  private JPanel panelForIncrementalAnalysisScripts;
+
+  public ProjectSettingsConfigurable(Project project) {
+    this.project = project;
+    this.sonarResourcesTable = new TableView<SonarResourceMapping>();
+    this.incrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
+  }
 
   public JButton getAddResourcesButton() {
     return addResourcesButton;
   }
-
-  public ProjectSettingsConfigurable(Project project) {
-    this.project = project;
-  }
-
-  private JButton addResourcesButton;
-
-  private JCheckBox useAnonymousCheckBox;
-
-  private JTextField sonarServerTextField;
 
   public Project getProject() {
     return project;
@@ -52,10 +63,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public JTextField getSonarServerTextField() {
     return sonarServerTextField;
   }
-
-  private JTextField userTextField;
-
-  private JPasswordField passwordField;
 
   public JPasswordField getPasswordField() {
     return passwordField;
@@ -77,13 +84,25 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return rootJPanel;
   }
 
-  private JPanel rootJPanel;
+  private JComponent createSonarResourcesTable() {
+    JPanel panelForTable = ToolbarDecorator.createDecorator(sonarResourcesTable, null).
+        disableUpDownActions().
+        createPanel();
+    panelForTable.setPreferredSize(new Dimension(-1, 200));
+    return panelForTable;
+  }
+
+  private JComponent createIncrementalAnalysisScriptsTable() {
+    JPanel panelForTable = ToolbarDecorator.createDecorator(incrementalAnalysisScriptsTable, null).
+        disableUpDownActions().
+        createPanel();
+    panelForTable.setPreferredSize(new Dimension(-1, 200));
+    return panelForTable;
+  }
 
   public JCheckBox getShowPasswordCheckBox() {
     return showPasswordCheckBox;
   }
-
-  private JCheckBox showPasswordCheckBox;
 
   @Nls
   @Override
@@ -139,6 +158,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
         String foo = ";";
       }
     });
+
+    panelForSonarResources.setLayout(new BorderLayout());
+    panelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
+    panelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
+    panelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
     return getRootJPanel();
   }

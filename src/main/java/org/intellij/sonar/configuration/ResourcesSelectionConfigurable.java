@@ -6,6 +6,9 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import org.intellij.sonar.configuration.project.ProjectSettingsBean;
+import org.intellij.sonar.configuration.project.ProjectSettingsComponent;
+import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 

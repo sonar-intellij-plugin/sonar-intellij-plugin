@@ -5,6 +5,7 @@ import com.intellij.ide.passwordSafe.PasswordSafeException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.UIUtil;
+import org.intellij.sonar.configuration.project.ProjectSettingsBean;
 
 public final class PasswordManager {
 

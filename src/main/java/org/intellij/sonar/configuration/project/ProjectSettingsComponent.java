@@ -1,7 +1,8 @@
-package org.intellij.sonar.configuration;
+package org.intellij.sonar.configuration.project;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
+import org.intellij.sonar.configuration.PasswordManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -6,6 +6,9 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import org.intellij.sonar.configuration.project.ProjectSettingsBean;
+import org.intellij.sonar.configuration.project.ProjectSettingsComponent;
+import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.intellij.sonar.sonarserver.SonarService;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
@@ -14,7 +17,6 @@ import org.sonar.wsclient.services.Resource;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 public class LoadAllSonarProjectsWithModulesRunnable implements Runnable {

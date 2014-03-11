@@ -1,6 +1,7 @@
-package org.intellij.sonar.configuration;
+package org.intellij.sonar.configuration.project;
 
 import com.intellij.util.xmlb.annotations.Transient;
+import org.intellij.sonar.configuration.SonarResourceBean;
 
 import java.util.ArrayList;
 import java.util.Collection;
