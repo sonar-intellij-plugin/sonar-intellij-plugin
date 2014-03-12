@@ -1,33 +1,24 @@
-package org.intellij.sonar.configuration.project;
+package org.intellij.sonar.persistence;
 
-import com.intellij.openapi.components.*;
-import com.intellij.openapi.project.Project;
-import org.intellij.sonar.configuration.PasswordManager;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @State(
     name = "project-settings-component",
     storages = {
-        @Storage(id = "project-settings-component", file = StoragePathMacros.PROJECT_CONFIG_DIR + "/sonar-intellij-plugin-pr.xml")
+        @Storage(id = "project-settings-component", file = BaseDir.PATH + "project-settings.xml")
     }
 )
-
 public class ProjectSettingsComponent implements PersistentStateComponent<ProjectSettingsBean>, ProjectComponent {
   protected ProjectSettingsBean projectSettingsBean;
-
-  private Project project;
-
-  public ProjectSettingsComponent(Project project) {
-    this.project = project;
-  }
 
   @Nullable
   @Override
   public ProjectSettingsBean getState() {
-    if (null != projectSettingsBean) {
-      projectSettingsBean.password = PasswordManager.loadPassword(project, projectSettingsBean);
-    }
     return projectSettingsBean;
   }
 
@@ -59,6 +50,6 @@ public class ProjectSettingsComponent implements PersistentStateComponent<Projec
   @NotNull
   @Override
   public String getComponentName() {
-    return "SonarQube";
+    return "ProjectSettings";
   }
 }

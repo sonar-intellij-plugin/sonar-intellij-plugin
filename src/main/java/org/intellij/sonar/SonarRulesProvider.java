@@ -20,11 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 01.05.13
- * Time: 12:42
- */
 @State(
     name = "SonarRulesProvider",
     storages = {

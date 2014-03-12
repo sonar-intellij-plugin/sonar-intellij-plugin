@@ -5,18 +5,32 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.*;
+import org.intellij.sonar.SonarIssuesProvider;
+import org.intellij.sonar.SonarRulesProvider;
+import org.intellij.sonar.SonarSettingsBean;
+import org.intellij.sonar.SonarSeverity;
+import org.intellij.sonar.SyncWithSonarResult;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.*;
+import org.sonar.wsclient.services.Resource;
+import org.sonar.wsclient.services.ResourceQuery;
+import org.sonar.wsclient.services.Rule;
+import org.sonar.wsclient.services.RuleQuery;
+import org.sonar.wsclient.services.Violation;
+import org.sonar.wsclient.services.ViolationQuery;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 public class SonarService {
 
@@ -130,10 +144,10 @@ public class SonarService {
 
   public SyncWithSonarResult sync(Project project, @NotNull ProgressIndicator indicator) {
     SyncWithSonarResult syncWithSonarResult = new SyncWithSonarResult();
-    SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project,
-        SonarViolationsProvider.class);
-    if (null != sonarViolationsProvider) {
-      syncWithSonarResult.violationsCount = sonarViolationsProvider.syncWithSonar(project, indicator);
+    SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project,
+        SonarIssuesProvider.class);
+    if (null != sonarIssuesProvider) {
+      syncWithSonarResult.violationsCount = sonarIssuesProvider.syncWithSonar(project, indicator);
     }
     SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
     if (null != sonarRulesProvider) {

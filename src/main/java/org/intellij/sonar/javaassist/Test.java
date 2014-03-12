@@ -15,11 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 31.03.13
- * Time: 13:52
- */
 @SuppressWarnings("UnusedDeclaration")
 public class Test {
   public static void main(String[] args) throws IllegalAccessException, InstantiationException {

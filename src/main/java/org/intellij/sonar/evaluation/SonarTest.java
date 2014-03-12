@@ -2,25 +2,21 @@ package org.intellij.sonar.evaluation;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.progress.util.CommandLineProgress;
-import com.ning.http.client.*;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.Future;
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
 import org.intellij.sonar.SonarSettingsBean;
 import org.intellij.sonar.sonarserver.SonarService;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.*;
+import org.sonar.wsclient.services.Resource;
+import org.sonar.wsclient.services.ResourceQuery;
+import org.sonar.wsclient.services.Rule;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 24.04.13
- * Time: 13:00
- */
 @SuppressWarnings("UnusedDeclaration")
 public class SonarTest {
   public static void main(String[] args) {

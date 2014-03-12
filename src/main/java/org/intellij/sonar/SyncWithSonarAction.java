@@ -19,11 +19,6 @@ import javax.swing.*;
 import java.text.MessageFormat;
 import java.util.Collection;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 22.04.13
- * Time: 14:00
- */
 public class SyncWithSonarAction extends DumbAwareAction {
 
   private Project project;

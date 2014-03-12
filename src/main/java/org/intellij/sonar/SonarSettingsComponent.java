@@ -13,11 +13,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 10.03.13
- * Time: 20:48
- */
 public class SonarSettingsComponent implements PersistentStateComponent<SonarSettingsBean> {
   protected SonarSettingsBean sonarSettings;
 
@@ -42,13 +37,13 @@ public class SonarSettingsComponent implements PersistentStateComponent<SonarSet
       }
     });
     Collection<SonarSettingsBean> sonarSettingsBeansOfAllModules = sonarSettingsMap.values();
-    SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarSettingsProjectComponent.class).getState();
+//    SonarSettingsBean sonarSettingsBeanOfProject = project.getComponent(SonarSettingsProjectComponent.class).getState();
 
     Collection<SonarSettingsBean> allSonarSettingsBeans = new LinkedList<SonarSettingsBean>();
     allSonarSettingsBeans.addAll(sonarSettingsBeansOfAllModules);
-    if (null != sonarSettingsBeanOfProject) {
-      allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
-    }
+//    if (null != sonarSettingsBeanOfProject) {
+//      allSonarSettingsBeans.add(sonarSettingsBeanOfProject);
+//    }
     return allSonarSettingsBeans;
   }
 

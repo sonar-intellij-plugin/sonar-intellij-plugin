@@ -39,16 +39,20 @@
     <depends>com.intellij.modules.lang</depends>
 
     <application-components>
+        <component>
+            <implementation-class>org.intellij.sonar.persistence.SonarServersApplicationComponent</implementation-class>
+        </component>
     </application-components>
 
     <project-components>
         <component>
-            <implementation-class>org.intellij.sonar.configuration.project.ProjectSettingsComponent</implementation-class>
+            <implementation-class>org.intellij.sonar.persistence.ProjectSettingsComponent</implementation-class>
         </component>
     </project-components>
+
     <module-components>
         <component>
-            <implementation-class>org.intellij.sonar.SonarSettingsModuleComponent</implementation-class>
+            <implementation-class>org.intellij.sonar.persistence.ModuleSettingsComponent</implementation-class>
         </component>
     </module-components>
 
@@ -62,9 +66,9 @@
         <projectConfigurable id="projectSettingsConfigurable"
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"/>
         <moduleConfigurable id="SonarModuleSettingsConfigurable"
-                            instance="org.intellij.sonar.SonarModuleSettingsConfigurable"/>
+                            instance="org.intellij.sonar.configuration.module.ModuleSettingsConfigurable"/>
         <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
-        <projectService serviceImplementation="org.intellij.sonar.SonarViolationsProvider"/>
+        <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarRulesProvider"/>
         <applicationService serviceImplementation="org.intellij.sonar.sonarserver.SonarService"/>
     </extensions>

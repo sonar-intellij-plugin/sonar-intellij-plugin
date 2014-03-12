@@ -76,9 +76,9 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     Map<String, Collection<Violation>> violationsMap = null;
     if (null != file) {
       Project project = file.getProject();
-      SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
-      if (null != sonarViolationsProvider) {
-        violationsMap = sonarViolationsProvider.mySonarViolations;
+      SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project, SonarIssuesProvider.class);
+      if (null != sonarIssuesProvider) {
+        violationsMap = sonarIssuesProvider.mySonarViolations;
       }
     }
     return violationsMap;
@@ -149,10 +149,10 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       if (null != virtualFile) {
         Module module = ModuleUtil.findModuleForFile(virtualFile, file.getProject());
         if (null != module) {
-          SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
-          SonarSettingsBean moduleSonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
-          if (null != moduleSonarSettingsBean && !moduleSonarSettingsBean.isEmpty())
-            sonarSettingsBean = moduleSonarSettingsBean;
+//          SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
+//          SonarSettingsBean moduleSonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
+//          if (null != moduleSonarSettingsBean && !moduleSonarSettingsBean.isEmpty())
+//            sonarSettingsBean = moduleSonarSettingsBean;
         }
       }
       if (null == sonarSettingsBean) {
@@ -248,11 +248,12 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   }
 
   private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
-    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
-    if (null == sonarProjectComponent) {
-      return null;
-    }
-    return sonarProjectComponent.getState();
+//    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
+//    if (null == sonarProjectComponent) {
+//      return null;
+//    }
+//    return sonarProjectComponent.getState();
+    return null;
   }
 
   private SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {

@@ -6,11 +6,6 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 10.03.13
- * Time: 20:37
- */
 @State(
     name = "SonarSettingsModuleComponent",
     storages = {
@@ -35,7 +30,7 @@ public class SonarSettingsModuleComponent extends SonarSettingsComponent impleme
   @Override
   public void moduleAdded() {
     if (null == this.getState()) {
-      this.loadState(this.module.getProject().getComponent(SonarSettingsProjectComponent.class).getState());
+      this.loadState(this.module.getProject().getComponent(SonarSettingsModuleComponent.class).getState());
     }
   }
 

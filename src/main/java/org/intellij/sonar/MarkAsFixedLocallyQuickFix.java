@@ -9,11 +9,6 @@ import org.sonar.wsclient.services.Violation;
 
 import java.util.Collection;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 20.11.13
- * Time: 00:01
- */
 public class MarkAsFixedLocallyQuickFix extends LocalQuickFixBase {
 
   private String sonarFileResourceKey;
@@ -27,8 +22,8 @@ public class MarkAsFixedLocallyQuickFix extends LocalQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-    SonarViolationsProvider sonarViolationsProvider = ServiceManager.getService(project, SonarViolationsProvider.class);
-    Collection<Violation> violationsOfFile = sonarViolationsProvider.mySonarViolations.get(sonarFileResourceKey);
+    SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project, SonarIssuesProvider.class);
+    Collection<Violation> violationsOfFile = sonarIssuesProvider.mySonarViolations.get(sonarFileResourceKey);
     violationsOfFile.remove(violationToBeMarkedAsFixed);
   }
 }

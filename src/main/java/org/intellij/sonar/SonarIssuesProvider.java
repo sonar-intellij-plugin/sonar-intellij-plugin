@@ -18,18 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Author: Oleg Mayevskiy
- * Date: 22.04.13
- * Time: 13:40
- */
 @State(
-    name = "SonarViolationsProvider",
+    name = "SonarIssuesProvider",
     storages = {
         @Storage(id = "other", file = "$PROJECT_FILE$")
     }
 )
-public class SonarViolationsProvider implements PersistentStateComponent<SonarViolationsProvider> {
+public class SonarIssuesProvider implements PersistentStateComponent<SonarIssuesProvider> {
 
   public Map<String, Collection<Violation>> mySonarViolations;
 
@@ -38,23 +33,23 @@ public class SonarViolationsProvider implements PersistentStateComponent<SonarVi
   private Project project;
 
   // fixes Could not save project: java.lang.InstantiationException
-  public SonarViolationsProvider() {
+  public SonarIssuesProvider() {
     this.mySonarViolations = new ConcurrentHashMap<String, Collection<Violation>>();
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public SonarViolationsProvider(Project project) {
+  public SonarIssuesProvider(Project project) {
     this();
   }
 
   @NotNull
   @Override
-  public SonarViolationsProvider getState() {
+  public SonarIssuesProvider getState() {
     return this;
   }
 
   @Override
-  public void loadState(SonarViolationsProvider state) {
+  public void loadState(SonarIssuesProvider state) {
     XmlSerializerUtil.copyBean(state, this);
   }
 

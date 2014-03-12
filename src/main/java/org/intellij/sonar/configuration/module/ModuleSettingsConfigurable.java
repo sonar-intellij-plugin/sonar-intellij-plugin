@@ -1,51 +1,47 @@
-package org.intellij.sonar.configuration.project;
+package org.intellij.sonar.configuration.module;
 
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.project.Project;
-import com.intellij.ui.AnActionButton;
-import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.SonarResourceMapping;
-import org.intellij.sonar.persistence.ProjectSettingsBean;
-import org.intellij.sonar.persistence.ProjectSettingsComponent;
+import org.intellij.sonar.persistence.ModuleSettingsBean;
+import org.intellij.sonar.persistence.ModuleSettingsComponent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 
-public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
+public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
 
-  private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
+  private static final Logger LOG = Logger.getInstance(ModuleSettingsConfigurable.class);
   private final TableView<SonarResourceMapping> sonarResourcesTable;
   private final TableView<IncrementalScriptsMapping> incrementalAnalysisScriptsTable;
-  private Project project;
+  private Module module;
   private JButton testConfigurationButton;
   private JPanel rootJPanel;
   private JPanel panelForSonarResources;
   private JPanel panelForIncrementalAnalysisScripts;
   private JComboBox sonarServersComboBox;
-  private JButton addSonarServerButton;
-  private JButton editSonarServerButton;
-  private JButton removeSonarServerButton;
+  private JButton addButton;
+  private JButton editButton;
+  private JButton removeButton;
 
-  public ProjectSettingsConfigurable(Project project) {
-    this.project = project;
+  public ModuleSettingsConfigurable(Module module) {
+    this.module = module;
     this.sonarResourcesTable = new TableView<SonarResourceMapping>();
     this.incrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
   }
 
-  public Project getProject() {
-    return project;
+  public Module getModule() {
+    return module;
   }
 
   public JPanel getRootJPanel() {
@@ -62,13 +58,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   private JComponent createIncrementalAnalysisScriptsTable() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(incrementalAnalysisScriptsTable, null).
-        setEditAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-
-          }
-        }).
-        setEditActionName("Edit").
         disableUpDownActions().
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 200));
@@ -94,19 +83,37 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   @Nullable
   @Override
   public JComponent createComponent() {
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    ModuleSettingsComponent projectSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
     if (null != projectSettingsComponent) {
-      ProjectSettingsBean projectSettingsBean = projectSettingsComponent.getState();
+      ModuleSettingsBean projectSettingsBean = projectSettingsComponent.getState();
       this.setValuesFromProjectSettingsBean(projectSettingsBean);
 //      setCredentialsEnabled();
     }
 
-    getTestConfigurationButton().addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-        String foo = ";";
-      }
-    });
+//    getUseAnonymousCheckBox().addChangeListener(new ChangeListener() {
+//      @Override
+//      public void stateChanged(ChangeEvent changeEvent) {
+//        setCredentialsEnabled();
+//      }
+//    });
+
+//    getShowPasswordCheckBox().addChangeListener(new ChangeListener() {
+//      @Override
+//      public void stateChanged(ChangeEvent changeEvent) {
+//        if (getShowPasswordCheckBox().isSelected()) {
+//          makePasswordVisible();
+//        } else {
+//          makePasswordInvisible();
+//        }
+//      }
+//    });
+
+//    getTestConfigurationButton().addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent actionEvent) {
+//        String foo = ";";
+//      }
+//    });
 
     panelForSonarResources.setLayout(new BorderLayout());
     panelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
@@ -116,14 +123,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return getRootJPanel();
   }
 
-//  private void makePasswordInvisible() {
-//    getPasswordField().setEchoChar('•');
-//  }
-//
-//  private void makePasswordVisible() {
-//    getPasswordField().setEchoChar('\u0000');
-//  }
-
 //  private void setCredentialsEnabled() {
 //    getUserTextField().setEnabled(!getUseAnonymousCheckBox().isSelected());
 //    getPasswordField().setEnabled(!getUseAnonymousCheckBox().isSelected());
@@ -131,22 +130,23 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   @Override
   public boolean isModified() {
-    ProjectSettingsBean state = project.getComponent(ProjectSettingsComponent.class).getState();
+    ModuleSettingsBean state = module.getComponent(ModuleSettingsComponent.class).getState();
     return null == state || !state.equals(this.toProjectSettingsBean());
   }
 
   @Override
   public void apply() throws ConfigurationException {
-    ProjectSettingsBean projectSettingsBean = this.toProjectSettingsBean();
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    ModuleSettingsBean projectSettingsBean = this.toProjectSettingsBean();
+    ModuleSettingsComponent projectSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
     projectSettingsComponent.loadState(projectSettingsBean);
+//    PasswordManager.storePassword(module.getProject(), projectSettingsBean);
   }
 
   @Override
   public void reset() {
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    ModuleSettingsComponent projectSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
     if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
-      ProjectSettingsBean persistedState = projectSettingsComponent.getState();
+      ModuleSettingsBean persistedState = projectSettingsComponent.getState();
       this.setValuesFromProjectSettingsBean(persistedState);
     }
   }
@@ -167,6 +167,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   @Override
+  public void moduleAdded() {
+
+  }
+
+  @Override
   public void initComponent() {
     // To change body of implemented methods use File | Settings | File Templates.
   }
@@ -182,11 +187,15 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return "SonarQube";
   }
 
-  public ProjectSettingsBean toProjectSettingsBean() {
+  public ModuleSettingsBean toProjectSettingsBean() {
 
-    ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
+    ModuleSettingsBean projectSettingsBean = new ModuleSettingsBean();
+//    projectSettingsBean.sonarServerHostUrl = this.getSonarServerTextField().getText();
+//    projectSettingsBean.useAnonymous = this.getUseAnonymousCheckBox().isSelected();
+//    projectSettingsBean.user = this.getUserTextField().getText();
+//    projectSettingsBean.password = String.valueOf(this.getPasswordField().getPassword());
 
-    ProjectSettingsBean persistedProjectSettingsBean = project.getComponent(ProjectSettingsComponent.class).getState();
+    ModuleSettingsBean persistedProjectSettingsBean = module.getComponent(ModuleSettingsComponent.class).getState();
     if (persistedProjectSettingsBean != null) {
 //      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
     }
@@ -195,7 +204,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return projectSettingsBean;
   }
 
-  private void convertResourcesListToBean(ProjectSettingsBean projectSettingsBean) {
+  private void convertResourcesListToBean(ModuleSettingsBean projectSettingsBean) {
 //    ListModel model = this.getResourcesList().getModel();
 //    projectSettingsBean.resources = new ArrayList<String>(model.getSize());
 //    for (int i = 0; i < model.getSize(); i++) {
@@ -203,8 +212,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 //    }
   }
 
-  public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
+  public void setValuesFromProjectSettingsBean(ModuleSettingsBean projectSettingsBean) {
     if (null == projectSettingsBean) return;
+
+//    this.getSonarServerTextField().setText(projectSettingsBean.sonarServerHostUrl);
+//    this.getUseAnonymousCheckBox().setSelected(projectSettingsBean.useAnonymous);
+//    this.getUserTextField().setText(projectSettingsBean.user);
+//    this.getPasswordField().setText(projectSettingsBean.password);
   }
 
 }
