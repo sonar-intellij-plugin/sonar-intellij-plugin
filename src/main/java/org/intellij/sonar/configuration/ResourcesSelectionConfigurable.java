@@ -41,7 +41,7 @@ public class ResourcesSelectionConfigurable {
       public void actionPerformed(ActionEvent actionEvent) {
 //        ProgressManager.getInstance().runProcessWithProgressSynchronously(
 //            new LoadAllSonarProjectsWithModulesRunnable(project, resourcesList, projectSettingsConfigurable),
-//            "Loading sonar resources", true, getProject());
+//            "Loading sonar resources", true, getMyProject());
       }
     });
 

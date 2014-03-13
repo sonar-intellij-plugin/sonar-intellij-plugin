@@ -11,6 +11,7 @@ import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.SonarResourceMapping;
+import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
 import org.jetbrains.annotations.Nls;
@@ -28,7 +29,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
   private final TableView<SonarResourceMapping> sonarResourcesTable;
   private final TableView<IncrementalScriptsMapping> incrementalAnalysisScriptsTable;
-  private Project project;
+  private Project myProject;
   private JButton testConfigurationButton;
   private JPanel rootJPanel;
   private JPanel panelForSonarResources;
@@ -39,13 +40,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   private JButton removeSonarServerButton;
 
   public ProjectSettingsConfigurable(Project project) {
-    this.project = project;
+    this.myProject = project;
     this.sonarResourcesTable = new TableView<SonarResourceMapping>();
     this.incrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
   }
 
-  public Project getProject() {
-    return project;
+  public Project getMyProject() {
+    return myProject;
   }
 
   public JPanel getRootJPanel() {
@@ -94,19 +95,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   @Nullable
   @Override
   public JComponent createComponent() {
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
-    if (null != projectSettingsComponent) {
-      ProjectSettingsBean projectSettingsBean = projectSettingsComponent.getState();
-      this.setValuesFromProjectSettingsBean(projectSettingsBean);
-//      setCredentialsEnabled();
-    }
-
-    getTestConfigurationButton().addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-        String foo = ";";
-      }
-    });
+    addActionListenersForSonarServerButtons();
 
     panelForSonarResources.setLayout(new BorderLayout());
     panelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
@@ -114,6 +103,31 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     panelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
     return getRootJPanel();
+  }
+
+  private void addActionListenersForSonarServerButtons() {
+    addSonarServerButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
+        dlg.show();
+        if (dlg.isOK()) {
+          LOG.info("OK");
+        }
+      }
+    });
+    editSonarServerButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        LOG.info("edit sonar server button clicked");
+      }
+    });
+    removeSonarServerButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+        LOG.info("remove sonar server button clicked");
+      }
+    });
   }
 
 //  private void makePasswordInvisible() {
@@ -131,20 +145,20 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   @Override
   public boolean isModified() {
-    ProjectSettingsBean state = project.getComponent(ProjectSettingsComponent.class).getState();
+    ProjectSettingsBean state = myProject.getComponent(ProjectSettingsComponent.class).getState();
     return null == state || !state.equals(this.toProjectSettingsBean());
   }
 
   @Override
   public void apply() throws ConfigurationException {
     ProjectSettingsBean projectSettingsBean = this.toProjectSettingsBean();
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    ProjectSettingsComponent projectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
     projectSettingsComponent.loadState(projectSettingsBean);
   }
 
   @Override
   public void reset() {
-    ProjectSettingsComponent projectSettingsComponent = project.getComponent(ProjectSettingsComponent.class);
+    ProjectSettingsComponent projectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
     if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
       ProjectSettingsBean persistedState = projectSettingsComponent.getState();
       this.setValuesFromProjectSettingsBean(persistedState);
@@ -186,7 +200,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
     ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
 
-    ProjectSettingsBean persistedProjectSettingsBean = project.getComponent(ProjectSettingsComponent.class).getState();
+    ProjectSettingsBean persistedProjectSettingsBean = myProject.getComponent(ProjectSettingsComponent.class).getState();
     if (persistedProjectSettingsBean != null) {
 //      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
     }

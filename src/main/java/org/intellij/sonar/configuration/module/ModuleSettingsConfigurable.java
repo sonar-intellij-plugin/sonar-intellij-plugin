@@ -139,7 +139,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     ModuleSettingsBean projectSettingsBean = this.toProjectSettingsBean();
     ModuleSettingsComponent projectSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
     projectSettingsComponent.loadState(projectSettingsBean);
-//    PasswordManager.storePassword(module.getProject(), projectSettingsBean);
+//    PasswordManager.storePassword(module.getMyProject(), projectSettingsBean);
   }
 
   @Override
