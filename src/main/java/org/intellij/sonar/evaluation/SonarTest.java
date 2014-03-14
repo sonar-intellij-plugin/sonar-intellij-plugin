@@ -6,7 +6,7 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import org.intellij.sonar.SonarSettingsBean;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
@@ -51,9 +51,9 @@ public class SonarTest {
   }
 
   private static void testGetAllProjectsAndModulesBySonarService() {
-    SonarService sonarService = new SonarService();
-    Sonar sonar = sonarService.createSonar("https://sonar.corp.mobile.de/sonar", null, null);
-    List<Resource> allProjectsWithModules = sonarService.getAllProjectsWithModules(sonar);
+    SonarServer sonarServer = new SonarServer();
+    Sonar sonar = sonarServer.createSonar("https://sonar.corp.mobile.de/sonar", null, null);
+    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsWithModules(sonar);
     for (Resource projectOrModule : allProjectsWithModules) {
       if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
         System.out.println("##################################################");
@@ -94,8 +94,8 @@ public class SonarTest {
     sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "org.codehaus.sonar:php-sonar-runner"));
 
 
-    SonarService sonarService = new SonarService();
-    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans, new CommandLineProgress());
+    SonarServer sonarServer = new SonarServer();
+    Collection<Rule> allRules = sonarServer.getAllRules(sonarSettingsBeans, new CommandLineProgress());
     System.out.print("foo");
   }
 }

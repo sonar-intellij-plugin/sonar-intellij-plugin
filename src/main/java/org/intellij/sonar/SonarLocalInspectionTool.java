@@ -15,7 +15,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,15 +30,15 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
   private static final Logger LOG = Logger.getInstance("SonarLocalInspectionTool");
 
-  private SonarService sonarService;
+  private SonarServer sonarServer;
 
   @SuppressWarnings("UnusedDeclaration")
   protected SonarLocalInspectionTool() {
-    sonarService = ServiceManager.getService(SonarService.class);
+    sonarServer = ServiceManager.getService(SonarServer.class);
   }
 
-  protected SonarLocalInspectionTool(SonarService sonarService) {
-    this.sonarService = sonarService;
+  protected SonarLocalInspectionTool(SonarServer sonarServer) {
+    this.sonarServer = sonarServer;
   }
 
   @Nls
@@ -240,7 +240,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       if (null != sonarRulesProviderState) {
         Rule rule = sonarRulesProviderState.sonarRulesByRuleKey.get(ruleKey);
         if (null != rule) {
-          return sonarService.sonarSeverityToProblemHighlightType(rule.getSeverity());
+          return sonarServer.sonarSeverityToProblemHighlightType(rule.getSeverity());
         }
       }
     }

@@ -1,10 +1,13 @@
 package org.intellij.sonar.configuration.project;
 
+import com.google.common.base.Optional;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.AnActionButton;
 import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.ToolbarDecorator;
@@ -14,6 +17,9 @@ import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
+import org.intellij.sonar.persistence.SonarServerConfigurationBean;
+import org.intellij.sonar.persistence.SonarServersApplicationComponent;
+import org.intellij.sonar.persistence.SonarServersDAO;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,39 +28,40 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Set;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
-  private final TableView<SonarResourceMapping> sonarResourcesTable;
-  private final TableView<IncrementalScriptsMapping> incrementalAnalysisScriptsTable;
+  private final TableView<SonarResourceMapping> mySonarResourcesTable;
+  private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
   private Project myProject;
-  private JButton testConfigurationButton;
-  private JPanel rootJPanel;
-  private JPanel panelForSonarResources;
-  private JPanel panelForIncrementalAnalysisScripts;
-  private JComboBox sonarServersComboBox;
-  private JButton addSonarServerButton;
-  private JButton editSonarServerButton;
-  private JButton removeSonarServerButton;
+  private JButton myTestConfigurationButton;
+  private JPanel myRootJPanel;
+  private JPanel myPanelForSonarResources;
+  private JPanel myPanelForIncrementalAnalysisScripts;
+  private JComboBox mySonarServersComboBox;
+  private JButton myAddSonarServerButton;
+  private JButton myEditSonarServerButton;
+  private JButton myRemoveSonarServerButton;
 
   public ProjectSettingsConfigurable(Project project) {
     this.myProject = project;
-    this.sonarResourcesTable = new TableView<SonarResourceMapping>();
-    this.incrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
+    this.mySonarResourcesTable = new TableView<SonarResourceMapping>();
+    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
   }
 
   public Project getMyProject() {
     return myProject;
   }
 
-  public JPanel getRootJPanel() {
-    return rootJPanel;
+  public JPanel getMyRootJPanel() {
+    return myRootJPanel;
   }
 
   private JComponent createSonarResourcesTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(sonarResourcesTable, null).
+    JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
         disableUpDownActions().
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 200));
@@ -62,7 +69,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   private JComponent createIncrementalAnalysisScriptsTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(incrementalAnalysisScriptsTable, null).
+    JPanel panelForTable = ToolbarDecorator.createDecorator(myIncrementalAnalysisScriptsTable, null).
         setEditAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
@@ -88,8 +95,8 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return null;
   }
 
-  public JButton getTestConfigurationButton() {
-    return testConfigurationButton;
+  public JButton getMyTestConfigurationButton() {
+    return myTestConfigurationButton;
   }
 
   @Nullable
@@ -97,37 +104,68 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public JComponent createComponent() {
     addActionListenersForSonarServerButtons();
 
-    panelForSonarResources.setLayout(new BorderLayout());
-    panelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
-    panelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
-    panelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
+    myPanelForSonarResources.setLayout(new BorderLayout());
+    myPanelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
+    myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
+    myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
-    return getRootJPanel();
+    Optional<Set<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersDAO.getAll();
+    if (sonarServerConfigurationBeans.isPresent()) {
+      for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
+        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.name));
+      }
+    }
+    return getMyRootJPanel();
+  }
+
+  private Object makeObj(final String item) {
+    return new Object() {
+      public String toString() {
+        return item;
+      }
+    };
   }
 
   private void addActionListenersForSonarServerButtons() {
-    addSonarServerButton.addActionListener(new ActionListener() {
+    myAddSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
-        final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
-        dlg.show();
-        if (dlg.isOK()) {
-          LOG.info("OK");
-        }
+        showSonarServerConfigurableDialog();
       }
     });
-    editSonarServerButton.addActionListener(new ActionListener() {
+    myEditSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         LOG.info("edit sonar server button clicked");
       }
     });
-    removeSonarServerButton.addActionListener(new ActionListener() {
+    myRemoveSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         LOG.info("remove sonar server button clicked");
       }
     });
+  }
+
+  private void showSonarServerConfigurableDialog() {
+    showSonarServerConfigurableDialog(null);
+  }
+  private void showSonarServerConfigurableDialog(SonarServerConfigurationBean oldSonarServerConfigurationBean) {
+    final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
+    if (null != oldSonarServerConfigurationBean) dlg.setValuesFrom(oldSonarServerConfigurationBean);
+    dlg.show();
+    if (dlg.isOK()) {
+      SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+      try {
+        SonarServersDAO.add(newSonarConfigurationBean);
+        final Object newItem = makeObj(newSonarConfigurationBean.name);
+        mySonarServersComboBox.addItem(newItem);
+        mySonarServersComboBox.setSelectedItem(newItem);
+      } catch (IllegalArgumentException e) {
+        Messages.showErrorDialog(newSonarConfigurationBean.name + " already exists", "Sonar Name Error");
+        showSonarServerConfigurableDialog(newSonarConfigurationBean);
+      }
+    }
   }
 
 //  private void makePasswordInvisible() {
@@ -145,7 +183,9 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   @Override
   public boolean isModified() {
-    ProjectSettingsBean state = myProject.getComponent(ProjectSettingsComponent.class).getState();
+    final ProjectSettingsComponent component = myProject.getComponent(ProjectSettingsComponent.class);
+    if (null == component) return false;
+    ProjectSettingsBean state = component.getState();
     return null == state || !state.equals(this.toProjectSettingsBean());
   }
 

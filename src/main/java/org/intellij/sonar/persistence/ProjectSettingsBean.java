@@ -22,7 +22,7 @@ public class ProjectSettingsBean {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    ModuleSettingsBean that = (ModuleSettingsBean) o;
+    ProjectSettingsBean that = (ProjectSettingsBean) o;
 
     if (resources != null ? !resources.equals(that.resources) : that.resources != null) return false;
     if (scripts != null ? !scripts.equals(that.scripts) : that.scripts != null) return false;

@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -53,11 +53,11 @@ public class LoadAllSonarProjectsWithModulesRunnable implements Runnable {
         }
       });
     }
-    SonarService sonarService = ServiceManager.getService(SonarService.class);
+    SonarServer sonarServer = ServiceManager.getService(SonarServer.class);
 //    Sonar sonar = projectSettingsBean.useAnonymous ?
-//        sonarService.createSonar(projectSettingsBean.sonarServerHostUrl, null, null) :
-//        sonarService.createSonar(projectSettingsBean.sonarServerHostUrl, projectSettingsBean.user, projectSettingsBean.password);
-//    List<Resource> allProjectsWithModules = sonarService.getAllProjectsWithModules(sonar);
+//        sonarServer.createSonar(projectSettingsBean.sonarServerHostUrl, null, null) :
+//        sonarServer.createSonar(projectSettingsBean.sonarServerHostUrl, projectSettingsBean.user, projectSettingsBean.password);
+//    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsWithModules(sonar);
 //    if (null != allProjectsWithModules) {
 //      if (null == projectSettingsBean.downloadedResources)
 //        projectSettingsBean.downloadedResources = new ArrayList<SonarResourceBean>(allProjectsWithModules.size());

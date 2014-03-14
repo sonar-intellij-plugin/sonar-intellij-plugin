@@ -8,7 +8,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.services.Violation;
 
@@ -65,14 +65,14 @@ public class SonarIssuesProvider implements PersistentStateComponent<SonarIssues
     if (null == violationsMap) {
       violationsMap = new ConcurrentHashMap<String, Collection<Violation>>();
     }
-    SonarService sonarService = ServiceManager.getService(SonarService.class);
+    SonarServer sonarServer = ServiceManager.getService(SonarServer.class);
     for (SonarSettingsBean sonarSettingsBean : allSonarSettingsBeans) {
       indicator.checkCanceled();
 
       if (sonarSettingsBean.isEmpty()) {
         continue;
       }
-      List<Violation> violations = sonarService.getViolations(sonarSettingsBean);
+      List<Violation> violations = sonarServer.getViolations(sonarSettingsBean);
       for (Violation violation : violations) {
         indicator.checkCanceled();
 

@@ -9,7 +9,7 @@ import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,11 +61,11 @@ public class SyncWithSonarAction extends DumbAwareAction {
     @Override
     public void run(@NotNull final ProgressIndicator indicator) {
       indicator.setIndeterminate(true);
-      SonarService sonarService = ServiceManager.getService(SonarService.class);
+      SonarServer sonarServer = ServiceManager.getService(SonarServer.class);
 
       title = "Sonar Sync";
       try {
-        SyncWithSonarResult syncWithSonarResult = sonarService.sync(project, indicator);
+        SyncWithSonarResult syncWithSonarResult = sonarServer.sync(project, indicator);
         message = MessageFormat.format("Successfully synced with sonar\nDownloaded {0} violations and {1} rules", syncWithSonarResult.violationsCount, syncWithSonarResult.rulesCount);
         icon = Messages.getInformationIcon();
       } catch (ConnectionException ce) {

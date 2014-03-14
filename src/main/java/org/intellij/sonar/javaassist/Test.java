@@ -7,7 +7,7 @@ import javassist.util.proxy.ProxyFactory;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarLocalInspectionTool;
 import org.intellij.sonar.SonarSettingsBean;
-import org.intellij.sonar.sonarserver.SonarService;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
@@ -23,8 +23,8 @@ public class Test {
     sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
     sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
 
-    SonarService sonarService = new SonarService();
-    Collection<Rule> allRules = sonarService.getAllRules(sonarSettingsBeans, new CommandLineProgress());
+    SonarServer sonarServer = new SonarServer();
+    Collection<Rule> allRules = sonarServer.getAllRules(sonarSettingsBeans, new CommandLineProgress());
     List<Class<SonarLocalInspectionTool>> classes = new ArrayList<Class<SonarLocalInspectionTool>>(allRules.size());
     for (Rule rule : allRules) {
       classes.add(getSonarLocalInspectionToolForOneRule(rule));

@@ -108,7 +108,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 //      }
 //    });
 
-//    getTestConfigurationButton().addActionListener(new ActionListener() {
+//    getMyTestConfigurationButton().addActionListener(new ActionListener() {
 //      @Override
 //      public void actionPerformed(ActionEvent actionEvent) {
 //        String foo = ";";

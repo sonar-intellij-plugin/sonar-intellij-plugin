@@ -4,6 +4,10 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Response;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarIssuesProvider;
 import org.intellij.sonar.SonarRulesProvider;
@@ -32,14 +36,35 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class SonarService {
+public class SonarServer {
 
   private static final String VERSION_URL = "/api/server/version";
   private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "SonarQube Community Plugin";
 
-  public SonarService() {
+  private AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+  private String myHostUrl;
+
+  public SonarServer() {}
+
+  public SonarServer(String myHostUrl) {
+    this.myHostUrl = myHostUrl;
+  }
+
+  public static SonarServer from(String hostUrl) {
+    return new SonarServer(hostUrl);
+  }
+
+  public ListenableFuture<String> getVersion() throws IOException {
+
+    return asyncHttpClient.prepareGet(myHostUrl + VERSION_URL).execute(new AsyncCompletionHandler<String>() {
+      @Override
+      public String onCompleted(Response response) throws Exception {
+        return response.getResponseBody();
+      }
+    });
+
   }
 
   public String verifySonarConnection(SonarSettingsBean sonarSettingsBean) throws SonarServerConnectionException {
