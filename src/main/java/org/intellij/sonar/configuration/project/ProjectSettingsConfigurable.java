@@ -35,7 +35,7 @@ import java.util.Collection;
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
-  public static final String NO_SONAR = "<NO SONAR>";
+  private static final String NO_SONAR = "<NO SONAR>";
   private final TableView<SonarResourceMapping> mySonarResourcesTable;
   private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
   private Project myProject;
@@ -52,14 +52,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     this.myProject = project;
     this.mySonarResourcesTable = new TableView<SonarResourceMapping>();
     this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
-  }
-
-  public Project getMyProject() {
-    return myProject;
-  }
-
-  public JPanel getMyRootJPanel() {
-    return myRootJPanel;
   }
 
   private JComponent createSonarResourcesTable() {
@@ -104,16 +96,15 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   @Nullable
   @Override
   public JComponent createComponent() {
-    addActionListenersForSonarServerButtons();
-
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
     myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
     myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
+    addActionListenersForSonarServerButtons();
     initSonarServersCombobox();
     disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
-    return getMyRootJPanel();
+    return myRootJPanel;
   }
 
   private void initSonarServersCombobox() {
