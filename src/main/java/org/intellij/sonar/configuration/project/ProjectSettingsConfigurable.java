@@ -1,6 +1,7 @@
 package org.intellij.sonar.configuration.project;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
@@ -17,7 +18,7 @@ import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersDAO;
+import org.intellij.sonar.persistence.SonarServersService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,12 +27,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Collection;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
+  public static final String NO_SONAR = "<NO SONAR>";
   private final TableView<SonarResourceMapping> mySonarResourcesTable;
   private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
   private Project myProject;
@@ -107,13 +111,20 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
     myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
-    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersDAO.getAll();
+    initSonarServersCombobox();
+    disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
+    return getMyRootJPanel();
+  }
+
+  private void initSonarServersCombobox() {
+    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersService.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
+      mySonarServersComboBox.removeAllItems();
+      mySonarServersComboBox.addItem(makeObj(NO_SONAR));
       for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
         mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.name));
       }
     }
-    return getMyRootJPanel();
   }
 
   private Object makeObj(final String item) {
@@ -125,59 +136,101 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   private void addActionListenersForSonarServerButtons() {
+
+    final JComboBox sonarServersComboBox = mySonarServersComboBox;
+
+    sonarServersComboBox.addItemListener(new ItemListener() {
+      @Override
+      public void itemStateChanged(ItemEvent itemEvent) {
+        disableEditAndRemoveButtonsIfNoSonarSelected(sonarServersComboBox);
+      }
+    });
+
     myAddSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
-        showSonarServerConfigurableDialog();
+
+        final SonarServerConfigurable dlg = showSonarServerConfigurableDialog();
+        if (dlg.isOK()) {
+          SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+          try {
+            SonarServersService.add(newSonarConfigurationBean);
+            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
+            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+          } catch (IllegalArgumentException e) {
+            Messages.showErrorDialog(newSonarConfigurationBean.name + " already exists", "Sonar Name Error");
+            showSonarServerConfigurableDialog(newSonarConfigurationBean);
+          }
+        }
       }
     });
+
     myEditSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
-        LOG.info("edit sonar server button clicked");
+        final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
+        final Optional<SonarServerConfigurationBean> oldBean = SonarServersService.get(selectedSonarServer.toString());
+        if (!oldBean.isPresent()) {
+          Messages.showErrorDialog(selectedSonarServer.toString() + " is not more preset", "Cannot Perform Edit");
+        } else {
+          final SonarServerConfigurable dlg = showSonarServerConfigurableDialog(oldBean.get());
+          if (dlg.isOK()) {
+            SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+            try {
+              SonarServersService.remove(oldBean.get().name);
+              SonarServersService.add(newSonarConfigurationBean);
+              mySonarServersComboBox.removeItem(selectedSonarServer);
+              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
+              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+            } catch (IllegalArgumentException e) {
+              Messages.showErrorDialog(selectedSonarServer.toString() + " cannot be saved\n\n" + Throwables.getStackTraceAsString(e), "Cannot Perform Edit");
+            }
+          }
+        }
       }
     });
+
     myRemoveSonarServerButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
-        LOG.info("remove sonar server button clicked");
+        final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
+        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove Sonar Server", Messages.getQuestionIcon());
+        if (rc == Messages.OK) {
+          SonarServersService.remove(selectedSonarServer.toString());
+          mySonarServersComboBox.removeItem(selectedSonarServer);
+          disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
+        }
       }
     });
   }
 
-  private void showSonarServerConfigurableDialog() {
-    showSonarServerConfigurableDialog(null);
+  private void disableEditAndRemoveButtonsIfNoSonarSelected(JComboBox sonarServersComboBox) {
+    final boolean isNoSonarSelected = NO_SONAR.equals(sonarServersComboBox.getSelectedItem().toString());
+    myEditSonarServerButton.setEnabled(!isNoSonarSelected);
+    myRemoveSonarServerButton.setEnabled(!isNoSonarSelected);
   }
-  private void showSonarServerConfigurableDialog(SonarServerConfigurationBean oldSonarServerConfigurationBean) {
+
+  private void selectItemForSonarServersComboBoxByName(String name) {
+    Optional itemToSelect = Optional.absent();
+    for (int i = 0; i < mySonarServersComboBox.getItemCount(); i++) {
+      final Object item = mySonarServersComboBox.getItemAt(i);
+      if (name.equals(item.toString())) {
+        itemToSelect = Optional.of(item);
+      }
+    }
+    if (itemToSelect.isPresent()) mySonarServersComboBox.setSelectedItem(itemToSelect.get());
+  }
+
+  private SonarServerConfigurable showSonarServerConfigurableDialog() {
+    return showSonarServerConfigurableDialog(null);
+  }
+
+  private SonarServerConfigurable showSonarServerConfigurableDialog(SonarServerConfigurationBean oldSonarServerConfigurationBean) {
     final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
     if (null != oldSonarServerConfigurationBean) dlg.setValuesFrom(oldSonarServerConfigurationBean);
     dlg.show();
-    if (dlg.isOK()) {
-      SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
-      try {
-        SonarServersDAO.add(newSonarConfigurationBean);
-        final Object newItem = makeObj(newSonarConfigurationBean.name);
-        mySonarServersComboBox.addItem(newItem);
-        mySonarServersComboBox.setSelectedItem(newItem);
-      } catch (IllegalArgumentException e) {
-        Messages.showErrorDialog(newSonarConfigurationBean.name + " already exists", "Sonar Name Error");
-        showSonarServerConfigurableDialog(newSonarConfigurationBean);
-      }
-    }
+    return dlg;
   }
-
-//  private void makePasswordInvisible() {
-//    getPasswordField().setEchoChar('•');
-//  }
-//
-//  private void makePasswordVisible() {
-//    getPasswordField().setEchoChar('\u0000');
-//  }
-
-//  private void setCredentialsEnabled() {
-//    getUserTextField().setEnabled(!getUseAnonymousCheckBox().isSelected());
-//    getPasswordField().setEnabled(!getUseAnonymousCheckBox().isSelected());
-//  }
 
   @Override
   public boolean isModified() {

@@ -35,8 +35,8 @@ public class SonarServerConfigurable extends DialogWrapper {
       Messages.showErrorDialog("Please provide an unique name for the sonar server", "Empty Name");
     } else if (!isHostUrlSyntaxCorrect()) {
       Messages.showErrorDialog("Host url syntax should be: http(s)://your.host(:1234)/possible/path", "Malformed Host Url");
-    } else if (!myAnonymousCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(myUserTextField.getText())){
-      Messages.showErrorDialog("User may not be empty","Empty User");
+    } else if (!myAnonymousCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(myUserTextField.getText())) {
+      Messages.showErrorDialog("User may not be empty", "Empty User");
     } else {
       super.doOKAction();
     }
@@ -55,8 +55,7 @@ public class SonarServerConfigurable extends DialogWrapper {
   @Override
   protected JComponent createCenterPanel() {
 
-    setEnabledForCredentialsTextFields();
-    setPasswordVisibility();
+    initCheckboxes();
 
     myAnonymousCheckBox.addActionListener(new ActionListener() {
       @Override
@@ -72,6 +71,11 @@ public class SonarServerConfigurable extends DialogWrapper {
     });
 
     return myRootPanel;
+  }
+
+  private void initCheckboxes() {
+    setEnabledForCredentialsTextFields();
+    setPasswordVisibility();
   }
 
   private void setPasswordVisibility() {
@@ -109,8 +113,14 @@ public class SonarServerConfigurable extends DialogWrapper {
   public void setValuesFrom(SonarServerConfigurationBean bean) {
     this.myNameTestField.setText(bean.name);
     this.myHostUrlTextField.setText(bean.hostUrl);
-    this.myUserTextField.setText(bean.user);
-    this.myPasswordField.setText(bean.password);
+    if (!bean.anonymous) {
+      this.myUserTextField.setText(bean.user);
+      bean.loadPassword();
+      this.myPasswordField.setText(bean.password);
+      bean.password = null;
+    }
     this.myAnonymousCheckBox.setSelected(bean.anonymous);
+
+    initCheckboxes();
   }
 }
