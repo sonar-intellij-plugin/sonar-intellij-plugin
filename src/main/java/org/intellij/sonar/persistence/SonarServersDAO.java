@@ -5,12 +5,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.intellij.openapi.util.text.StringUtil;
 
-import java.util.Set;
+import java.util.Collection;
 
 public class SonarServersDAO {
 
   public static void add(final SonarServerConfigurationBean newSonarServerConfigurationBean) {
-    final Set<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServersApplicationComponent.getInstance().getState().beans;
+    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServersService.getInstance().getState().beans;
     final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfigurationBean>() {
       @Override
       public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
@@ -28,7 +28,7 @@ public class SonarServersDAO {
     }
   }
 
-  public static Optional<Set<SonarServerConfigurationBean>> getAll() {
-    return Optional.fromNullable(SonarServersApplicationComponent.getInstance().getState().beans);
+  public static Optional<Collection<SonarServerConfigurationBean>> getAll() {
+    return Optional.fromNullable(SonarServersService.getInstance().getState().beans);
   }
 }

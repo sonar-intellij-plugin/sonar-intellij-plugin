@@ -1,7 +1,6 @@
 package org.intellij.sonar.configuration.project;
 
 import com.google.common.base.Optional;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
@@ -18,7 +17,6 @@ import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersApplicationComponent;
 import org.intellij.sonar.persistence.SonarServersDAO;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +26,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Set;
+import java.util.Collection;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
@@ -109,7 +107,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
     myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
-    Optional<Set<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersDAO.getAll();
+    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersDAO.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
       for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
         mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.name));

@@ -38,12 +38,6 @@
 
     <depends>com.intellij.modules.lang</depends>
 
-    <application-components>
-        <component>
-            <implementation-class>org.intellij.sonar.persistence.SonarServersApplicationComponent</implementation-class>
-        </component>
-    </application-components>
-
   <!--  <project-components>
         <component>
             <implementation-class>org.intellij.sonar.persistence.ProjectSettingsComponent</implementation-class>
@@ -71,6 +65,7 @@
         <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarRulesProvider"/>
         <applicationService serviceImplementation="org.intellij.sonar.sonarserver.SonarServer"/>
+        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServersService" />
     </extensions>
 
 </idea-plugin>
