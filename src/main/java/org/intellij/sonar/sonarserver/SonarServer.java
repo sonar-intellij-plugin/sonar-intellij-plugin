@@ -4,16 +4,13 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarIssuesProvider;
 import org.intellij.sonar.SonarRulesProvider;
 import org.intellij.sonar.SonarSettingsBean;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.SyncWithSonarResult;
+import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
@@ -43,28 +40,23 @@ public class SonarServer {
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "SonarQube Community Plugin";
 
-  private AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-  private String myHostUrl;
-
-  public SonarServer() {}
-
-  public SonarServer(String myHostUrl) {
-    this.myHostUrl = myHostUrl;
+  public SonarServer() {
   }
 
-  public static SonarServer from(String hostUrl) {
-    return new SonarServer(hostUrl);
+  public static SonarServer getInstance() {
+    return ServiceManager.getService(SonarServer.class);
   }
 
-  public ListenableFuture<String> getVersion() throws IOException {
-
-    return asyncHttpClient.prepareGet(myHostUrl + VERSION_URL).execute(new AsyncCompletionHandler<String>() {
-      @Override
-      public String onCompleted(Response response) throws Exception {
-        return response.getResponseBody();
-      }
-    });
-
+  public Sonar createSonar(SonarServerConfigurationBean configurationBean) {
+    Sonar sonar;
+    if (configurationBean.anonymous) {
+      sonar = createSonar(configurationBean.hostUrl, null, null);
+    } else {
+      configurationBean.loadPassword();
+      sonar = createSonar(configurationBean.hostUrl, configurationBean.user, configurationBean.password);
+      configurationBean.password = null;
+    }
+    return sonar;
   }
 
   public String verifySonarConnection(SonarSettingsBean sonarSettingsBean) throws SonarServerConnectionException {
@@ -199,21 +191,10 @@ public class SonarServer {
     }
   }
 
-  public List<Resource> getAllProjectsWithModules(Sonar sonar) {
-    List<Resource> allResources = new LinkedList<Resource>();
-    List<Resource> projects = getAllProjects(sonar);
-    if (null != projects) {
-      for (Resource project : projects) {
-        allResources.add(project);
-        List<Resource> modules = getAllModules(sonar, project.getId());
-        if (null != modules) {
-          for (Resource module : modules) {
-            allResources.add(module);
-          }
-        }
-      }
-    }
-    return allResources;
+  public List<Resource> getAllProjectsAndModules(Sonar sonar) {
+    ResourceQuery projectResourceQuery = new ResourceQuery();
+    projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT, Resource.QUALIFIER_MODULE);
+    return sonar.findAll(projectResourceQuery);
   }
 
   public List<Resource> getAllProjects(Sonar sonar) {

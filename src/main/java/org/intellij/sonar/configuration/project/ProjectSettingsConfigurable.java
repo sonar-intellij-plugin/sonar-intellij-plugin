@@ -13,6 +13,7 @@ import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import org.intellij.sonar.configuration.IncrementalScriptsMapping;
+import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
@@ -56,6 +57,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   private JComponent createSonarResourcesTable() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
+        setAddAction(new AnActionButtonRunnable() {
+          @Override
+          public void run(AnActionButton anActionButton) {
+            ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, mySonarServersComboBox.getSelectedItem().toString());
+            dlg.show();
+          }
+        }).
         disableUpDownActions().
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 200));
@@ -281,6 +289,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public ProjectSettingsBean toProjectSettingsBean() {
 
     ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
+    projectSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
 
     ProjectSettingsBean persistedProjectSettingsBean = myProject.getComponent(ProjectSettingsComponent.class).getState();
     if (persistedProjectSettingsBean != null) {
@@ -301,6 +310,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
     if (null == projectSettingsBean) return;
+    selectItemForSonarServersComboBoxByName(projectSettingsBean.sonarServerName);
   }
 
 }

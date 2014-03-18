@@ -220,26 +220,26 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
   @Override
   public boolean isModified() {
-//    ModuleSettingsBean state = myModule.getComponent(ModuleSettingsComponent.class).getState();
-//    return null == state || !state.equals(this.toProjectSettingsBean());
-    return false;
+    final ModuleSettingsComponent component = myModule.getComponent(ModuleSettingsComponent.class);
+    if (null == component) return false;
+    ModuleSettingsBean state = component.getState();
+    return null == state || !state.equals(this.toModuleSettingsBean());
   }
 
   @Override
   public void apply() throws ConfigurationException {
-//    ModuleSettingsBean projectSettingsBean = this.toProjectSettingsBean();
-//    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
-//    projectSettingsComponent.loadState(projectSettingsBean);
-//    PasswordManager.storePassword(myModule.getMyProject(), projectSettingsBean);
+    ModuleSettingsBean moduleSettingsBean = this.toModuleSettingsBean();
+    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
+    projectSettingsComponent.loadState(moduleSettingsBean);
   }
 
   @Override
   public void reset() {
-//    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
-//    if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
-//      ModuleSettingsBean persistedState = projectSettingsComponent.getState();
-//      this.setValuesFromProjectSettingsBean(persistedState);
-//    }
+    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
+    if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
+      ModuleSettingsBean persistedState = projectSettingsComponent.getState();
+      this.setValuesFromProjectSettingsBean(persistedState);
+    }
   }
 
   @Override
@@ -278,9 +278,10 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     return "SonarQube";
   }
 
-  public ModuleSettingsBean toProjectSettingsBean() {
+  public ModuleSettingsBean toModuleSettingsBean() {
 
-    ModuleSettingsBean projectSettingsBean = new ModuleSettingsBean();
+    ModuleSettingsBean moduleSettingsBean = new ModuleSettingsBean();
+    moduleSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
 //    projectSettingsBean.sonarServerHostUrl = this.getSonarServerTextField().getText();
 //    projectSettingsBean.useAnonymous = this.getUseAnonymousCheckBox().isSelected();
 //    projectSettingsBean.user = this.getUserTextField().getText();
@@ -290,9 +291,9 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     if (persistedProjectSettingsBean != null) {
 //      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
     }
-    convertResourcesListToBean(projectSettingsBean);
+    convertResourcesListToBean(moduleSettingsBean);
 
-    return projectSettingsBean;
+    return moduleSettingsBean;
   }
 
   private void convertResourcesListToBean(ModuleSettingsBean projectSettingsBean) {
@@ -303,8 +304,9 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 //    }
   }
 
-  public void setValuesFromProjectSettingsBean(ModuleSettingsBean projectSettingsBean) {
-    if (null == projectSettingsBean) return;
+  public void setValuesFromProjectSettingsBean(ModuleSettingsBean moduleSettingsBean) {
+    if (null == moduleSettingsBean) return;
+    selectItemForSonarServersComboBoxByName(moduleSettingsBean.sonarServerName);
 
 //    this.getSonarServerTextField().setText(projectSettingsBean.sonarServerHostUrl);
 //    this.getUseAnonymousCheckBox().setSelected(projectSettingsBean.useAnonymous);

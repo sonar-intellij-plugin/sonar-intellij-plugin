@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.intellij.sonar.configuration.ResourcesSelectionConfigurable">
-  <grid id="27dc6" binding="rootJPanel" layout-manager="GridLayoutManager" row-count="4" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="myRootJPanel" layout-manager="GridLayoutManager" row-count="2" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
       <xy x="20" y="20" width="801" height="400"/>
@@ -8,15 +8,15 @@
     <properties/>
     <border type="none"/>
     <children>
-      <component id="9e4cc" class="javax.swing.JLabel">
+      <component id="9e4cc" class="javax.swing.JLabel" binding="mySelectSonarResourcesFrom">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Select sonar resources"/>
+          <text value="Select sonar resources from"/>
         </properties>
       </component>
-      <component id="3db3d" class="javax.swing.JButton" binding="updateListButton" default-binding="true">
+      <component id="3db3d" class="javax.swing.JButton" binding="myDownloadResourcesButton" default-binding="true">
         <constraints>
           <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
@@ -24,54 +24,14 @@
           <text value="Download resources"/>
         </properties>
       </component>
-      <scrollpane id="5b0e1">
-        <constraints>
-          <grid row="1" column="0" row-span="2" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <minimum-size width="500" height="100"/>
-            <preferred-size width="500" height="100"/>
-          </grid>
-        </constraints>
-        <properties/>
-        <border type="none"/>
-        <children>
-          <component id="8cfcc" class="javax.swing.JList" binding="resourcesList">
-            <constraints/>
-            <properties>
-              <model/>
-            </properties>
-          </component>
-        </children>
-      </scrollpane>
-      <grid id="8bf21" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="b4543" binding="myPanelForSonarResources" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="4" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
         <border type="none"/>
-        <children>
-          <component id="5184d" class="javax.swing.JButton" binding="OKButton" default-binding="true">
-            <constraints>
-              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="OK"/>
-            </properties>
-          </component>
-          <component id="6fbf9" class="javax.swing.JButton" binding="cancelButton" default-binding="true">
-            <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="Cancel"/>
-            </properties>
-          </component>
-          <hspacer id="ad3c9">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-          </hspacer>
-        </children>
+        <children/>
       </grid>
     </children>
   </grid>

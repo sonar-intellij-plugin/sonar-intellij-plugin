@@ -38,17 +38,17 @@
 
     <depends>com.intellij.modules.lang</depends>
 
-  <!--  <project-components>
+    <project-components>
         <component>
             <implementation-class>org.intellij.sonar.persistence.ProjectSettingsComponent</implementation-class>
         </component>
-    </project-components>-->
+    </project-components>
 
-    <!--<module-components>
+    <module-components>
         <component>
             <implementation-class>org.intellij.sonar.persistence.ModuleSettingsComponent</implementation-class>
         </component>
-    </module-components>-->
+    </module-components>
 
     <actions>
         <action id="Show.SyncWithSonar" class="org.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">

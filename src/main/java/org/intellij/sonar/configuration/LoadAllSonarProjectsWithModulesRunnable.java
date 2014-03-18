@@ -57,7 +57,7 @@ public class LoadAllSonarProjectsWithModulesRunnable implements Runnable {
 //    Sonar sonar = projectSettingsBean.useAnonymous ?
 //        sonarServer.createSonar(projectSettingsBean.sonarServerHostUrl, null, null) :
 //        sonarServer.createSonar(projectSettingsBean.sonarServerHostUrl, projectSettingsBean.user, projectSettingsBean.password);
-//    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsWithModules(sonar);
+//    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules(sonar);
 //    if (null != allProjectsWithModules) {
 //      if (null == projectSettingsBean.downloadedResources)
 //        projectSettingsBean.downloadedResources = new ArrayList<SonarResourceBean>(allProjectsWithModules.size());

@@ -53,7 +53,7 @@ public class SonarTest {
   private static void testGetAllProjectsAndModulesBySonarService() {
     SonarServer sonarServer = new SonarServer();
     Sonar sonar = sonarServer.createSonar("https://sonar.corp.mobile.de/sonar", null, null);
-    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsWithModules(sonar);
+    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules(sonar);
     for (Resource projectOrModule : allProjectsWithModules) {
       if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
         System.out.println("##################################################");

@@ -1,7 +1,6 @@
 package org.intellij.sonar.persistence;
 
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.ModuleComponent;
@@ -11,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
     name = "module-settings-component",
     storages = {
-        @Storage(id = "module-settings-component", file = BaseDir.PATH + "module-settings.xml")
+        @Storage(id = "module-settings-component", file = "$MODULE_FILE$")
     }
 )
 public class ModuleSettingsComponent implements PersistentStateComponent<ModuleSettingsBean>, ModuleComponent {
