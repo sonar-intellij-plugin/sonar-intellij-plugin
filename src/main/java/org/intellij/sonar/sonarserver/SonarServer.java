@@ -192,9 +192,20 @@ public class SonarServer {
   }
 
   public List<Resource> getAllProjectsAndModules(Sonar sonar) {
-    ResourceQuery projectResourceQuery = new ResourceQuery();
-    projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT, Resource.QUALIFIER_MODULE);
-    return sonar.findAll(projectResourceQuery);
+    List<Resource> allResources = new LinkedList<Resource>();
+    List<Resource> projects = getAllProjects(sonar);
+    if (null != projects) {
+      for (Resource project : projects) {
+        allResources.add(project);
+        List<Resource> modules = getAllModules(sonar, project.getId());
+        if (null != modules) {
+          for (Resource module : modules) {
+            allResources.add(module);
+          }
+        }
+      }
+    }
+    return allResources;
   }
 
   public List<Resource> getAllProjects(Sonar sonar) {

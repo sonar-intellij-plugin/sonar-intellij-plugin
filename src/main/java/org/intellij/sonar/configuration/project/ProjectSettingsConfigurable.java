@@ -60,8 +60,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
         setAddAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
-            ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, mySonarServersComboBox.getSelectedItem().toString());
-            dlg.show();
+            final String selectedSonarServerName = mySonarServersComboBox.getSelectedItem().toString();
+            if (!NO_SONAR.equals(selectedSonarServerName)) {
+              ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, selectedSonarServerName);
+              dlg.show();
+            }
           }
         }).
         disableUpDownActions().

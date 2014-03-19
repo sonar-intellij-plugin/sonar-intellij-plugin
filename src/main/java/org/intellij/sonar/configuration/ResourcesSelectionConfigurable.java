@@ -1,27 +1,59 @@
 package org.intellij.sonar.configuration;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.TableSpeedSearch;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
+import com.intellij.util.ui.ColumnInfo;
+import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.persistence.SonarServersService;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.Resource;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ResourcesSelectionConfigurable extends DialogWrapper {
+
+  private static final ColumnInfo<SonarResource, String> NAME_COLUMN = new ColumnInfo<SonarResource, String>("Name") {
+    @Nullable
+    @Override
+    public String valueOf(SonarResource sonarResource) {
+      return sonarResource.getName();
+    }
+
+    @Override
+    public int getWidth(JTable table) {
+      return 300;
+    }
+  };
+  private static final ColumnInfo<SonarResource, String> KEY_COLUMN = new ColumnInfo<SonarResource, String>("Key") {
+    @Nullable
+    @Override
+    public String valueOf(SonarResource sonarResource) {
+      return sonarResource.getKey();
+    }
+  };
+  private Project myProject;
+  private String mySonarServerName;
+  private TableView<SonarResource> myResourcesTable = new TableView<SonarResource>();
+  private JButton myDownloadResourcesButton;
+  private JPanel myRootJPanel;
+  private JLabel mySelectSonarResourcesFrom;
+  private JPanel myPanelForSonarResources;
+  private List<Resource> allProjectsAndModules;
 
   public ResourcesSelectionConfigurable(@Nullable Project project, @NotNull String sonarServerName) {
     super(project);
@@ -30,14 +62,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     mySonarServerName = sonarServerName;
     mySelectSonarResourcesFrom.setText(mySelectSonarResourcesFrom.getText() + " " + mySonarServerName);
   }
-
-  private Project myProject;
-  private String mySonarServerName;
-  private TableView<String> myResourcesTable = new TableView<String>();
-  private JButton myDownloadResourcesButton;
-  private JPanel myRootJPanel;
-  private JLabel mySelectSonarResourcesFrom;
-  private JPanel myPanelForSonarResources;
 
   /*@Nullable
   public JComponent createComponent() {
@@ -83,6 +107,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   protected JComponent createCenterPanel() {
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(createResourcesTableComponent(), BorderLayout.CENTER);
+    myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(NAME_COLUMN, KEY_COLUMN));
     new TableSpeedSearch(myResourcesTable);
 
     myDownloadResourcesButton.addActionListener(new ActionListener() {
@@ -98,18 +123,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     return myRootJPanel;
   }
 
-  private class DownloadResourcesRunnable implements Runnable {
-
-    @Override
-    public void run() {
-      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(mySonarServerName);
-      if (sonarServerConfiguration.isPresent()) {
-        final Sonar sonar = SonarServer.getInstance().createSonar(sonarServerConfiguration.get());
-        final List<Resource> allProjectsAndModules = SonarServer.getInstance().getAllProjectsAndModules(sonar);
-      }
-    }
-  }
-
   private JComponent createResourcesTableComponent() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(myResourcesTable, null).
         disableUpDownActions().
@@ -117,5 +130,70 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 400));
     return panelForTable;
+  }
+
+  private class DownloadResourcesRunnable implements Runnable {
+
+    @Override
+    public void run() {
+      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(mySonarServerName);
+      if (sonarServerConfiguration.isPresent()) {
+        final org.sonar.wsclient.Sonar sonar = SonarServer.getInstance().createSonar(sonarServerConfiguration.get());
+        try {
+          allProjectsAndModules = SonarServer.getInstance().getAllProjectsAndModules(sonar);
+          final List<SonarResource> sonarResources = new ArrayList<SonarResource>(allProjectsAndModules.size());
+          for (Resource resource : allProjectsAndModules) {
+            final SonarResource sonarResource = new SonarResource(resource);
+            sonarResources.add(sonarResource);
+          }
+          SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, sonarResources, 0));
+            }
+          });
+        } catch (Exception e) {
+          final String message = "Cannot fetch sonar project and modules from " + mySonarServerName
+              + "\n\n" + Throwables.getStackTraceAsString(e);
+          SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              Messages.showErrorDialog(message, "Sonar Server Error");
+            }
+          });
+        }
+      }
+    }
+  }
+
+  private class SonarResource {
+
+    private String key;
+    private String name;
+
+    public SonarResource(Resource resource) {
+      if (resource.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
+        this.name = String.format("    %s", resource.getName());
+      } else {
+        this.name = resource.getName();
+      }
+      this.key = resource.getKey();
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
   }
 }
