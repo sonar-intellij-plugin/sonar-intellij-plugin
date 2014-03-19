@@ -2,6 +2,7 @@ package org.intellij.sonar.configuration;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -11,6 +12,8 @@ import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
+import org.intellij.sonar.persistence.SonarResource;
+import org.intellij.sonar.persistence.SonarResourcesService;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.persistence.SonarServersService;
 import org.intellij.sonar.sonarserver.SonarServer;
@@ -55,12 +58,18 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   private JPanel myPanelForSonarResources;
   private List<Resource> allProjectsAndModules;
 
+  public List<Resource> getSelectedSonarResources() {
+    return selectedSonarResources;
+  }
+
+  private List<Resource> selectedSonarResources;
+
   public ResourcesSelectionConfigurable(@Nullable Project project, @NotNull String sonarServerName) {
     super(project);
-    init();
     myProject = project;
     mySonarServerName = sonarServerName;
     mySelectSonarResourcesFrom.setText(mySelectSonarResourcesFrom.getText() + " " + mySonarServerName);
+    init();
   }
 
   /*@Nullable
@@ -107,7 +116,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   protected JComponent createCenterPanel() {
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(createResourcesTableComponent(), BorderLayout.CENTER);
-    myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(NAME_COLUMN, KEY_COLUMN));
+    List<SonarResource> sonarResources = SonarResourcesService.getInstance().sonarResourcesBySonarServerName.get(mySonarServerName);
+    if (null == sonarResources) sonarResources = new ArrayList<SonarResource>();
+    myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, sonarResources, 0));
     new TableSpeedSearch(myResourcesTable);
 
     myDownloadResourcesButton.addActionListener(new ActionListener() {
@@ -146,6 +157,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
             final SonarResource sonarResource = new SonarResource(resource);
             sonarResources.add(sonarResource);
           }
+          SonarResourcesService.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(sonarResources));
           SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -166,34 +178,15 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     }
   }
 
-  private class SonarResource {
-
-    private String key;
-    private String name;
-
-    public SonarResource(Resource resource) {
-      if (resource.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
-        this.name = String.format("    %s", resource.getName());
-      } else {
-        this.name = resource.getName();
-      }
-      this.key = resource.getKey();
+  @Override
+  protected void doOKAction() {
+    final int[] selectedRowsIndex = myResourcesTable.getSelectedRows();
+    ListTableModel<SonarResource> sonarResoures = (ListTableModel<SonarResource>) myResourcesTable.getModel();
+    selectedSonarResources = new ArrayList<Resource>(selectedRowsIndex.length);
+    for (int i: selectedRowsIndex) {
+      Resource sonarResource = allProjectsAndModules.get(i);
+      selectedSonarResources.add(sonarResource);
     }
-
-    public String getKey() {
-      return key;
-    }
-
-    public void setKey(String key) {
-      this.key = key;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void setName(String name) {
-      this.name = name;
-    }
+    super.doOKAction();
   }
 }

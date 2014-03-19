@@ -64,6 +64,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
             if (!NO_SONAR.equals(selectedSonarServerName)) {
               ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, selectedSonarServerName);
               dlg.show();
+              if (dlg.isOK()) {
+                dlg.getSelectedSonarResources();
+                // add selected sonar resoures to
+//                mySonarResourcesTable.getModel();
+              }
             }
           }
         }).

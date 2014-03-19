@@ -25,8 +25,8 @@ public class SonarServerConfigurable extends DialogWrapper {
 
   public SonarServerConfigurable(@Nullable Project project) {
     super(project);
-    init();
     myProject = project;
+    init();
   }
 
   @Override
