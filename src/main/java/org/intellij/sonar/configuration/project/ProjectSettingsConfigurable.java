@@ -3,8 +3,6 @@ package org.intellij.sonar.configuration.project;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
@@ -37,8 +35,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
@@ -117,8 +119,17 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
               if (dlg.isOK()) {
                 final java.util.List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
                 final java.util.List<Resource> currentSonarResources = getCurrentSonarResources();
-                final java.util.List<Resource> mergedSonarResources = Lists.newArrayList(ImmutableSet.copyOf(Iterables.concat(currentSonarResources, selectedSonarResources)).asList());
-                setModelForSonarResourcesTable(mergedSonarResources);
+
+                Set<Resource> mergedSonarResourcesAsSet = new TreeSet<Resource>(new Comparator<Resource>() {
+                  @Override
+                  public int compare(Resource resource, Resource resource2) {
+                    return resource.getKey().compareTo(resource2.getKey());
+                  }
+                });
+                mergedSonarResourcesAsSet.addAll(currentSonarResources);
+                mergedSonarResourcesAsSet.addAll(selectedSonarResources);
+
+                setModelForSonarResourcesTable(Lists.newArrayList(mergedSonarResourcesAsSet));
               }
             }
           }
