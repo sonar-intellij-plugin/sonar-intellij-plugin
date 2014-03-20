@@ -1,12 +1,15 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
+targetCompatibility=1.6
+sourceCompatibility=1.6
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile 'org.codehaus.sonar:sonar-ws-client:3.4'
+    compile 'org.codehaus.sonar:sonar-ws-client:4.1.2'
     compile 'org.apache.httpcomponents:httpclient:4.2.2'
     compile 'org.javassist:javassist:3.17.1-GA'
     compile 'com.google.guava:guava:16.0.1'

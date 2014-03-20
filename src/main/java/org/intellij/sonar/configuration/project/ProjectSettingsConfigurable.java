@@ -2,6 +2,10 @@ package org.intellij.sonar.configuration.project;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
@@ -10,11 +14,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.AnActionButton;
 import com.intellij.ui.AnActionButtonRunnable;
+import com.intellij.ui.TableUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
+import com.intellij.util.ui.ColumnInfo;
+import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
-import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
@@ -23,6 +29,7 @@ import org.intellij.sonar.persistence.SonarServersService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.sonar.wsclient.services.Resource;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,14 +37,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Collection;
+import java.util.*;
+import java.util.List;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
+  public ProjectSettingsConfigurable(Project project) {
+    this.myProject = project;
+    this.mySonarResourcesTable = new TableView<Resource>();
+    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
+    this.myProjectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
+  }
+
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
   private static final String NO_SONAR = "<NO SONAR>";
-  private final TableView<SonarResourceMapping> mySonarResourcesTable;
+
+  private final TableView<Resource> mySonarResourcesTable;
   private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
   private Project myProject;
   private JButton myTestConfigurationButton;
@@ -48,12 +64,46 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   private JButton myAddSonarServerButton;
   private JButton myEditSonarServerButton;
   private JButton myRemoveSonarServerButton;
+  private final ProjectSettingsComponent myProjectSettingsComponent;
 
-  public ProjectSettingsConfigurable(Project project) {
-    this.myProject = project;
-    this.mySonarResourcesTable = new TableView<SonarResourceMapping>();
-    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
-  }
+  private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
+
+    @Nullable
+    @Override
+    public String valueOf(Resource sonarResource) {
+      if (Resource.QUALIFIER_PROJECT.equals(sonarResource.getQualifier())) {
+        return "Project";
+      } else if (Resource.QUALIFIER_MODULE.equals(sonarResource.getQualifier())) {
+        return "Module";
+      } else {
+        return sonarResource.getQualifier();
+      }
+    }
+
+  };
+  private static final ColumnInfo<Resource, String> NAME_COLUMN = new ColumnInfo<Resource, String>("Name") {
+
+    @Nullable
+    @Override
+    public String valueOf(Resource sonarResource) {
+      return sonarResource.getName();
+    }
+
+    @Override
+    public int getWidth(JTable table) {
+      return 300;
+    }
+
+  };
+  private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
+
+    @Nullable
+    @Override
+    public String valueOf(Resource sonarResource) {
+      return sonarResource.getKey();
+    }
+
+  };
 
   private JComponent createSonarResourcesTable() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
@@ -65,17 +115,32 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
               ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, selectedSonarServerName);
               dlg.show();
               if (dlg.isOK()) {
-                dlg.getSelectedSonarResources();
-                // add selected sonar resoures to
-//                mySonarResourcesTable.getModel();
+                final java.util.List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
+                final java.util.List<Resource> currentSonarResources = getCurrentSonarResources();
+                final java.util.List<Resource> mergedSonarResources = Lists.newArrayList(ImmutableSet.copyOf(Iterables.concat(currentSonarResources, selectedSonarResources)).asList());
+                setModelForSonarResourcesTable(mergedSonarResources);
               }
             }
+          }
+        }).
+        setRemoveAction(new AnActionButtonRunnable() {
+          @Override
+          public void run(AnActionButton anActionButton) {
+            TableUtil.removeSelectedItems(mySonarResourcesTable);
           }
         }).
         disableUpDownActions().
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 200));
     return panelForTable;
+  }
+
+  private void setModelForSonarResourcesTable(List<Resource> sonarResources) {
+    mySonarResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN, TYPE_COLUMN}, sonarResources, 0));
+  }
+
+  private java.util.List<Resource> getCurrentSonarResources() {
+    return mySonarResourcesTable.getListTableModel().getItems();
   }
 
   private JComponent createIncrementalAnalysisScriptsTable() {
@@ -241,24 +306,20 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   @Override
   public boolean isModified() {
-    final ProjectSettingsComponent component = myProject.getComponent(ProjectSettingsComponent.class);
-    if (null == component) return false;
-    ProjectSettingsBean state = component.getState();
+    if (null == myProjectSettingsComponent) return false;
+    ProjectSettingsBean state = myProjectSettingsComponent.getState();
     return null == state || !state.equals(this.toProjectSettingsBean());
   }
 
   @Override
   public void apply() throws ConfigurationException {
-    ProjectSettingsBean projectSettingsBean = this.toProjectSettingsBean();
-    ProjectSettingsComponent projectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
-    projectSettingsComponent.loadState(projectSettingsBean);
+    myProjectSettingsComponent.loadState(this.toProjectSettingsBean());
   }
 
   @Override
   public void reset() {
-    ProjectSettingsComponent projectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
-    if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
-      ProjectSettingsBean persistedState = projectSettingsComponent.getState();
+    if (myProjectSettingsComponent != null && myProjectSettingsComponent.getState() != null) {
+      ProjectSettingsBean persistedState = myProjectSettingsComponent.getState();
       this.setValuesFromProjectSettingsBean(persistedState);
     }
   }
@@ -298,8 +359,9 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
     ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
     projectSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
+    projectSettingsBean.resources = ImmutableList.copyOf(getCurrentSonarResources());
 
-    ProjectSettingsBean persistedProjectSettingsBean = myProject.getComponent(ProjectSettingsComponent.class).getState();
+    ProjectSettingsBean persistedProjectSettingsBean = myProjectSettingsComponent.getState();
     if (persistedProjectSettingsBean != null) {
 //      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
     }
@@ -317,8 +379,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
+
     if (null == projectSettingsBean) return;
     selectItemForSonarServersComboBoxByName(projectSettingsBean.sonarServerName);
+
+    final ArrayList<Resource> resources = Lists.newArrayList(projectSettingsBean.resources);
+    setModelForSonarResourcesTable(resources);
+
   }
 
 }

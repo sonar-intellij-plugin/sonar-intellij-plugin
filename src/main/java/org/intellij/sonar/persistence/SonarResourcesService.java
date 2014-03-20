@@ -8,6 +8,7 @@ import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.sonar.wsclient.services.Resource;
 
 import java.util.List;
 import java.util.Map;
@@ -21,13 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 )
 public class SonarResourcesService implements PersistentStateComponent<SonarResourcesService> {
 
-  public Map<String, List<SonarResource>> sonarResourcesBySonarServerName = new ConcurrentHashMap<String, List<SonarResource>>();
+  public Map<String, List<Resource>> sonarResourcesBySonarServerName = new ConcurrentHashMap<String, List<Resource>>();
 
   @NotNull
   public static SonarResourcesService getInstance() {
     return ServiceManager.getService(SonarResourcesService.class);
   }
-
 
   @Nullable
   @Override

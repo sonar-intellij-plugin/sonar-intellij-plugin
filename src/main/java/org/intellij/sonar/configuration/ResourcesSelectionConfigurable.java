@@ -30,11 +30,11 @@ import java.util.List;
 
 public class ResourcesSelectionConfigurable extends DialogWrapper {
 
-  private static final ColumnInfo<SonarResource, String> NAME_COLUMN = new ColumnInfo<SonarResource, String>("Name") {
+  private static final ColumnInfo<Resource, String> NAME_COLUMN = new ColumnInfo<Resource, String>("Name") {
     @Nullable
     @Override
-    public String valueOf(SonarResource sonarResource) {
-      return sonarResource.getName();
+    public String valueOf(Resource resource) {
+      return new SonarResource(resource).getName();
     }
 
     @Override
@@ -42,21 +42,21 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       return 300;
     }
   };
-  private static final ColumnInfo<SonarResource, String> KEY_COLUMN = new ColumnInfo<SonarResource, String>("Key") {
+  private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
     @Nullable
     @Override
-    public String valueOf(SonarResource sonarResource) {
-      return sonarResource.getKey();
+    public String valueOf(Resource resource) {
+      return new SonarResource(resource).getKey();
     }
   };
   private Project myProject;
   private String mySonarServerName;
-  private TableView<SonarResource> myResourcesTable = new TableView<SonarResource>();
+  private TableView<Resource> myResourcesTable = new TableView<Resource>();
   private JButton myDownloadResourcesButton;
   private JPanel myRootJPanel;
   private JLabel mySelectSonarResourcesFrom;
   private JPanel myPanelForSonarResources;
-  private List<Resource> allProjectsAndModules;
+  private List<Resource> myAllProjectsAndModules;
 
   public List<Resource> getSelectedSonarResources() {
     return selectedSonarResources;
@@ -116,9 +116,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   protected JComponent createCenterPanel() {
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(createResourcesTableComponent(), BorderLayout.CENTER);
-    List<SonarResource> sonarResources = SonarResourcesService.getInstance().sonarResourcesBySonarServerName.get(mySonarServerName);
-    if (null == sonarResources) sonarResources = new ArrayList<SonarResource>();
-    myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, sonarResources, 0));
+    myAllProjectsAndModules = SonarResourcesService.getInstance().sonarResourcesBySonarServerName.get(mySonarServerName);
+    if (null == myAllProjectsAndModules) myAllProjectsAndModules = new ArrayList<Resource>();
+    myResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, myAllProjectsAndModules, 0));
     new TableSpeedSearch(myResourcesTable);
 
     myDownloadResourcesButton.addActionListener(new ActionListener() {
@@ -126,8 +126,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       public void actionPerformed(ActionEvent actionEvent) {
         DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable();
         ProgressManager.getInstance().runProcessWithProgressSynchronously(downloadResourcesRunnable, "Loading sonar resources from server", true, myProject);
-        // download resources for mySonarServerName
-        // show resources in myResourcesTable
       }
     });
 
@@ -151,17 +149,12 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       if (sonarServerConfiguration.isPresent()) {
         final org.sonar.wsclient.Sonar sonar = SonarServer.getInstance().createSonar(sonarServerConfiguration.get());
         try {
-          allProjectsAndModules = SonarServer.getInstance().getAllProjectsAndModules(sonar);
-          final List<SonarResource> sonarResources = new ArrayList<SonarResource>(allProjectsAndModules.size());
-          for (Resource resource : allProjectsAndModules) {
-            final SonarResource sonarResource = new SonarResource(resource);
-            sonarResources.add(sonarResource);
-          }
-          SonarResourcesService.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(sonarResources));
+          myAllProjectsAndModules = SonarServer.getInstance().getAllProjectsAndModules(sonar);
+          SonarResourcesService.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(myAllProjectsAndModules));
           SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-              myResourcesTable.setModelAndUpdateColumns(new ListTableModel<SonarResource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, sonarResources, 0));
+              myResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, myAllProjectsAndModules, 0));
             }
           });
         } catch (Exception e) {
@@ -181,10 +174,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   @Override
   protected void doOKAction() {
     final int[] selectedRowsIndex = myResourcesTable.getSelectedRows();
-    ListTableModel<SonarResource> sonarResoures = (ListTableModel<SonarResource>) myResourcesTable.getModel();
     selectedSonarResources = new ArrayList<Resource>(selectedRowsIndex.length);
     for (int i: selectedRowsIndex) {
-      Resource sonarResource = allProjectsAndModules.get(i);
+      Resource sonarResource = myAllProjectsAndModules.get(i);
       selectedSonarResources.add(sonarResource);
     }
     super.doOKAction();
