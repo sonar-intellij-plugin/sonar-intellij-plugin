@@ -372,21 +372,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     projectSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
     projectSettingsBean.resources = ImmutableList.copyOf(getCurrentSonarResources());
 
-    ProjectSettingsBean persistedProjectSettingsBean = myProjectSettingsComponent.getState();
-    if (persistedProjectSettingsBean != null) {
-//      projectSettingsBean.downloadedResources = persistedProjectSettingsBean.downloadedResources;
-    }
-    convertResourcesListToBean(projectSettingsBean);
-
     return projectSettingsBean;
-  }
-
-  private void convertResourcesListToBean(ProjectSettingsBean projectSettingsBean) {
-//    ListModel model = this.getResourcesList().getModel();
-//    projectSettingsBean.resources = new ArrayList<String>(model.getSize());
-//    for (int i = 0; i < model.getSize(); i++) {
-//      projectSettingsBean.resources.add((String) model.getElementAt(i));
-//    }
   }
 
   public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
