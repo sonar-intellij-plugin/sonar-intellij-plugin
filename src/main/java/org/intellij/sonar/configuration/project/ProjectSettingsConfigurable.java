@@ -17,6 +17,7 @@ import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
+import org.intellij.sonar.configuration.IncrementalScriptConfigurable;
 import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
@@ -156,10 +157,14 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   private JComponent createIncrementalAnalysisScriptsTable() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(myIncrementalAnalysisScriptsTable, null).
-        setEditAction(new AnActionButtonRunnable() {
+        setAddAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
-
+            IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
+            dlg.show();
+            if (dlg.isOK()) {
+              // store incremental script setup
+            }
           }
         }).
         setEditActionName("Edit").
