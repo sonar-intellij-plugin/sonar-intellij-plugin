@@ -8,28 +8,34 @@ Each sonar issue and rule is converted to an IntelliJ inspection which makes it 
 If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarcube-intellij-plugin) or even sending a pull request. Thanks for your support.
 
 
-Usage
---------------------
+### Usage
 
-At first you need to configure your sonar server connection. You can use a remote server or a local one on your machine, depends on how you work with sonar.
-For a project configuration:
+#### Project Configuration
+
+After the installation you first of all need to configure the connection to your sonar server. This is done per project. You can use a remote server or a local one on your machine, depends on how you work with sonar.
 
 Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube` and test your configuration. 
 ![alt text][projectConfiguration]
-You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the dashboard of SonarQube, click on "Projects" in the menu so a dropdown menu with all configured projects appears. When you hover the mouse arrow over a project name in this dropdown menu, you can see the project keys in the URL. For Maven projects it mostly consists of "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
+[projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
+
+#### The Resource field
+You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the main dashboard of your SonarQube installation (e.g. http://localhost:9000/), you see the "Projects" section on the right listing all the projects you already ran an analysis for.<sup>1</sup> When you hover the cursor over a project name in this list, the title/ hint you can see is the project's _resourceId_. For Maven projects it also contains a colon like "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
 
 **NOTE: We will simplify the configuration in a future version.**
 
-[projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
+<sup>1</sup> _You can only use the plugin for projects which are already present in SonarQube. If your project is not in SonarQube, yet, you'll need to run the analysis first e.g. via sonarrunner, Maven or Gradle._
 
 
-If your project has multiple modules, then you can configure each module as well:
+#### Module Configuration
 
-Go to File -> Project Structure (Ctrl+Alt+Shift+S)
--> Modules -> SonarQube Tab
+If your project has multiple modules, you can configure each module individually if you like:
+
+Go to `File -> Project Structure -> Modules -> SonarQube` Tab
 ![alt text][moduleConfiguration]
 
 [moduleConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14228.png "Example module configuration"
+
+#### Syncing
 
 After your project is configured, go to any source file in your project, right click over the source code and press *Sync with sonar*
 ![alt text][syncWithSonar]
