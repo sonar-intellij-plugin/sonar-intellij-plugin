@@ -18,13 +18,9 @@ import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.configuration.IncrementalScriptConfigurable;
-import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
-import org.intellij.sonar.persistence.ProjectSettingsBean;
-import org.intellij.sonar.persistence.ProjectSettingsComponent;
-import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersService;
+import org.intellij.sonar.persistence.*;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,39 +32,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
-  public ProjectSettingsConfigurable(Project project) {
-    this.myProject = project;
-    this.mySonarResourcesTable = new TableView<Resource>();
-    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
-    this.myProjectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
-  }
+  public static final int SOURCE_CODE_ENTRY_MAX_LENGTH = 100;
+  private static final ColumnInfo<IncrementalScriptBean, String> SCRIPT_COLUMN = new ColumnInfo<IncrementalScriptBean, String>("Script") {
 
+    @Nullable
+    @Override
+    public String valueOf(IncrementalScriptBean incrementalScriptBean) {
+      final String sourceCodeOfScript = incrementalScriptBean.getSourceCodeOfScript();
+      if (sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
+        return sourceCodeOfScript.substring(0, SOURCE_CODE_ENTRY_MAX_LENGTH) + "...";
+      } else {
+        return sourceCodeOfScript;
+      }
+    }
+
+  };
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
   private static final String NO_SONAR = "<NO SONAR>";
-
-  private final TableView<Resource> mySonarResourcesTable;
-  private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
-  private Project myProject;
-  private JButton myTestConfigurationButton;
-  private JPanel myRootJPanel;
-  private JPanel myPanelForSonarResources;
-  private JPanel myPanelForIncrementalAnalysisScripts;
-  private JComboBox mySonarServersComboBox;
-  private JButton myAddSonarServerButton;
-  private JButton myEditSonarServerButton;
-  private JButton myRemoveSonarServerButton;
-  private final ProjectSettingsComponent myProjectSettingsComponent;
-
   private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
 
     @Nullable
@@ -107,6 +93,25 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     }
 
   };
+  private final TableView<Resource> mySonarResourcesTable;
+  private final TableView<IncrementalScriptBean> myIncrementalAnalysisScriptsTable;
+  private final ProjectSettingsComponent myProjectSettingsComponent;
+  private Project myProject;
+  private JButton myTestConfigurationButton;
+  private JPanel myRootJPanel;
+  private JPanel myPanelForSonarResources;
+  private JPanel myPanelForIncrementalAnalysisScripts;
+  private JComboBox mySonarServersComboBox;
+  private JButton myAddSonarServerButton;
+  private JButton myEditSonarServerButton;
+  private JButton myRemoveSonarServerButton;
+
+  public ProjectSettingsConfigurable(Project project) {
+    this.myProject = project;
+    this.mySonarResourcesTable = new TableView<Resource>();
+    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptBean>();
+    this.myProjectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
+  }
 
   private JComponent createSonarResourcesTable() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
@@ -140,10 +145,10 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
           public void run(AnActionButton anActionButton) {
             TableUtil.removeSelectedItems(mySonarResourcesTable);
           }
-        }).
-        disableUpDownActions().
-        createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1, 200));
+        })
+        .disableUpDownActions().
+            createPanel();
+    panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
   }
 
@@ -163,14 +168,28 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
             IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
             dlg.show();
             if (dlg.isOK()) {
-              // store incremental script setup
+              final List<IncrementalScriptBean> incrementalScriptBeans = ImmutableList.<IncrementalScriptBean>builder()
+                  .addAll(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
+                  .add(dlg.getIncrementalScriptBean())
+                  .build();
+              myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
+                  new ListTableModel<IncrementalScriptBean>(
+                      new ColumnInfo[]{SCRIPT_COLUMN},
+                      incrementalScriptBeans,
+                      0)
+              );
             }
           }
-        }).
-        setEditActionName("Edit").
-        disableUpDownActions().
-        createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1, 200));
+        })
+        .setEditAction(new AnActionButtonRunnable() {
+          @Override
+          public void run(AnActionButton anActionButton) {
+            Messages.showInfoMessage("cliked", "Title");
+          }
+        })
+        .disableUpDownActions()
+        .createPanel();
+    panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
   }
 
@@ -306,7 +325,8 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
         itemToSelect = Optional.of(item);
       }
     }
-    if (itemToSelect.isPresent()) mySonarServersComboBox.setSelectedItem(itemToSelect.get());
+    if (itemToSelect.isPresent())
+      mySonarServersComboBox.setSelectedItem(itemToSelect.get());
   }
 
   private SonarServerConfigurable showSonarServerConfigurableDialog() {
@@ -315,7 +335,8 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   private SonarServerConfigurable showSonarServerConfigurableDialog(SonarServerConfigurationBean oldSonarServerConfigurationBean) {
     final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
-    if (null != oldSonarServerConfigurationBean) dlg.setValuesFrom(oldSonarServerConfigurationBean);
+    if (null != oldSonarServerConfigurationBean)
+      dlg.setValuesFrom(oldSonarServerConfigurationBean);
     dlg.show();
     return dlg;
   }

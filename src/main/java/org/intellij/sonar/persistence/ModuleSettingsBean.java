@@ -1,6 +1,5 @@
 package org.intellij.sonar.persistence;
 
-import org.intellij.sonar.configuration.IncrementalScriptsMapping;
 import org.intellij.sonar.configuration.SonarResourceMapping;
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ public class ModuleSettingsBean {
 
   public Collection<SonarResourceMapping> resources = new ArrayList<SonarResourceMapping>();
 
-  public Collection<IncrementalScriptsMapping> scripts = new ArrayList<IncrementalScriptsMapping>();
+  public Collection<IncrementalScriptBean> scripts = new ArrayList<IncrementalScriptBean>();
 
   public boolean isEmpty() {
     return this.equals(new ModuleSettingsBean());

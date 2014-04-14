@@ -10,7 +10,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
-import org.intellij.sonar.configuration.IncrementalScriptsMapping;
+import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.ModuleSettingsBean;
@@ -36,7 +36,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   private static final String NO_SONAR = "<NO SONAR>";
   private static final String PROJECT_SONAR = "<PROJECT>";
   private final TableView<SonarResourceMapping> mySonarResourcesTable;
-  private final TableView<IncrementalScriptsMapping> myIncrementalAnalysisScriptsTable;
+  private final TableView<IncrementalScriptBean> myIncrementalAnalysisScriptsTable;
   private Module myModule;
   private JButton myTestConfigurationButton;
   private JPanel myRootJPanel;
@@ -50,7 +50,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   public ModuleSettingsConfigurable(Module module) {
     this.myModule = module;
     this.mySonarResourcesTable = new TableView<SonarResourceMapping>();
-    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptsMapping>();
+    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptBean>();
   }
 
   private JComponent createSonarResourcesTable() {
