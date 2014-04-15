@@ -101,25 +101,26 @@ public class SonarServerConfigurable extends DialogWrapper {
   }
 
   public SonarServerConfigurationBean toSonarServerConfigurationBean() {
-    SonarServerConfigurationBean bean = new SonarServerConfigurationBean();
-    bean.name = myNameTestField.getText();
-    bean.hostUrl = myHostUrlTextField.getText();
-    bean.user = myUserTextField.getText();
-    bean.password = String.valueOf(myPasswordField.getPassword());
-    bean.anonymous = myAnonymousCheckBox.isSelected();
+    SonarServerConfigurationBean bean = SonarServerConfigurationBean.of(
+        myNameTestField.getText(),
+        myHostUrlTextField.getText(),
+        myAnonymousCheckBox.isSelected(),
+        myUserTextField.getText()
+    );
+    bean.setPassword(String.valueOf(myPasswordField.getPassword()));
     return bean;
   }
 
   public void setValuesFrom(SonarServerConfigurationBean bean) {
-    this.myNameTestField.setText(bean.name);
-    this.myHostUrlTextField.setText(bean.hostUrl);
-    if (!bean.anonymous) {
-      this.myUserTextField.setText(bean.user);
-      bean.loadPassword();
-      this.myPasswordField.setText(bean.password);
-      bean.password = null;
+    this.myNameTestField.setText(bean.getName());
+    this.myHostUrlTextField.setText(bean.getHostUrl());
+    if (!bean.isAnonymous()) {
+      this.myUserTextField.setText(bean.getUser());
+
+      this.myPasswordField.setText(bean.loadPassword());
+      bean.clearPassword();
     }
-    this.myAnonymousCheckBox.setSelected(bean.anonymous);
+    this.myAnonymousCheckBox.setSelected(bean.isAnonymous());
 
     initCheckboxes();
   }

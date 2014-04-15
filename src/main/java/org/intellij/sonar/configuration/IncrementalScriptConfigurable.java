@@ -42,7 +42,7 @@ public class IncrementalScriptConfigurable extends DialogWrapper {
     @Nullable
     @Override
     public String valueOf(VirtualFile virtualFile) {
-      return virtualFile.getPath();
+      return virtualFile != null ? virtualFile.getPath() : "";
     }
   };
 
@@ -96,19 +96,7 @@ public class IncrementalScriptConfigurable extends DialogWrapper {
     init();
   }
 
-  public IncrementalScriptBean getIncrementalScriptBean() {
-    return new IncrementalScriptBean(
-        FluentIterable.from(mySourcePathsTable.getItems())
-        .transform(new Function<VirtualFile, String>() {
-          @Override
-          public String apply(VirtualFile virtualFile) {
-            return virtualFile.getPath();
-          }
-        }).toList(),
-        myScriptSourceTextPane.getText(),
-        myPathToSonarReportTextFieldWithBrowseButton.getText()
-    );
-  }
+
 
   @Nullable
   @Override
@@ -167,6 +155,37 @@ public class IncrementalScriptConfigurable extends DialogWrapper {
         createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
+  }
+
+
+  public IncrementalScriptBean getIncrementalScriptBean() {
+    return IncrementalScriptBean.of(
+        FluentIterable.from(mySourcePathsTable.getItems())
+            .transform(new Function<VirtualFile, String>() {
+              @Override
+              public String apply(VirtualFile virtualFile) {
+                return virtualFile.getPath();
+              }
+            }).toList(),
+        myScriptSourceTextPane.getText(),
+        myPathToSonarReportTextFieldWithBrowseButton.getText()
+    );
+  }
+
+  public void setValuesFrom(IncrementalScriptBean selectedIncrementalScriptBean) {
+    mySourcePathsTable.setModelAndUpdateColumns(
+        new ListTableModel<VirtualFile>(
+            new ColumnInfo[]{SOURCE_PATH_COLUMN},
+            Lists.newArrayList(FluentIterable.from(selectedIncrementalScriptBean.getSourcePaths())
+                .transform(new Function<String, VirtualFile>() {
+                  @Override
+                  public VirtualFile apply(String path) {
+                    return LocalFileSystem.getInstance().findFileByPath(path);
+                  }
+                })),
+            0));
+    myScriptSourceTextPane.setText(selectedIncrementalScriptBean.getSourceCodeOfScript());
+    myPathToSonarReportTextFieldWithBrowseButton.setText(selectedIncrementalScriptBean.getPathToSonarReport());
   }
 
   private final class ExternalEditorPathActionListener implements ActionListener {

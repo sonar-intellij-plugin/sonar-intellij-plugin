@@ -1,7 +1,9 @@
 package org.intellij.sonar.configuration.project;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.components.ProjectComponent;
@@ -10,6 +12,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.AnActionButton;
 import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.TableUtil;
@@ -45,7 +48,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     @Override
     public String valueOf(IncrementalScriptBean incrementalScriptBean) {
       final String sourceCodeOfScript = incrementalScriptBean.getSourceCodeOfScript();
-      if (sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
+      if ( !StringUtil.isEmptyOrSpaces(sourceCodeOfScript) &&  sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
         return sourceCodeOfScript.substring(0, SOURCE_CODE_ENTRY_MAX_LENGTH) + "...";
       } else {
         return sourceCodeOfScript;
@@ -161,36 +164,74 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   private JComponent createIncrementalAnalysisScriptsTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(myIncrementalAnalysisScriptsTable, null).
-        setAddAction(new AnActionButtonRunnable() {
+    JPanel panelForTable = ToolbarDecorator.createDecorator(myIncrementalAnalysisScriptsTable, null)
+        .setAddAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
             IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
             dlg.show();
             if (dlg.isOK()) {
-              final List<IncrementalScriptBean> incrementalScriptBeans = ImmutableList.<IncrementalScriptBean>builder()
-                  .addAll(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
-                  .add(dlg.getIncrementalScriptBean())
-                  .build();
-              myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
-                  new ListTableModel<IncrementalScriptBean>(
-                      new ColumnInfo[]{SCRIPT_COLUMN},
-                      incrementalScriptBeans,
-                      0)
+              final List<IncrementalScriptBean> incrementalScriptBeans = Lists.newArrayList(
+                  ImmutableList.<IncrementalScriptBean>builder()
+                      .addAll(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
+                      .add(dlg.getIncrementalScriptBean())
+                      .build()
               );
+              setModelForIncrementalAnalysisScriptsTable(incrementalScriptBeans);
             }
           }
         })
         .setEditAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
-            Messages.showInfoMessage("cliked", "Title");
+            IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
+            dlg.setValuesFrom(myIncrementalAnalysisScriptsTable.getSelectedObject());
+            dlg.show();
+            if (dlg.isOK()) {
+              final IncrementalScriptBean newIncrementalScriptBean = dlg.getIncrementalScriptBean();
+              final IncrementalScriptBean selectedIncrementalScriptBean = myIncrementalAnalysisScriptsTable.getSelectedObject();
+
+              myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
+                  new ListTableModel<IncrementalScriptBean>(
+                      new ColumnInfo[]{SCRIPT_COLUMN},
+                      Lists.newArrayList(ImmutableList.<IncrementalScriptBean>builder()
+                          .addAll(
+                              FluentIterable.from(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
+                                  .filter(new Predicate<IncrementalScriptBean>() {
+                                    @Override
+                                    public boolean apply(IncrementalScriptBean it) {
+                                      return !it.equals(selectedIncrementalScriptBean);
+                                    }
+                                  })
+                                  .toList()
+                          )
+                          .add(newIncrementalScriptBean)
+                          .build()),
+                      0
+                  )
+              );
+            }
+          }
+        })
+        .setRemoveAction(new AnActionButtonRunnable() {
+          @Override
+          public void run(AnActionButton anActionButton) {
+            TableUtil.removeSelectedItems(myIncrementalAnalysisScriptsTable);
           }
         })
         .disableUpDownActions()
         .createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
+  }
+
+  private void setModelForIncrementalAnalysisScriptsTable(List<IncrementalScriptBean> incrementalScriptBeans) {
+    myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
+        new ListTableModel<IncrementalScriptBean>(
+            new ColumnInfo[]{SCRIPT_COLUMN},
+            incrementalScriptBeans,
+            0)
+    );
   }
 
   @Nls
@@ -229,7 +270,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
       mySonarServersComboBox.removeAllItems();
       mySonarServersComboBox.addItem(makeObj(NO_SONAR));
       for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
-        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.name));
+        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.getName()));
       }
     }
   }
@@ -262,10 +303,10 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
           SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
           try {
             SonarServersService.add(newSonarConfigurationBean);
-            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
-            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
+            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
           } catch (IllegalArgumentException e) {
-            Messages.showErrorDialog(newSonarConfigurationBean.name + " already exists", "Sonar Name Error");
+            Messages.showErrorDialog(newSonarConfigurationBean.getName() + " already exists", "Sonar Name Error");
             showSonarServerConfigurableDialog(newSonarConfigurationBean);
           }
         }
@@ -284,11 +325,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
           if (dlg.isOK()) {
             SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
             try {
-              SonarServersService.remove(oldBean.get().name);
+              SonarServersService.remove(oldBean.get().getName());
               SonarServersService.add(newSonarConfigurationBean);
               mySonarServersComboBox.removeItem(selectedSonarServer);
-              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
-              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
+              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
             } catch (IllegalArgumentException e) {
               Messages.showErrorDialog(selectedSonarServer.toString() + " cannot be saved\n\n" + Throwables.getStackTraceAsString(e), "Cannot Perform Edit");
             }
@@ -395,8 +436,9 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public ProjectSettingsBean toProjectSettingsBean() {
 
     ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
-    projectSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
-    projectSettingsBean.resources = ImmutableList.copyOf(getCurrentSonarResources());
+    projectSettingsBean.setSonarServerName(mySonarServersComboBox.getSelectedItem().toString());
+    projectSettingsBean.setResources(ImmutableList.copyOf(getCurrentSonarResources()));
+    projectSettingsBean.setScripts(ImmutableList.copyOf(myIncrementalAnalysisScriptsTable.getItems()));
 
     return projectSettingsBean;
   }
@@ -404,11 +446,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
 
     if (null == projectSettingsBean) return;
-    selectItemForSonarServersComboBoxByName(projectSettingsBean.sonarServerName);
+    selectItemForSonarServersComboBoxByName(projectSettingsBean.getSonarServerName());
 
-    final ArrayList<Resource> resources = Lists.newArrayList(projectSettingsBean.resources);
+    final ArrayList<Resource> resources = Lists.newArrayList(projectSettingsBean.getResources());
     setModelForSonarResourcesTable(resources);
 
+    final ArrayList<IncrementalScriptBean> scripts = Lists.newArrayList(projectSettingsBean.getScripts());
+    setModelForIncrementalAnalysisScriptsTable(scripts);
   }
 
 }

@@ -5,11 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
+import com.intellij.openapi.components.*;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
@@ -41,16 +37,16 @@ public class SonarServersService implements PersistentStateComponent<SonarServer
     final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfigurationBean>() {
       @Override
       public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
-        return sonarServerConfigurationBean.name.equals(newSonarServerConfigurationBean.name);
+        return sonarServerConfigurationBean.equals(newSonarServerConfigurationBean);
       }
     });
     if (alreadyExists) {
       throw new IllegalArgumentException("already exists");
     } else {
       sonarServerConfigurationBeans.add(newSonarServerConfigurationBean);
-      if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigurationBean.password)) {
+      if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigurationBean.getPassword())) {
         newSonarServerConfigurationBean.storePassword();
-        newSonarServerConfigurationBean.password = null;
+        newSonarServerConfigurationBean.clearPassword();
       }
     }
   }
@@ -74,7 +70,7 @@ public class SonarServersService implements PersistentStateComponent<SonarServer
       bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfigurationBean>() {
         @Override
         public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
-          return sonarServerName.equals(sonarServerConfigurationBean.name);
+          return sonarServerName.equals(sonarServerConfigurationBean.getName());
         }
       });
     }

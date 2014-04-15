@@ -7,13 +7,15 @@ public class SonarResource {
   private String key;
   private String name;
 
-  public SonarResource(Resource resource) {
+  public static SonarResource of(Resource resource) {
+    SonarResource sonarResource = new SonarResource();
     if (resource.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
-      this.name = String.format("    %s", resource.getName());
+      sonarResource.name = String.format("    %s", resource.getName());
     } else {
-      this.name = resource.getName();
+      sonarResource.name = resource.getName();
     }
-    this.key = resource.getKey();
+    sonarResource.key = resource.getKey();
+    return sonarResource;
   }
 
   public String getKey() {
@@ -37,5 +39,27 @@ public class SonarResource {
     return "SonarResource{" +
         "name='" + name + '\'' +
         '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SonarResource that = (SonarResource) o;
+
+    if (key != null ? !key.equals(that.key) : that.key != null)
+      return false;
+    if (name != null ? !name.equals(that.name) : that.name != null)
+      return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = key != null ? key.hashCode() : 0;
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    return result;
   }
 }

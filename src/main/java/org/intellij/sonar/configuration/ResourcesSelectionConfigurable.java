@@ -34,7 +34,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     @Nullable
     @Override
     public String valueOf(Resource resource) {
-      return new SonarResource(resource).getName();
+      return SonarResource.of(resource).getName();
     }
 
     @Override
@@ -46,7 +46,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     @Nullable
     @Override
     public String valueOf(Resource resource) {
-      return new SonarResource(resource).getKey();
+      return SonarResource.of(resource).getKey();
     }
   };
   private Project myProject;

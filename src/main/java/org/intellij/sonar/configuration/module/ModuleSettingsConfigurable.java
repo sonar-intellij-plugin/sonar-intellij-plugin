@@ -10,13 +10,9 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
-import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
-import org.intellij.sonar.persistence.ModuleSettingsBean;
-import org.intellij.sonar.persistence.ModuleSettingsComponent;
-import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersService;
+import org.intellij.sonar.persistence.*;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,7 +103,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
       mySonarServersComboBox.addItem(makeObj(PROJECT_SONAR));
       mySonarServersComboBox.addItem(makeObj(NO_SONAR));
       for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
-        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.name));
+        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.getName()));
       }
     }
   }
@@ -140,10 +136,10 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
           SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
           try {
             SonarServersService.add(newSonarConfigurationBean);
-            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
-            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
+            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
           } catch (IllegalArgumentException e) {
-            Messages.showErrorDialog(newSonarConfigurationBean.name + " already exists", "Sonar Name Error");
+            Messages.showErrorDialog(newSonarConfigurationBean.getName() + " already exists", "Sonar Name Error");
             showSonarServerConfigurableDialog(newSonarConfigurationBean);
           }
         }
@@ -162,11 +158,11 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
           if (dlg.isOK()) {
             SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
             try {
-              SonarServersService.remove(oldBean.get().name);
+              SonarServersService.remove(oldBean.get().getName());
               SonarServersService.add(newSonarConfigurationBean);
               mySonarServersComboBox.removeItem(selectedSonarServer);
-              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.name));
-              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.name);
+              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
+              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
             } catch (IllegalArgumentException e) {
               Messages.showErrorDialog(selectedSonarServer.toString() + " cannot be saved\n\n" + Throwables.getStackTraceAsString(e), "Cannot Perform Edit");
             }
@@ -281,7 +277,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   public ModuleSettingsBean toModuleSettingsBean() {
 
     ModuleSettingsBean moduleSettingsBean = new ModuleSettingsBean();
-    moduleSettingsBean.sonarServerName = mySonarServersComboBox.getSelectedItem().toString();
+    moduleSettingsBean.setSonarServerName(mySonarServersComboBox.getSelectedItem().toString());
 //    projectSettingsBean.sonarServerHostUrl = this.getSonarServerTextField().getText();
 //    projectSettingsBean.useAnonymous = this.getUseAnonymousCheckBox().isSelected();
 //    projectSettingsBean.user = this.getUserTextField().getText();
@@ -306,7 +302,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
   public void setValuesFromProjectSettingsBean(ModuleSettingsBean moduleSettingsBean) {
     if (null == moduleSettingsBean) return;
-    selectItemForSonarServersComboBoxByName(moduleSettingsBean.sonarServerName);
+    selectItemForSonarServersComboBoxByName(moduleSettingsBean.getSonarServerName());
 
 //    this.getSonarServerTextField().setText(projectSettingsBean.sonarServerHostUrl);
 //    this.getUseAnonymousCheckBox().setSelected(projectSettingsBean.useAnonymous);

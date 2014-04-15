@@ -5,33 +5,19 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SonarIssuesProvider;
-import org.intellij.sonar.SonarRulesProvider;
-import org.intellij.sonar.SonarSettingsBean;
-import org.intellij.sonar.SonarSeverity;
-import org.intellij.sonar.SyncWithSonarResult;
+import org.intellij.sonar.*;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.Resource;
-import org.sonar.wsclient.services.ResourceQuery;
-import org.sonar.wsclient.services.Rule;
-import org.sonar.wsclient.services.RuleQuery;
-import org.sonar.wsclient.services.Violation;
-import org.sonar.wsclient.services.ViolationQuery;
+import org.sonar.wsclient.services.*;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SonarServer {
 
@@ -49,12 +35,12 @@ public class SonarServer {
 
   public Sonar createSonar(SonarServerConfigurationBean configurationBean) {
     Sonar sonar;
-    if (configurationBean.anonymous) {
-      sonar = createSonar(configurationBean.hostUrl, null, null);
+    if (configurationBean.isAnonymous()) {
+      sonar = createSonar(configurationBean.getHostUrl(), null, null);
     } else {
       configurationBean.loadPassword();
-      sonar = createSonar(configurationBean.hostUrl, configurationBean.user, configurationBean.password);
-      configurationBean.password = null;
+      sonar = createSonar(configurationBean.getHostUrl(), configurationBean.getUser(), configurationBean.getPassword());
+      configurationBean.clearPassword();
     }
     return sonar;
   }
