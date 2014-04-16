@@ -2,10 +2,6 @@ package org.intellij.sonar.evaluation;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.progress.util.CommandLineProgress;
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Response;
-import org.intellij.sonar.SonarSettingsBean;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.services.Resource;
@@ -23,31 +19,6 @@ public class SonarTest {
 //      testGetRules();
 //        testGetResources();
 //    testGetAllProjectsAndModulesBySonarService();
-    testGetIssues();
-  }
-
-  private static void testGetIssues() {
-//    sonar.create(ManualMeasureCreateQuery.create("de.mobile:mobile-multimodule-pom"));
-    AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-    try {
-      asyncHttpClient.prepareGet("https://sonar.corp.mobile.de/sonar/api/issues/search?pageSize=10&componentRoots=de.mobile:mobile-multimodule-pom").execute(new AsyncCompletionHandler<Response>(){
-
-        @Override
-        public Response onCompleted(Response response) throws Exception{
-          String responseBody = response.getResponseBody();
-          System.out.println(responseBody);
-          Gson gson = new Gson();
-          return response;
-        }
-
-        @Override
-        public void onThrowable(Throwable t){
-          // Something wrong happened.
-        }
-      });
-    } catch (IOException e) {
-      // something wrong with IO
-    }
   }
 
   private static void testGetAllProjectsAndModulesBySonarService() {
@@ -85,7 +56,7 @@ public class SonarTest {
       System.out.println("##################################################");
     }
   }
-
+/*
   private static void testGetRules() {
     List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<SonarSettingsBean>(3);
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
@@ -97,5 +68,5 @@ public class SonarTest {
     SonarServer sonarServer = new SonarServer();
     Collection<Rule> allRules = sonarServer.getAllRules(sonarSettingsBeans, new CommandLineProgress());
     System.out.print("foo");
-  }
+  }*/
 }

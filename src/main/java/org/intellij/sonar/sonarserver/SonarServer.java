@@ -1,23 +1,38 @@
 package org.intellij.sonar.sonarserver;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.*;
+import org.intellij.sonar.SonarIssuesProvider;
+import org.intellij.sonar.SonarRulesProvider;
+import org.intellij.sonar.SonarSeverity;
+import org.intellij.sonar.SyncWithSonarResult;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.services.*;
+import org.sonar.wsclient.rule.Rule;
+import org.sonar.wsclient.services.Resource;
+import org.sonar.wsclient.services.ResourceQuery;
+import org.sonar.wsclient.services.RuleQuery;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SonarServer {
 
@@ -45,8 +60,8 @@ public class SonarServer {
     return sonar;
   }
 
-  public String verifySonarConnection(SonarSettingsBean sonarSettingsBean) throws SonarServerConnectionException {
-    HttpURLConnection httpURLConnection = getHttpConnection(sonarSettingsBean.host);
+  public String verifySonarConnection(SonarServerConfigurationBean config) throws SonarServerConnectionException {
+    HttpURLConnection httpURLConnection = getHttpConnection(config.getHostUrl());
 
     try {
       int statusCode = httpURLConnection.getResponseCode();
@@ -81,7 +96,7 @@ public class SonarServer {
     return StringUtils.removeEnd(hostName, "/");
   }
 
-  @NotNull
+  /*@NotNull
   public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
     if (null == sonarSettingsBean) {
       return Collections.emptyList();
@@ -93,18 +108,72 @@ public class SonarServer {
         .setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
 
     return sonar.findAll(violationQuery);
-  }
+  }*/
 
   public Sonar createSonar(String host, String user, String password) {
     host = getHostSafe(host);
     return StringUtils.isEmpty(user) ? Sonar.create(host) : Sonar.create(host, user, password);
   }
 
-  public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
+  /*public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
     return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
-  }
+  }*/
 
-  public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
+  /*public ImmutableSet<Rule> getRulesFor(SonarServerConfigurationBean configurationBean, Collection<String> sonarResources) {
+    Sonar sonar = createSonar(configurationBean);
+
+    for (String resource: sonarResources) {
+      final ResourceQuery query = ResourceQuery.createForMetrics(resource, "rule");
+      final Resource result = sonar.find(query);
+      System.out.println(result);
+    }
+  }*/
+
+
+// GET LANGUAGE AND RULES PROFILE FOR A SONAR RESOURCE
+//  https://sonar.corp.mobile.de/sonar/api/resources?format=json&resource=autoact:autoact-b2b-api_groovy&metrics=profile
+
+  // Set<language,profile> s= new Set;
+  // for resource in resources:
+  //   s.put( resource.language, resource.profile )
+
+  // for entry in s:
+  //   getRulesFor(entry.language, entry.profile)
+
+// GET LIST OF RULES FOR A SONAR PROFILE language is mandatory!
+//  https://sonar.corp.mobile.de/sonar/api/profiles?language=java&name=mobile_relaxed&format=json
+  /*
+  [
+  {
+    "name": "mobile_relaxed",
+      "language": "java",  <--LANGUAGE
+      "default": false,
+      "rules": [
+    {
+      "key": "com.puppycrawl.tools.checkstyle.checks.design.HideUtilityClassConstructorCheck",
+        "repo": "checkstyle",  <-- RULE REPOSITORY
+        "severity": "MAJOR"
+    },
+    {
+      "key": "com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+        "repo": "checkstyle",
+        "severity": "MAJOR"
+    },
+    {
+      "key": "com.puppycrawl.tools.checkstyle.checks.naming.StaticVariableNameCheck",
+        "repo": "checkstyle",
+        "severity": "MAJOR"
+    },
+    {
+      "key": "com.puppycrawl.tools.checkstyle.checks.naming.MethodNameCheck",
+        "repo": "checkstyle",
+        "severity": "INFO"
+    },
+*/
+
+
+
+ /* public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     List<Rule> rulesResult = new LinkedList<Rule>();
     Set<String> ruleKeys = new LinkedHashSet<String>();
     for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
@@ -144,13 +213,14 @@ public class SonarServer {
     // return all collected rules
     return rulesResult;
   }
-
+*/
   public SyncWithSonarResult sync(Project project, @NotNull ProgressIndicator indicator) {
+
     SyncWithSonarResult syncWithSonarResult = new SyncWithSonarResult();
     SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project,
         SonarIssuesProvider.class);
     if (null != sonarIssuesProvider) {
-      syncWithSonarResult.violationsCount = sonarIssuesProvider.syncWithSonar(project, indicator);
+//      syncWithSonarResult.violationsCount = sonarIssuesProvider.syncWithSonar(project, indicator);
     }
     SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
     if (null != sonarRulesProvider) {

@@ -7,7 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 public class SonarSettingsUtils {
 
-  public static SonarSettingsBean getSonarSettingsBeanForFile(VirtualFile virtualFile, Project project) {
+  /*public static SonarSettingsBean getSonarSettingsBeanForFile(VirtualFile virtualFile, Project project) {
     SonarSettingsBean sonarSettingsBean = null;
     if (null != project) {
       if (null != virtualFile) {
@@ -23,15 +23,15 @@ public class SonarSettingsUtils {
     }
 
     return sonarSettingsBean;
-  }
+  }*/
 
-  public static SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
+ /* public static SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
     return sonarSettingsComponent.getState();
-  }
+  }*/
 
-  public static SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
+  /*public static SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
 //    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
 //    return sonarProjectComponent.getState();
     return null;
-  }
+  }*/
 }

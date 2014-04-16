@@ -25,7 +25,7 @@ public class SyncWithSonarAction extends DumbAwareAction {
 
   @Override
   public void actionPerformed(AnActionEvent event) {
-    project = event.getProject();
+    /*project = event.getProject();
     if (null == project) {
       Messages.showInfoMessage("No project found", "No Project");
       return;
@@ -38,7 +38,7 @@ public class SyncWithSonarAction extends DumbAwareAction {
     }
 
     new SyncWithSonarInBackground(project, "Sync with sonar", true, PerformInBackgroundOption.ALWAYS_BACKGROUND).
-        queue();
+        queue();*/
   }
 
   private class SyncWithSonarInBackground extends Task.Backgroundable {

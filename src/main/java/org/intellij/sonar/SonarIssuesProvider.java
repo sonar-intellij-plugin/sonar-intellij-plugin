@@ -53,14 +53,14 @@ public class SonarIssuesProvider implements PersistentStateComponent<SonarIssues
     XmlSerializerUtil.copyBean(state, this);
   }
 
-  public int syncWithSonar(final Project project, @NotNull ProgressIndicator indicator) {
+  /*public int syncWithSonar(final Project project, @NotNull ProgressIndicator indicator) {
     clearState();
     Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
     this.mySonarViolations = getViolationsFromSonar(allSonarSettingsBeans, indicator);
     return getMySonarViolations().size();
-  }
+  }*/
 
-  private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans, @NotNull ProgressIndicator indicator) {
+  /*private Map<String, Collection<Violation>> getViolationsFromSonar(Collection<SonarSettingsBean> allSonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     Map<String, Collection<Violation>> violationsMap = getMySonarViolations();
     if (null == violationsMap) {
       violationsMap = new ConcurrentHashMap<String, Collection<Violation>>();
@@ -100,7 +100,7 @@ public class SonarIssuesProvider implements PersistentStateComponent<SonarIssues
     }
 
     return violationsMap;
-  }
+  }*/
 
   private Map<String, Collection<Violation>> getMySonarViolations() {
     if (null == mySonarViolations) {

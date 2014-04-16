@@ -142,7 +142,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     return result.toString();
   }
 
-  private SonarSettingsBean getSonarSettingsBeanForFile(PsiFile file) {
+  /*private SonarSettingsBean getSonarSettingsBeanForFile(PsiFile file) {
     SonarSettingsBean sonarSettingsBean = null;
     if (null != file) {
       VirtualFile virtualFile = file.getVirtualFile();
@@ -161,7 +161,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     }
 
     return sonarSettingsBean;
-  }
+  }*/
 
   @NotNull
   private TextRange getTextRange(@NotNull Document document, int line) {
@@ -173,7 +173,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
-    // don't care about non physical files
+    /*// don't care about non physical files
     VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(virtualFile) == null) {
       return null;
@@ -218,7 +218,8 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       }
     }
 
-    return result.toArray(new ProblemDescriptor[result.size()]);
+    return result.toArray(new ProblemDescriptor[result.size()]);*/
+    return null;
   }
 
   @Nullable
@@ -247,7 +248,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
   }
 
-  private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
+/*  private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
 //    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
 //    if (null == sonarProjectComponent) {
 //      return null;
@@ -258,6 +259,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
   private SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
     return sonarSettingsComponent.getState();
-  }
+  }*/
 
 }

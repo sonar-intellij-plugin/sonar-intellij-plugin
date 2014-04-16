@@ -56,7 +56,7 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
   }
 
   public int syncWithSonar(Project project, @NotNull ProgressIndicator indicator) {
-    Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
+    /*Collection<SonarSettingsBean> allSonarSettingsBeans = SonarSettingsComponent.getSonarSettingsBeans(project);
     SonarServer sonarServer = ServiceManager.getService(SonarServer.class);
 
     Map<String, Rule> sonarRulesByRuleKeyFromServer = new HashMap<String, Rule>();
@@ -69,7 +69,7 @@ public class SonarRulesProvider implements PersistentStateComponent<SonarRulesPr
       sonarRulesByRuleKey.putAll(sonarRulesByRuleKeyFromServer);
       showRestartIdeDialog();
     }
-
+*/
     return sonarRulesByRuleKey.size();
   }
 

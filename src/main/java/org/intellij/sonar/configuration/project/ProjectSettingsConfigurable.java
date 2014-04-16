@@ -10,6 +10,9 @@ import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
@@ -24,6 +27,7 @@ import org.intellij.sonar.configuration.IncrementalScriptConfigurable;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
 import org.intellij.sonar.persistence.*;
+import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +52,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     @Override
     public String valueOf(IncrementalScriptBean incrementalScriptBean) {
       final String sourceCodeOfScript = incrementalScriptBean.getSourceCodeOfScript();
-      if ( !StringUtil.isEmptyOrSpaces(sourceCodeOfScript) &&  sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
+      if (!StringUtil.isEmptyOrSpaces(sourceCodeOfScript) && sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
         return sourceCodeOfScript.substring(0, SOURCE_CODE_ENTRY_MAX_LENGTH) + "...";
       } else {
         return sourceCodeOfScript;
@@ -59,7 +63,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
   private static final String NO_SONAR = "<NO SONAR>";
   private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
-
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
@@ -74,7 +77,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   };
   private static final ColumnInfo<Resource, String> NAME_COLUMN = new ColumnInfo<Resource, String>("Name") {
-
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
@@ -191,35 +193,31 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
               final IncrementalScriptBean newIncrementalScriptBean = dlg.getIncrementalScriptBean();
               final IncrementalScriptBean selectedIncrementalScriptBean = myIncrementalAnalysisScriptsTable.getSelectedObject();
 
-              myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
-                  new ListTableModel<IncrementalScriptBean>(
-                      new ColumnInfo[]{SCRIPT_COLUMN},
-                      Lists.newArrayList(ImmutableList.<IncrementalScriptBean>builder()
-                          .addAll(
-                              FluentIterable.from(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
-                                  .filter(new Predicate<IncrementalScriptBean>() {
-                                    @Override
-                                    public boolean apply(IncrementalScriptBean it) {
-                                      return !it.equals(selectedIncrementalScriptBean);
-                                    }
-                                  })
-                                  .toList()
-                          )
-                          .add(newIncrementalScriptBean)
-                          .build()),
-                      0
+              final ArrayList<IncrementalScriptBean> incrementalScriptBeans = Lists.newArrayList(ImmutableList.<IncrementalScriptBean>builder()
+                  .addAll(
+                      FluentIterable.from(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
+                          .filter(new Predicate<IncrementalScriptBean>() {
+                            @Override
+                            public boolean apply(IncrementalScriptBean it) {
+                              return !it.equals(selectedIncrementalScriptBean);
+                            }
+                          })
+                          .toList()
                   )
-              );
+                  .add(newIncrementalScriptBean)
+                  .build());
+
+              setModelForIncrementalAnalysisScriptsTable(incrementalScriptBeans);
             }
           }
         })
+        .disableUpDownActions()
         .setRemoveAction(new AnActionButtonRunnable() {
           @Override
           public void run(AnActionButton anActionButton) {
             TableUtil.removeSelectedItems(myIncrementalAnalysisScriptsTable);
           }
         })
-        .disableUpDownActions()
         .createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
@@ -246,10 +244,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return null;
   }
 
-  public JButton getMyTestConfigurationButton() {
-    return myTestConfigurationButton;
-  }
-
   @Nullable
   @Override
   public JComponent createComponent() {
@@ -259,12 +253,15 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
 
     addActionListenersForSonarServerButtons();
-    initSonarServersCombobox();
+    initSonarServersComboBox();
     disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
+
+    addActionListenerForTestConfigurationButton();
     return myRootJPanel;
   }
 
-  private void initSonarServersCombobox() {
+
+  private void initSonarServersComboBox() {
     Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersService.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
       mySonarServersComboBox.removeAllItems();
@@ -453,6 +450,105 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
     final ArrayList<IncrementalScriptBean> scripts = Lists.newArrayList(projectSettingsBean.getScripts());
     setModelForIncrementalAnalysisScriptsTable(scripts);
+  }
+
+
+  private void addActionListenerForTestConfigurationButton() {
+    myTestConfigurationButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent actionEvent) {
+
+        final TestConnectionRunnable testConnectionRunnable = testSonarServerConnection();
+
+        // try to get rules for each resource
+        // try to get issues for each resource
+
+        // check if script file exists
+        // check if all source paths exists
+        // try to execute script + abort after 5 sec
+
+
+        String testResultMessage = testConnectionRunnable.getMessage();
+        Messages.showInfoMessage(testResultMessage, "Configuration Check Result");
+
+      }
+    });
+  }
+
+  private TestConnectionRunnable testSonarServerConnection() {
+    final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(
+        mySonarServersComboBox.getSelectedItem().toString()
+    );
+    final TestConnectionRunnable testConnectionRunnable = new TestConnectionRunnable(sonarServerConfiguration.get());
+    ProgressManager.getInstance().runProcessWithProgressSynchronously(
+        testConnectionRunnable,
+        "Testing Connection", true, myProject
+    );
+
+    return testConnectionRunnable;
+  }
+
+  public class TestConnectionRunnable implements Runnable {
+
+    private final SonarServerConfigurationBean sonarServerConfigurationBean;
+
+    private Optional<String> mySonarServerVersion = Optional.absent();
+
+    private Optional<String> mySonarServerError = Optional.absent();
+
+    public TestConnectionRunnable(SonarServerConfigurationBean sonarServerConfigurationBean) {
+      this.sonarServerConfigurationBean = sonarServerConfigurationBean;
+    }
+
+    @Override
+    public void run() {
+      ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+      indicator.setText("Testing Connection");
+      indicator.setText2(String.format("connecting to %s", sonarServerConfigurationBean.getHostUrl()));
+      indicator.setFraction(0.5);
+      indicator.setIndeterminate(true);
+
+      try {
+        mySonarServerVersion = Optional.fromNullable(SonarServer.getInstance().verifySonarConnection(sonarServerConfigurationBean));
+      } catch (Exception e) {
+        mySonarServerError = Optional.of(e.getMessage());
+        throw new ProcessCanceledException();
+      }
+
+      if (indicator.isCanceled()) {
+        throw new ProcessCanceledException();
+      }
+    }
+
+    public boolean connectionWorks() {
+      return !mySonarServerError.isPresent();
+    }
+
+    public Optional<String> getSonarServerVersion() {
+      return mySonarServerVersion;
+    }
+
+    public Optional<String> getSonarServerError() {
+      return mySonarServerError;
+    }
+
+    public String getMessage() {
+
+      if (!connectionWorks()) {
+        return errorMessage("Connection to sonar server not successful\n\n" +
+            getSonarServerError().get());
+      } else {
+        return okMessage("Sonar server version: " + getSonarServerVersion().get());
+      }
+    }
+  }
+
+  private static String errorMessage(String message) {
+    return "ERROR: " + message;
+  }
+
+  private static String okMessage(String message) {
+    return "OK:    " + message;
   }
 
 }

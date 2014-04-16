@@ -72,45 +72,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     init();
   }
 
-  /*@Nullable
-  public JComponent createComponent() {
-    getMyDownloadResourcesButton().addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-//        ProgressManager.getInstance().runProcessWithProgressSynchronously(
-//            new LoadAllSonarProjectsWithModulesRunnable(project, myResourcesTable, projectSettingsConfigurable),
-//            "Loading sonar resources", true, getMyProject());
-      }
-    });
-
-//    final ModuleSettingsComponent projectSettingsComponent = project.getComponent(ModuleSettingsComponent.class);
-//    final ModuleSettingsBean persistedProjectSettingsBean = projectSettingsComponent.getState();
-//    if (persistedProjectSettingsBean != null && persistedProjectSettingsBean.downloadedResources != null) {
-//      this.myResourcesTable.setListData(LoadAllSonarProjectsWithModulesRunnable.toResourcesListDataFrom(persistedProjectSettingsBean.downloadedResources).toArray());
-//    }
-
-    myResourcesTable.addListSelectionListener(new ListSelectionListener() {
-      @Override
-      public void valueChanged(ListSelectionEvent listSelectionEvent) {
-//        ModuleSettingsComponent projectSettingsComponent = project.getComponent(ModuleSettingsComponent.class);
-//        if (projectSettingsComponent != null && projectSettingsComponent.getState() != null && projectSettingsComponent.getState().downloadedResources != null) {
-//          int[] selectedIndices = ((JList) (listSelectionEvent).getSource()).getSelectedIndices();
-//          Collection<SonarResourceBean> selectedSonarResources = new ArrayList<SonarResourceBean>(selectedIndices.length);
-//          for (int selectedIndex: selectedIndices) {
-//            SonarResourceBean sonarResourceBean = Iterables.get(projectSettingsComponent.getState().downloadedResources, selectedIndex);
-//            selectedSonarResources.add(sonarResourceBean);
-//          }
-
-//          Collection<Object> resourcesListData = LoadAllSonarProjectsWithModulesRunnable.toResourcesListDataFrom(selectedSonarResources);
-//          projectSettingsConfigurable.getResourcesList().setListData(resourcesListData.toArray());
-//        }
-      }
-    });
-
-    return myRootJPanel;
-  }*/
-
   @Nullable
   @Override
   protected JComponent createCenterPanel() {

@@ -8,22 +8,14 @@ repositories {
     mavenCentral()
 }
 
-configurations {
-    provided
-}
-
-sourceSets {
-    main { compileClasspath += configurations.provided }
-}
-
 dependencies {
-    compile 'org.codehaus.sonar:sonar-ws-client:4.1.2'
+    compile 'org.codehaus.sonar:sonar-ws-client:4.0'
     compile 'org.apache.httpcomponents:httpclient:4.2.2'
     compile 'org.javassist:javassist:3.17.1-GA'
     compile 'com.google.guava:guava:16.0.1'
     compile 'com.google.code.gson:gson:2.2.4'
-    compile 'com.ning:async-http-client:1.8.3'
-    provided 'org.projectlombok:lombok:1.12.6'
+    compile 'joda-time:joda-time:2.3'
+    testCompile 'org.easytesting:fest-assert:1.4'
 }
 
 idea {
