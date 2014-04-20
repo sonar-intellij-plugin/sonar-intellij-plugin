@@ -6,7 +6,7 @@ import org.joda.time.DateTime;
 import java.lang.reflect.Type;
 import java.util.Date;
 
-class DateTimeTypeConverter
+public class DateTimeTypeConverter
     implements JsonSerializer<DateTime>, JsonDeserializer<DateTime> {
   @Override
   public JsonElement serialize(DateTime src, Type srcType, JsonSerializationContext context) {

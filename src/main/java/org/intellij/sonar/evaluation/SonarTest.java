@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.intellij.openapi.progress.util.CommandLineProgress;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.Sonar;
+import org.sonar.wsclient.issue.Issues;
+import org.sonar.wsclient.services.Profile;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
 import org.sonar.wsclient.services.Rule;
@@ -19,12 +21,36 @@ public class SonarTest {
 //      testGetRules();
 //        testGetResources();
 //    testGetAllProjectsAndModulesBySonarService();
+//    testGetResourceWithProfile();
+//    testGetProfile();
+    testGetIssues();
+  }
+
+  private static void testGetIssues() {
+    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+    final String resourceKey = "de.mobile.dealer:dealer-admin";
+//    final String resourceKey = "de.mobile:mobile-multimodule-pom";
+    final Issues issues = sonarServer.getIssuesFor(resourceKey);
+    System.out.println(issues.size() + " issues for " + resourceKey + " | total: " + issues.paging().total() +
+    " pages: " + issues.paging().pages() + " max results reached: " + issues.maxResultsReached());
+  }
+
+  private static void testGetProfile() {
+    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+    final Profile profile = sonarServer.getProfile("java", "mobile_relaxed");
+    System.out.println("rules count: " + profile.getRules().size());
+  }
+
+  private static void testGetResourceWithProfile() {
+    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+    final Resource resourceWithProfile = sonarServer.getResourceWithProfile("de.mobile:mobile-parkings-job");
+    System.out.println("language: " + resourceWithProfile.getLanguage());
+    System.out.println("profile: " + resourceWithProfile.getMeasure("profile").getData());
   }
 
   private static void testGetAllProjectsAndModulesBySonarService() {
-    SonarServer sonarServer = new SonarServer();
-    Sonar sonar = sonarServer.createSonar("https://sonar.corp.mobile.de/sonar", null, null);
-    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules(sonar);
+    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules();
     for (Resource projectOrModule : allProjectsWithModules) {
       if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
         System.out.println("##################################################");

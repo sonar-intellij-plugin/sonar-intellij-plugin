@@ -6,12 +6,11 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -26,6 +25,7 @@ import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.configuration.IncrementalScriptConfigurable;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
+import org.intellij.sonar.configuration.check.*;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.Nls;
@@ -39,8 +39,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.util.*;
 import java.util.List;
+
+import static org.intellij.sonar.util.MessagesUtil.errorMessage;
+import static org.intellij.sonar.util.MessagesUtil.warnMessage;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
@@ -260,7 +264,6 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     return myRootJPanel;
   }
 
-
   private void initSonarServersComboBox() {
     Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersService.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
@@ -339,7 +342,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
-        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove Sonar Server", Messages.getQuestionIcon());
+        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove Sonar Server", AllIcons.Actions.Help);
         if (rc == Messages.OK) {
           SonarServersService.remove(selectedSonarServer.toString());
           mySonarServersComboBox.removeItem(selectedSonarServer);
@@ -452,103 +455,143 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     setModelForIncrementalAnalysisScriptsTable(scripts);
   }
 
-
   private void addActionListenerForTestConfigurationButton() {
     myTestConfigurationButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
 
-        final TestConnectionRunnable testConnectionRunnable = testSonarServerConnection();
+        StringBuilder testResultMessageBuilder = new StringBuilder();
 
-        // try to get rules for each resource
-        // try to get issues for each resource
+        final String selectedSonarServerName = mySonarServersComboBox.getSelectedItem().toString();
+        if (NO_SONAR.equals(selectedSonarServerName)) {
+          testResultMessageBuilder.append(warnMessage("No sonar server selected\n"));
+        } else {
+          final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(selectedSonarServerName);
 
-        // check if script file exists
-        // check if all source paths exists
-        // try to execute script + abort after 5 sec
+          if (!sonarServerConfiguration.isPresent()) {
+            testResultMessageBuilder.append(String.format("Cannot find configuration for %s\n", selectedSonarServerName));
+          } else {
+            final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
 
+            final ConnectionCheck connectionCheck = testSonarServerConnection(sonarServer);
+            testResultMessageBuilder.append(connectionCheck.getMessage());
+            if (connectionCheck.isOk()) {
+              testResultMessageBuilder
+                  .append(testGetRules(sonarServer))
+                  .append(testGetIssues(sonarServer));
+            }
+          }
+        }
 
-        String testResultMessage = testConnectionRunnable.getMessage();
-        Messages.showInfoMessage(testResultMessage, "Configuration Check Result");
+        testResultMessageBuilder.append(testSourceDirectoryPaths())
+            .append(testSonarReportFiles())
+            .append(testScriptsExecution());
+
+        Messages.showMessageDialog(testResultMessageBuilder.toString(), "Configuration Check Result", AllIcons.Actions.IntentionBulb);
 
       }
     });
   }
 
-  private TestConnectionRunnable testSonarServerConnection() {
-    final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(
-        mySonarServersComboBox.getSelectedItem().toString()
-    );
-    final TestConnectionRunnable testConnectionRunnable = new TestConnectionRunnable(sonarServerConfiguration.get());
+  private String testScriptsExecution() {
+    StringBuilder sb = new StringBuilder();
+    for (IncrementalScriptBean incrementalScriptBean : myIncrementalAnalysisScriptsTable.getItems()) {
+      ScriptExecutionCheck scriptExecutionCheck = new ScriptExecutionCheck(
+          incrementalScriptBean, new File(myProject.getBaseDir().getPath()));
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          scriptExecutionCheck,
+          "Testing Script Execution", true, myProject
+      );
+      sb.append(scriptExecutionCheck.getMessage());
+    }
+
+    return sb.toString();
+  }
+
+
+  private String testSourceDirectoryPaths() {
+    StringBuilder sb = new StringBuilder();
+    for (IncrementalScriptBean incrementalScriptBean : myIncrementalAnalysisScriptsTable.getItems()) {
+      for (String sourceDirectoryPath : incrementalScriptBean.getSourcePaths()) {
+        FileExistenceCheck fileExistenceCheck = new FileExistenceCheck(sourceDirectoryPath);
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(
+            fileExistenceCheck,
+            "Testing File Existence", true, myProject
+        );
+        sb.append(fileExistenceCheck.getMessage());
+      }
+    }
+    return sb.toString();
+  }
+
+  private String testSonarReportFiles() {
+    StringBuilder sb = new StringBuilder();
+    for (IncrementalScriptBean incrementalScriptBean : myIncrementalAnalysisScriptsTable.getItems()) {
+      FileExistenceCheck fileExistenceCheck = new FileExistenceCheck(incrementalScriptBean.getPathToSonarReport());
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          fileExistenceCheck,
+          "Testing File Existence", true, myProject
+      );
+      sb.append(fileExistenceCheck.getMessage());
+      if (fileExistenceCheck.isOk()) {
+        SonarReportContentCheck sonarReportContentCheck = new SonarReportContentCheck(incrementalScriptBean.getPathToSonarReport());
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(
+            sonarReportContentCheck,
+            "Testing Sonar Report Contents", true, myProject
+        );
+        sb.append(sonarReportContentCheck.getMessage());
+      }
+    }
+    return sb.toString();
+  }
+
+  private String testGetIssues(SonarServer sonarServer) {
+    final List<Resource> resources = mySonarResourcesTable.getItems();
+    if (null == resources || resources.size() == 0) return "";
+
+    StringBuilder sb = new StringBuilder();
+    for (Resource resource : resources) {
+      final String resourceKey = resource.getKey();
+      final IssuesRetrievalCheck issuesRetrievalCheck = new IssuesRetrievalCheck(sonarServer, resourceKey);
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          issuesRetrievalCheck,
+          "Testing Issues", true, myProject
+      );
+      sb.append(issuesRetrievalCheck.getMessage());
+    }
+
+    return sb.toString();
+  }
+
+  private String testGetRules(SonarServer sonarServer) {
+
+    final List<Resource> resources = mySonarResourcesTable.getItems();
+    if (null == resources || resources.size() == 0)
+      return errorMessage("No sonar resource configured");
+
+    StringBuilder sb = new StringBuilder();
+    for (Resource resource : resources) {
+      final String resourceKey = resource.getKey();
+      final RulesRetrievalCheck rulesRetrievalCheck = new RulesRetrievalCheck(sonarServer, resourceKey);
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          rulesRetrievalCheck,
+          "Testing Rules", true, myProject
+      );
+      sb.append(rulesRetrievalCheck.getMessage());
+    }
+
+    return sb.toString();
+  }
+
+  private ConnectionCheck testSonarServerConnection(SonarServer sonarServer) {
+
+    final ConnectionCheck connectionCheck = new ConnectionCheck(sonarServer);
     ProgressManager.getInstance().runProcessWithProgressSynchronously(
-        testConnectionRunnable,
+        connectionCheck,
         "Testing Connection", true, myProject
     );
 
-    return testConnectionRunnable;
-  }
-
-  public class TestConnectionRunnable implements Runnable {
-
-    private final SonarServerConfigurationBean sonarServerConfigurationBean;
-
-    private Optional<String> mySonarServerVersion = Optional.absent();
-
-    private Optional<String> mySonarServerError = Optional.absent();
-
-    public TestConnectionRunnable(SonarServerConfigurationBean sonarServerConfigurationBean) {
-      this.sonarServerConfigurationBean = sonarServerConfigurationBean;
-    }
-
-    @Override
-    public void run() {
-      ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-      indicator.setText("Testing Connection");
-      indicator.setText2(String.format("connecting to %s", sonarServerConfigurationBean.getHostUrl()));
-      indicator.setFraction(0.5);
-      indicator.setIndeterminate(true);
-
-      try {
-        mySonarServerVersion = Optional.fromNullable(SonarServer.getInstance().verifySonarConnection(sonarServerConfigurationBean));
-      } catch (Exception e) {
-        mySonarServerError = Optional.of(e.getMessage());
-        throw new ProcessCanceledException();
-      }
-
-      if (indicator.isCanceled()) {
-        throw new ProcessCanceledException();
-      }
-    }
-
-    public boolean connectionWorks() {
-      return !mySonarServerError.isPresent();
-    }
-
-    public Optional<String> getSonarServerVersion() {
-      return mySonarServerVersion;
-    }
-
-    public Optional<String> getSonarServerError() {
-      return mySonarServerError;
-    }
-
-    public String getMessage() {
-
-      if (!connectionWorks()) {
-        return errorMessage("Connection to sonar server not successful\n\n" +
-            getSonarServerError().get());
-      } else {
-        return okMessage("Sonar server version: " + getSonarServerVersion().get());
-      }
-    }
-  }
-
-  private static String errorMessage(String message) {
-    return "ERROR: " + message;
-  }
-
-  private static String okMessage(String message) {
-    return "OK:    " + message;
+    return connectionCheck;
   }
 
 }

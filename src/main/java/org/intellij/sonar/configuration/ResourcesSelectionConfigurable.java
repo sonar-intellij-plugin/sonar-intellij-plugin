@@ -108,9 +108,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     public void run() {
       final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(mySonarServerName);
       if (sonarServerConfiguration.isPresent()) {
-        final org.sonar.wsclient.Sonar sonar = SonarServer.getInstance().createSonar(sonarServerConfiguration.get());
+        final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
         try {
-          myAllProjectsAndModules = SonarServer.getInstance().getAllProjectsAndModules(sonar);
+          myAllProjectsAndModules = sonarServer.getAllProjectsAndModules();
           SonarResourcesService.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(myAllProjectsAndModules));
           SwingUtilities.invokeLater(new Runnable() {
             @Override

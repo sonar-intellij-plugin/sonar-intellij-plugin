@@ -1,12 +1,13 @@
 package org.intellij.sonar.sonarserver;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.base.Optional;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
+import com.intellij.util.net.HttpConfigurable;
+import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarIssuesProvider;
 import org.intellij.sonar.SonarRulesProvider;
@@ -16,52 +17,123 @@ import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.jetbrains.annotations.NotNull;
+import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
-import org.sonar.wsclient.rule.Rule;
+import org.sonar.wsclient.SonarClient;
+import org.sonar.wsclient.issue.IssueQuery;
+import org.sonar.wsclient.issue.Issues;
+import org.sonar.wsclient.services.Profile;
+import org.sonar.wsclient.services.ProfileQuery;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
-import org.sonar.wsclient.services.RuleQuery;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
+import java.net.*;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class SonarServer {
+
+  private static final Logger LOG = Logger.getInstance(SonarServer.class);
 
   private static final String VERSION_URL = "/api/server/version";
   private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "SonarQube Community Plugin";
+  public static final int READ_TIMEOUT = 5000;
 
-  public SonarServer() {
+  private final SonarServerConfigurationBean mySonarServerConfigurationBean;
+  private final Sonar sonar;
+  private final SonarClient sonarClient;
+
+  private SonarServer(SonarServerConfigurationBean sonarServerConfigurationBean) {
+    this.mySonarServerConfigurationBean = sonarServerConfigurationBean;
+    this.sonar = createSonar();
+    this.sonarClient = createSonarClient(createHost());
   }
 
-  public static SonarServer getInstance() {
-    return ServiceManager.getService(SonarServer.class);
+  public static SonarServer create(String hostUrl) {
+    return create(SonarServerConfigurationBean.of(hostUrl));
   }
 
-  public Sonar createSonar(SonarServerConfigurationBean configurationBean) {
+  public static SonarServer create(SonarServerConfigurationBean sonarServerConfigurationBean) {
+    return new SonarServer(sonarServerConfigurationBean);
+  }
+
+  private SonarClient createSonarClient(Host host) {
+    SonarClient.Builder builder = SonarClient.builder()
+        .readTimeoutMilliseconds(READ_TIMEOUT)
+        .url(host.getHost())
+        .login(host.getUsername())
+        .password(host.getPassword());
+    Optional<Proxy> proxy = getIntelliJProxyFor(host);
+    if (proxy.isPresent()) {
+      InetSocketAddress address = (InetSocketAddress) proxy.get().address();
+      HttpConfigurable proxySettings = HttpConfigurable.getInstance();
+      builder.proxy(address.getHostName(), address.getPort());
+      if (proxySettings.PROXY_AUTHENTICATION) {
+        builder.proxyLogin(proxySettings.PROXY_LOGIN).proxyPassword(proxySettings.getPlainProxyPassword());
+      }
+    }
+    return builder.build();
+  }
+
+  private Optional<Proxy> getIntelliJProxyFor(Host server) {
+    List<Proxy> proxies;
+    try {
+      proxies = CommonProxy.getInstance().select(new URL(server.getHost()));
+    } catch (MalformedURLException e) {
+      LOG.error("Unable to configure proxy", e);
+      return Optional.absent();
+    }
+    for (Proxy proxy : proxies) {
+      if (proxy.type() == Proxy.Type.HTTP) {
+        return Optional.of(proxy);
+      }
+    }
+    return Optional.absent();
+  }
+
+  private Sonar createSonar() {
     Sonar sonar;
-    if (configurationBean.isAnonymous()) {
-      sonar = createSonar(configurationBean.getHostUrl(), null, null);
+    if (mySonarServerConfigurationBean.isAnonymous()) {
+      sonar = createSonar(mySonarServerConfigurationBean.getHostUrl(), null, null);
     } else {
-      configurationBean.loadPassword();
-      sonar = createSonar(configurationBean.getHostUrl(), configurationBean.getUser(), configurationBean.getPassword());
-      configurationBean.clearPassword();
+      mySonarServerConfigurationBean.loadPassword();
+      sonar = createSonar(mySonarServerConfigurationBean.getHostUrl(), mySonarServerConfigurationBean.getUser(), mySonarServerConfigurationBean.getPassword());
+      mySonarServerConfigurationBean.clearPassword();
     }
     return sonar;
   }
 
-  public String verifySonarConnection(SonarServerConfigurationBean config) throws SonarServerConnectionException {
-    HttpURLConnection httpURLConnection = getHttpConnection(config.getHostUrl());
+  private Host createHost() {
+    Host host;
+    final String safeHostUrl = getHostSafe(mySonarServerConfigurationBean.getHostUrl());
+    if (mySonarServerConfigurationBean.isAnonymous()) {
+      host = new Host(safeHostUrl);
+    } else {
+      mySonarServerConfigurationBean.loadPassword();
+      host = new Host(safeHostUrl, mySonarServerConfigurationBean.getUser(), mySonarServerConfigurationBean.getPassword());
+      mySonarServerConfigurationBean.clearPassword();
+    }
+    return host;
+  }
+
+  private Sonar createSonar(String host, String user, String password) {
+    host = getHostSafe(host);
+    return StringUtils.isEmpty(user) ? Sonar.create(host) : Sonar.create(host, user, password);
+  }
+
+  private String getHostSafe(String hostName) {
+    return StringUtils.removeEnd(hostName, "/");
+  }
+
+  public SonarServerConfigurationBean getSonarServerConfigurationBean() {
+    return mySonarServerConfigurationBean;
+  }
+
+  public String verifySonarConnection() throws SonarServerConnectionException {
+    HttpURLConnection httpURLConnection = getHttpConnection();
 
     try {
       int statusCode = httpURLConnection.getResponseCode();
@@ -74,7 +146,8 @@ public class SonarServer {
     }
   }
 
-  private HttpURLConnection getHttpConnection(String hostName) throws SonarServerConnectionException {
+  private HttpURLConnection getHttpConnection() throws SonarServerConnectionException {
+    String hostName = mySonarServerConfigurationBean.getHostUrl();
     URL sonarServerUrl = null;
     try {
       sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);
@@ -92,10 +165,6 @@ public class SonarServer {
     }
   }
 
-  private String getHostSafe(String hostName) {
-    return StringUtils.removeEnd(hostName, "/");
-  }
-
   /*@NotNull
   public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
     if (null == sonarSettingsBean) {
@@ -110,10 +179,7 @@ public class SonarServer {
     return sonar.findAll(violationQuery);
   }*/
 
-  public Sonar createSonar(String host, String user, String password) {
-    host = getHostSafe(host);
-    return StringUtils.isEmpty(user) ? Sonar.create(host) : Sonar.create(host, user, password);
-  }
+
 
   /*public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
     return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
@@ -129,7 +195,6 @@ public class SonarServer {
     }
   }*/
 
-
 // GET LANGUAGE AND RULES PROFILE FOR A SONAR RESOURCE
 //  https://sonar.corp.mobile.de/sonar/api/resources?format=json&resource=autoact:autoact-b2b-api_groovy&metrics=profile
 
@@ -140,38 +205,31 @@ public class SonarServer {
   // for entry in s:
   //   getRulesFor(entry.language, entry.profile)
 
+  /**
+   * <pre>
+   * Usage: <br>
+   * {@code
+   * Resource resource = getResourceWithProfile(sonar, resourceKey);
+   * String profile = resource.getMeasure("profile").getData();
+   * }
+   * </pre>
+   *
+   * @param resourceKey like myproject:myname
+   */
+  public Resource getResourceWithProfile(String resourceKey) {
+    final ResourceQuery query = ResourceQuery.createForMetrics(resourceKey, "profile");
+    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    return sonar.find(query);
+  }
+
 // GET LIST OF RULES FOR A SONAR PROFILE language is mandatory!
 //  https://sonar.corp.mobile.de/sonar/api/profiles?language=java&name=mobile_relaxed&format=json
-  /*
-  [
-  {
-    "name": "mobile_relaxed",
-      "language": "java",  <--LANGUAGE
-      "default": false,
-      "rules": [
-    {
-      "key": "com.puppycrawl.tools.checkstyle.checks.design.HideUtilityClassConstructorCheck",
-        "repo": "checkstyle",  <-- RULE REPOSITORY
-        "severity": "MAJOR"
-    },
-    {
-      "key": "com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-        "repo": "checkstyle",
-        "severity": "MAJOR"
-    },
-    {
-      "key": "com.puppycrawl.tools.checkstyle.checks.naming.StaticVariableNameCheck",
-        "repo": "checkstyle",
-        "severity": "MAJOR"
-    },
-    {
-      "key": "com.puppycrawl.tools.checkstyle.checks.naming.MethodNameCheck",
-        "repo": "checkstyle",
-        "severity": "INFO"
-    },
-*/
 
-
+  public Profile getProfile(String language, String profileName) {
+    ProfileQuery query = ProfileQuery.create(language, profileName);
+    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    return sonar.find(query);
+  }
 
  /* public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     List<Rule> rulesResult = new LinkedList<Rule>();
@@ -247,7 +305,7 @@ public class SonarServer {
     }
   }
 
-  public List<Resource> getAllProjectsAndModules(Sonar sonar) {
+  public List<Resource> getAllProjectsAndModules() {
     List<Resource> allResources = new LinkedList<Resource>();
     List<Resource> projects = getAllProjects(sonar);
     if (null != projects) {
@@ -265,16 +323,26 @@ public class SonarServer {
   }
 
   public List<Resource> getAllProjects(Sonar sonar) {
-    ResourceQuery projectResourceQuery = new ResourceQuery();
-    projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT);
-    return sonar.findAll(projectResourceQuery);
+    ResourceQuery query = new ResourceQuery();
+    query.setQualifiers(Resource.QUALIFIER_PROJECT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    return sonar.findAll(query);
   }
 
   public List<Resource> getAllModules(Sonar sonar, Integer projectResourceId) {
-    ResourceQuery moduleResourceQuery = new ResourceQuery(projectResourceId);
-    moduleResourceQuery.setDepth(-1);
-    moduleResourceQuery.setQualifiers(Resource.QUALIFIER_MODULE);
-    return sonar.findAll(moduleResourceQuery);
+    ResourceQuery query = new ResourceQuery(projectResourceId);
+    query.setDepth(-1);
+    query.setQualifiers(Resource.QUALIFIER_MODULE);
+    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    return sonar.findAll(query);
+  }
+
+  public Issues getIssuesFor(String resourceKey) {
+    IssueQuery query = IssueQuery.create()
+        .componentRoots(resourceKey)
+        .resolved(false)
+        .pageSize(-1);
+    return sonarClient.issueClient().find(query);
   }
 
 }

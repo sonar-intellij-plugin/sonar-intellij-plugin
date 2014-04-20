@@ -1,0 +1,58 @@
+package org.intellij.sonar.configuration.check;
+
+import com.intellij.openapi.util.text.StringUtil;
+import org.intellij.sonar.sonarserver.SonarServer;
+import org.sonar.wsclient.issue.Issues;
+import org.sonar.wsclient.services.Resource;
+
+import static org.intellij.sonar.util.MessagesUtil.errorMessage;
+import static org.intellij.sonar.util.MessagesUtil.okMessage;
+import static org.intellij.sonar.util.MessagesUtil.warnMessage;
+
+public class IssuesRetrievalCheck implements Runnable, ConfigurationCheck {
+
+  private final SonarServer mySonarServer;
+  private final String myResourceKey;
+
+  private Issues myIssues;
+  private Resource myResource;
+
+  private String errorMessage;
+
+  public IssuesRetrievalCheck(SonarServer sonarServer, String resourceKey) {
+    this.mySonarServer = sonarServer;
+    this.myResourceKey = resourceKey;
+  }
+
+  @Override
+  public void run() {
+    try {
+      myIssues = mySonarServer.getIssuesFor(myResourceKey);
+      myResource = mySonarServer.getResourceWithProfile(myResourceKey);
+    } catch (Exception e) {
+      errorMessage = e.getMessage();
+    }
+  }
+
+  @Override
+  public boolean isOk() {
+    return StringUtil.isEmptyOrSpaces(errorMessage)
+        && !(null == myIssues || null == myIssues.maxResultsReached())
+        && !myIssues.maxResultsReached();
+  }
+
+  @Override
+  public String getMessage() {
+    if (!StringUtil.isEmptyOrSpaces(errorMessage)) {
+      return errorMessage(String.format("Cannot retrieve issues for %s\nRoot cause:\n\n%s\n", myResourceKey, errorMessage));
+    }
+    if (null == myIssues || null == myIssues.maxResultsReached()) {
+      return errorMessage(String.format("Cannot retrieve issues for %s\n", myResourceKey));
+    } else if (myIssues.maxResultsReached()) {
+      return warnMessage(String.format("Max results reached for %s !" +
+          " Total issues size is greater then %s.\n", myResource.getName(), myIssues.paging().total()));
+    } else {
+      return okMessage(String.format("Total issues size for %s is %d.\n", myResource.getName(), myIssues.paging().total()));
+    }
+  }
+}

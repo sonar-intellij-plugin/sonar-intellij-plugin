@@ -12,6 +12,10 @@ public class SonarServerConfigurationBean {
   @Transient
   private String password;
 
+  public static SonarServerConfigurationBean of(String hostUrl) {
+    return SonarServerConfigurationBean.of(null, hostUrl, true, null);
+  }
+
   public static SonarServerConfigurationBean of(String name, String hostUrl, boolean anonymous, String user) {
     SonarServerConfigurationBean bean = new SonarServerConfigurationBean();
     bean.name = name;

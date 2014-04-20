@@ -1,0 +1,48 @@
+{"version": "4.1.1",
+    "issues": [
+    {
+        "key": "002e8a9c-3d3d-495f-8a1a-06710ce70346",
+        "component": "de.mobile.dealer:dealer-admin:de.mobile.dealer.homepage.HomepageSettingsApplicationImpl",
+        "line": 56,
+        "message": "The method 'updateSettings' has a Cyclomatic Complexity of 20.",
+        "severity": "MAJOR",
+        "rule": "pmd:CyclomaticComplexity",
+        "status": "OPEN",
+        "isNew": false,
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "15658627-d8eb-4310-abef-25bd5925815f",
+        "component": "de.mobile.dealer:dealer-admin:de.mobile.dealer.homepage.HomepageSettingsApplicationImpl",
+        "line": 142,
+        "message": "Method 'EbayPictureService.findByBaseUri(...)' is deprecated.",
+        "severity": "MAJOR",
+        "rule": "squid:CallToDeprecatedMethod",
+        "status": "OPEN",
+        "isNew": false,
+        "creationDate": "2013-12-04T04:45:42+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    }
+
+],
+    "components": [
+    {
+        "key": "de.mobile.dealer:dealer-admin:de.mobile.dealer.homepage.HomepageSettingsApplicationImpl"
+    }
+],
+    "rules": [
+    {
+        "key": "pmd:CyclomaticComplexity",
+        "rule": "CyclomaticComplexity",
+        "repository": "pmd",
+        "name": "Code size - cyclomatic complexity"
+    },
+    {
+        "key": "squid:CallToDeprecatedMethod",
+        "rule": "CallToDeprecatedMethod",
+        "repository": "squid",
+        "name": "Avoid use of deprecated method"
+    }
+],
+    "users": []}

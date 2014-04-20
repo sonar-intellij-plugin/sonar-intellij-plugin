@@ -64,7 +64,6 @@
         <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarRulesProvider"/>
-        <applicationService serviceImplementation="org.intellij.sonar.sonarserver.SonarServer"/>
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServersService" />
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesService" />
     </extensions>
