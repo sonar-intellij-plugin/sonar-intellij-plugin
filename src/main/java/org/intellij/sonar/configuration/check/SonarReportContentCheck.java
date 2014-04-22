@@ -3,13 +3,17 @@ package org.intellij.sonar.configuration.check;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.intellij.sonar.sonarreport.SonarReport;
 import org.intellij.sonar.util.MessagesUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;
 import static org.intellij.sonar.util.MessagesUtil.okMessage;
@@ -22,6 +26,27 @@ public class SonarReportContentCheck implements Runnable, ConfigurationCheck {
 
   public SonarReportContentCheck(String pathToSonarReportJson) {
     this.pathToSonarReportJson = pathToSonarReportJson;
+  }
+
+  public static String checkSonarReportFiles(Project project, List<IncrementalScriptBean> incrementalScriptBeans) {
+    StringBuilder sb = new StringBuilder();
+    for (IncrementalScriptBean incrementalScriptBean : incrementalScriptBeans) {
+      FileExistenceCheck fileExistenceCheck = new FileExistenceCheck(incrementalScriptBean.getPathToSonarReport());
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          fileExistenceCheck,
+          "Testing File Existence", true, project
+      );
+      sb.append(fileExistenceCheck.getMessage());
+      if (fileExistenceCheck.isOk()) {
+        SonarReportContentCheck sonarReportContentCheck = new SonarReportContentCheck(incrementalScriptBean.getPathToSonarReport());
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(
+            sonarReportContentCheck,
+            "Testing Sonar Report Contents", true, project
+        );
+        sb.append(sonarReportContentCheck.getMessage());
+      }
+    }
+    return sb.toString();
   }
 
   @Override

@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import org.intellij.sonar.sonarserver.SonarServer;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;
@@ -13,12 +14,25 @@ public class ConnectionCheck implements Runnable, ConfigurationCheck {
 
   private final SonarServer mySonarServer;
 
+  private final Project myProject;
+
   private Optional<String> mySonarServerVersion = Optional.absent();
 
   private Optional<String> mySonarServerError = Optional.absent();
 
-  public ConnectionCheck(SonarServer sonarServer) {
+  public ConnectionCheck(SonarServer sonarServer, Project project) {
     this.mySonarServer = sonarServer;
+    this.myProject = project;
+  }
+
+  public ConnectionCheck checkSonarServerConnection() {
+
+    ProgressManager.getInstance().runProcessWithProgressSynchronously(
+        this,
+        "Testing Connection", true, myProject
+    );
+
+    return this;
   }
 
   @Override

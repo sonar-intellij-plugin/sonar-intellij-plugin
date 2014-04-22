@@ -1,9 +1,13 @@
 package org.intellij.sonar.configuration.check;
 
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.services.Profile;
 import org.sonar.wsclient.services.Resource;
+
+import java.util.List;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;
 import static org.intellij.sonar.util.MessagesUtil.okMessage;
@@ -27,6 +31,25 @@ public class RulesRetrievalCheck implements Runnable, ConfigurationCheck {
   public RulesRetrievalCheck(SonarServer mySonarServer, String resourceKey) {
     this.mySonarServer = mySonarServer;
     this.myResourceKey = resourceKey;
+  }
+
+  public static String checkRulesRetrieval(SonarServer sonarServer, Project project, List<Resource> resources) {
+
+    if (null == resources || resources.size() == 0)
+      return errorMessage("No sonar resource configured");
+
+    StringBuilder sb = new StringBuilder();
+    for (Resource resource : resources) {
+      final String resourceKey = resource.getKey();
+      final RulesRetrievalCheck rulesRetrievalCheck = new RulesRetrievalCheck(sonarServer, resourceKey);
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          rulesRetrievalCheck,
+          "Testing Rules", true, project
+      );
+      sb.append(rulesRetrievalCheck.getMessage());
+    }
+
+    return sb.toString();
   }
 
   @Override

@@ -1,8 +1,11 @@
 package org.intellij.sonar.configuration.check;
 
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import org.intellij.sonar.persistence.IncrementalScriptBean;
 
 import java.io.File;
+import java.util.List;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;
 import static org.intellij.sonar.util.MessagesUtil.okMessage;
@@ -17,6 +20,21 @@ public class ScriptExecutionCheck implements Runnable, ConfigurationCheck {
   public ScriptExecutionCheck(IncrementalScriptBean myScript, File workingDirectory) {
     this.myScript = myScript;
     this.workingDirectory = workingDirectory;
+  }
+
+  public static String checkScriptsExecution(Project project, List<IncrementalScriptBean> incrementalScriptBeans) {
+    StringBuilder sb = new StringBuilder();
+    for (IncrementalScriptBean incrementalScriptBean : incrementalScriptBeans) {
+      ScriptExecutionCheck scriptExecutionCheck = new ScriptExecutionCheck(
+          incrementalScriptBean, new File(project.getBaseDir().getPath()));
+      ProgressManager.getInstance().runProcessWithProgressSynchronously(
+          scriptExecutionCheck,
+          "Testing Script Execution", true, project
+      );
+      sb.append(scriptExecutionCheck.getMessage());
+    }
+
+    return sb.toString();
   }
 
   @Override

@@ -18,7 +18,7 @@ import java.util.List;
 @SuppressWarnings("UnusedDeclaration")
 public class SonarTest {
   public static void main(String[] args) {
-//      testGetRules();
+//      checkRulesRetrieval();
 //        testGetResources();
 //    testGetAllProjectsAndModulesBySonarService();
 //    testGetResourceWithProfile();
@@ -83,7 +83,7 @@ public class SonarTest {
     }
   }
 /*
-  private static void testGetRules() {
+  private static void checkRulesRetrieval() {
     List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<SonarSettingsBean>(3);
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
 //        sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
