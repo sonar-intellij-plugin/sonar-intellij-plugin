@@ -3,6 +3,7 @@ package org.intellij.sonar.configuration;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.Application;
@@ -35,6 +36,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.*;
 
 public class IncrementalScriptConfigurable extends DialogWrapper {
 
@@ -135,11 +138,16 @@ public class IncrementalScriptConfigurable extends DialogWrapper {
             fileDescriptor.setDescription("Configure sonar source path for incremental analysis script");
             FileChooser.chooseFiles(fileDescriptor, myProject, projectBaseDir, new Consumer<java.util.List<VirtualFile>>() {
               @Override
-              public void consume(final java.util.List<VirtualFile> files) {
+              public void consume(final java.util.List<VirtualFile> selectedFiles) {
+                Set<VirtualFile> currentFiles = ImmutableSet.copyOf(mySourcePathsTable.getItems());
+                Set<VirtualFile> newFilesSelection = ImmutableSet.<VirtualFile>builder()
+                    .addAll(currentFiles)
+                    .addAll(selectedFiles)
+                    .build();
                 mySourcePathsTable.setModelAndUpdateColumns(
                     new ListTableModel<VirtualFile>(
                         new ColumnInfo[]{SOURCE_PATH_COLUMN},
-                        Lists.newArrayList(files),
+                        Lists.newArrayList(newFilesSelection),
                         0));
               }
             });

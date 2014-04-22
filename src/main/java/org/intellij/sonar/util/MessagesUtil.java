@@ -2,14 +2,14 @@ package org.intellij.sonar.util;
 
 public class MessagesUtil {
   public static String warnMessage(String message) {
-    return "WARNING: " + message;
+    return String.format("\nWARNING: %s\n", message);
   }
 
   public static String errorMessage(String message) {
-    return "ERROR:   " + message;
+    return String.format("\nERROR:   %s\n", message);
   }
 
   public static String okMessage(String message) {
-    return "OK:      " + message;
+    return String.format("OK:      %s", message);
   }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;
 import static org.intellij.sonar.util.MessagesUtil.okMessage;
+import static org.intellij.sonar.util.MessagesUtil.warnMessage;
 
 public class RulesRetrievalCheck implements Runnable, ConfigurationCheck {
 
@@ -35,8 +36,9 @@ public class RulesRetrievalCheck implements Runnable, ConfigurationCheck {
 
   public static String checkRulesRetrieval(SonarServer sonarServer, Project project, List<Resource> resources) {
 
-    if (null == resources || resources.size() == 0)
-      return errorMessage("No sonar resource configured");
+    if (null == resources || resources.size() == 0) {
+      return warnMessage("No sonar resource configured");
+    }
 
     StringBuilder sb = new StringBuilder();
     for (Resource resource : resources) {

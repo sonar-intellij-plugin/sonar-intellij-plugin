@@ -74,7 +74,7 @@ public class SonarReportContentCheck implements Runnable, ConfigurationCheck {
     try {
       String sonarReportContent = Files.toString(new File(pathToSonarReportJson), Charsets.UTF_8);
       sonarReport = SonarReport.fromJson(sonarReportContent);
-    } catch (IOException e) {
+    } catch (Exception e) {
       errorMessage = e.getMessage();
     }
   }

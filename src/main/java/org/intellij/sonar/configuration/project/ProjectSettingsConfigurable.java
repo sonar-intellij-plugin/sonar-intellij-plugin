@@ -1,30 +1,16 @@
 package org.intellij.sonar.configuration.project;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.ui.AnActionButton;
-import com.intellij.ui.AnActionButtonRunnable;
-import com.intellij.ui.TableUtil;
-import com.intellij.ui.ToolbarDecorator;
-import com.intellij.ui.table.TableView;
-import com.intellij.util.ui.ColumnInfo;
-import com.intellij.util.ui.ListTableModel;
-import org.intellij.sonar.configuration.IncrementalScriptConfigurable;
-import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
-import org.intellij.sonar.configuration.SonarServerConfigurable;
-import org.intellij.sonar.configuration.check.*;
+import org.intellij.sonar.configuration.check.ConfigurationCheckActionListener;
+import org.intellij.sonar.configuration.partials.IncrementalAnalysisScriptsTableView;
+import org.intellij.sonar.configuration.partials.ProjectSonarServersView;
+import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.persistence.*;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -33,72 +19,19 @@ import org.sonar.wsclient.services.Resource;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.*;
-import java.util.List;
+import java.util.ArrayList;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
-  public static final int SOURCE_CODE_ENTRY_MAX_LENGTH = 100;
-  private static final ColumnInfo<IncrementalScriptBean, String> SCRIPT_COLUMN = new ColumnInfo<IncrementalScriptBean, String>("Script") {
-
-    @Nullable
-    @Override
-    public String valueOf(IncrementalScriptBean incrementalScriptBean) {
-      final String sourceCodeOfScript = incrementalScriptBean.getSourceCodeOfScript();
-      if (!StringUtil.isEmptyOrSpaces(sourceCodeOfScript) && sourceCodeOfScript.length() >= SOURCE_CODE_ENTRY_MAX_LENGTH) {
-        return sourceCodeOfScript.substring(0, SOURCE_CODE_ENTRY_MAX_LENGTH) + "...";
-      } else {
-        return sourceCodeOfScript;
-      }
-    }
-
-  };
-  private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
   public static final String NO_SONAR = "<NO SONAR>";
-  private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
-    @Nullable
-    @Override
-    public String valueOf(Resource sonarResource) {
-      if (Resource.QUALIFIER_PROJECT.equals(sonarResource.getQualifier())) {
-        return "Project";
-      } else if (Resource.QUALIFIER_MODULE.equals(sonarResource.getQualifier())) {
-        return "Module";
-      } else {
-        return sonarResource.getQualifier();
-      }
-    }
+  private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
 
-  };
-  private static final ColumnInfo<Resource, String> NAME_COLUMN = new ColumnInfo<Resource, String>("Name") {
-    @Nullable
-    @Override
-    public String valueOf(Resource sonarResource) {
-      return sonarResource.getName();
-    }
 
-    @Override
-    public int getWidth(JTable table) {
-      return 300;
-    }
-
-  };
-  private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
-
-    @Nullable
-    @Override
-    public String valueOf(Resource sonarResource) {
-      return sonarResource.getKey();
-    }
-
-  };
-  private final TableView<Resource> mySonarResourcesTable;
-  private final TableView<IncrementalScriptBean> myIncrementalAnalysisScriptsTable;
   private final ProjectSettingsComponent myProjectSettingsComponent;
+  private final IncrementalAnalysisScriptsTableView myIncrementalAnalysisScriptsTableView;
+  private final SonarResourcesTableView mySonarResourcesTableView;
+  private final ProjectSonarServersView mySonarServersView;
   private Project myProject;
   private JButton myCheckConfigurationButton;
   private JPanel myRootJPanel;
@@ -111,123 +44,11 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   public ProjectSettingsConfigurable(Project project) {
     this.myProject = project;
-    this.mySonarResourcesTable = new TableView<Resource>();
-    this.myIncrementalAnalysisScriptsTable = new TableView<IncrementalScriptBean>();
+    this.myIncrementalAnalysisScriptsTableView = new IncrementalAnalysisScriptsTableView(myProject);
     this.myProjectSettingsComponent = myProject.getComponent(ProjectSettingsComponent.class);
-  }
+    this.mySonarServersView = new ProjectSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton, myProject);
+    this.mySonarResourcesTableView = new SonarResourcesTableView(myProject, mySonarServersView);
 
-  private JComponent createSonarResourcesTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
-        setAddAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            final String selectedSonarServerName = mySonarServersComboBox.getSelectedItem().toString();
-            if (!NO_SONAR.equals(selectedSonarServerName)) {
-              ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(myProject, selectedSonarServerName);
-              dlg.show();
-              if (dlg.isOK()) {
-                final java.util.List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
-                final java.util.List<Resource> currentSonarResources = getCurrentSonarResources();
-
-                Set<Resource> mergedSonarResourcesAsSet = new TreeSet<Resource>(new Comparator<Resource>() {
-                  @Override
-                  public int compare(Resource resource, Resource resource2) {
-                    return resource.getKey().compareTo(resource2.getKey());
-                  }
-                });
-                mergedSonarResourcesAsSet.addAll(currentSonarResources);
-                mergedSonarResourcesAsSet.addAll(selectedSonarResources);
-
-                setModelForSonarResourcesTable(Lists.newArrayList(mergedSonarResourcesAsSet));
-              }
-            }
-          }
-        }).
-        setRemoveAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            TableUtil.removeSelectedItems(mySonarResourcesTable);
-          }
-        })
-        .disableUpDownActions().
-            createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1, 100));
-    return panelForTable;
-  }
-
-  private void setModelForSonarResourcesTable(List<Resource> sonarResources) {
-    mySonarResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN, TYPE_COLUMN}, sonarResources, 0));
-  }
-
-  private java.util.List<Resource> getCurrentSonarResources() {
-    return mySonarResourcesTable.getListTableModel().getItems();
-  }
-
-  private JComponent createIncrementalAnalysisScriptsTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(myIncrementalAnalysisScriptsTable, null)
-        .setAddAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
-            dlg.show();
-            if (dlg.isOK()) {
-              final List<IncrementalScriptBean> incrementalScriptBeans = Lists.newArrayList(
-                  ImmutableList.<IncrementalScriptBean>builder()
-                      .addAll(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
-                      .add(dlg.getIncrementalScriptBean())
-                      .build()
-              );
-              setModelForIncrementalAnalysisScriptsTable(incrementalScriptBeans);
-            }
-          }
-        })
-        .setEditAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            IncrementalScriptConfigurable dlg = new IncrementalScriptConfigurable(myProject);
-            dlg.setValuesFrom(myIncrementalAnalysisScriptsTable.getSelectedObject());
-            dlg.show();
-            if (dlg.isOK()) {
-              final IncrementalScriptBean newIncrementalScriptBean = dlg.getIncrementalScriptBean();
-              final IncrementalScriptBean selectedIncrementalScriptBean = myIncrementalAnalysisScriptsTable.getSelectedObject();
-
-              final ArrayList<IncrementalScriptBean> incrementalScriptBeans = Lists.newArrayList(ImmutableList.<IncrementalScriptBean>builder()
-                  .addAll(
-                      FluentIterable.from(myIncrementalAnalysisScriptsTable.getListTableModel().getItems())
-                          .filter(new Predicate<IncrementalScriptBean>() {
-                            @Override
-                            public boolean apply(IncrementalScriptBean it) {
-                              return !it.equals(selectedIncrementalScriptBean);
-                            }
-                          })
-                          .toList()
-                  )
-                  .add(newIncrementalScriptBean)
-                  .build());
-
-              setModelForIncrementalAnalysisScriptsTable(incrementalScriptBeans);
-            }
-          }
-        })
-        .disableUpDownActions()
-        .setRemoveAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            TableUtil.removeSelectedItems(myIncrementalAnalysisScriptsTable);
-          }
-        })
-        .createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1, 100));
-    return panelForTable;
-  }
-
-  private void setModelForIncrementalAnalysisScriptsTable(List<IncrementalScriptBean> incrementalScriptBeans) {
-    myIncrementalAnalysisScriptsTable.setModelAndUpdateColumns(
-        new ListTableModel<IncrementalScriptBean>(
-            new ColumnInfo[]{SCRIPT_COLUMN},
-            incrementalScriptBeans,
-            0)
-    );
   }
 
   @Nls
@@ -246,134 +67,13 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   @Override
   public JComponent createComponent() {
     myPanelForSonarResources.setLayout(new BorderLayout());
-    myPanelForSonarResources.add(createSonarResourcesTable(), BorderLayout.CENTER);
+    myPanelForSonarResources.add(mySonarResourcesTableView.getComponent(), BorderLayout.CENTER);
     myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
-    myPanelForIncrementalAnalysisScripts.add(createIncrementalAnalysisScriptsTable(), BorderLayout.CENTER);
-
-    addActionListenersForSonarServerButtons();
-    initSonarServersComboBox();
-    disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
+    myPanelForIncrementalAnalysisScripts.add(myIncrementalAnalysisScriptsTableView.getComponent(), BorderLayout.CENTER);
+    mySonarServersView.init();
 
     addActionListenerForCheckConfigurationButton();
     return myRootJPanel;
-  }
-
-  private void initSonarServersComboBox() {
-    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersService.getAll();
-    if (sonarServerConfigurationBeans.isPresent()) {
-      mySonarServersComboBox.removeAllItems();
-      mySonarServersComboBox.addItem(makeObj(NO_SONAR));
-      for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
-        mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.getName()));
-      }
-    }
-  }
-
-  private Object makeObj(final String item) {
-    return new Object() {
-      public String toString() {
-        return item;
-      }
-    };
-  }
-
-  private void addActionListenersForSonarServerButtons() {
-
-    final JComboBox sonarServersComboBox = mySonarServersComboBox;
-
-    sonarServersComboBox.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent itemEvent) {
-        disableEditAndRemoveButtonsIfNoSonarSelected(sonarServersComboBox);
-      }
-    });
-
-    myAddSonarServerButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-
-        final SonarServerConfigurable dlg = showSonarServerConfigurableDialog();
-        if (dlg.isOK()) {
-          SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
-          try {
-            SonarServersService.add(newSonarConfigurationBean);
-            mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
-            selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
-          } catch (IllegalArgumentException e) {
-            Messages.showErrorDialog(newSonarConfigurationBean.getName() + " already exists", "Sonar Name Error");
-            showSonarServerConfigurableDialog(newSonarConfigurationBean);
-          }
-        }
-      }
-    });
-
-    myEditSonarServerButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-        final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
-        final Optional<SonarServerConfigurationBean> oldBean = SonarServersService.get(selectedSonarServer.toString());
-        if (!oldBean.isPresent()) {
-          Messages.showErrorDialog(selectedSonarServer.toString() + " is not more preset", "Cannot Perform Edit");
-        } else {
-          final SonarServerConfigurable dlg = showSonarServerConfigurableDialog(oldBean.get());
-          if (dlg.isOK()) {
-            SonarServerConfigurationBean newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
-            try {
-              SonarServersService.remove(oldBean.get().getName());
-              SonarServersService.add(newSonarConfigurationBean);
-              mySonarServersComboBox.removeItem(selectedSonarServer);
-              mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
-              selectItemForSonarServersComboBoxByName(newSonarConfigurationBean.getName());
-            } catch (IllegalArgumentException e) {
-              Messages.showErrorDialog(selectedSonarServer.toString() + " cannot be saved\n\n" + Throwables.getStackTraceAsString(e), "Cannot Perform Edit");
-            }
-          }
-        }
-      }
-    });
-
-    myRemoveSonarServerButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent actionEvent) {
-        final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
-        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove Sonar Server", AllIcons.Actions.Help);
-        if (rc == Messages.OK) {
-          SonarServersService.remove(selectedSonarServer.toString());
-          mySonarServersComboBox.removeItem(selectedSonarServer);
-          disableEditAndRemoveButtonsIfNoSonarSelected(mySonarServersComboBox);
-        }
-      }
-    });
-  }
-
-  private void disableEditAndRemoveButtonsIfNoSonarSelected(JComboBox sonarServersComboBox) {
-    final boolean isNoSonarSelected = NO_SONAR.equals(sonarServersComboBox.getSelectedItem().toString());
-    myEditSonarServerButton.setEnabled(!isNoSonarSelected);
-    myRemoveSonarServerButton.setEnabled(!isNoSonarSelected);
-  }
-
-  private void selectItemForSonarServersComboBoxByName(String name) {
-    Optional itemToSelect = Optional.absent();
-    for (int i = 0; i < mySonarServersComboBox.getItemCount(); i++) {
-      final Object item = mySonarServersComboBox.getItemAt(i);
-      if (name.equals(item.toString())) {
-        itemToSelect = Optional.of(item);
-      }
-    }
-    if (itemToSelect.isPresent())
-      mySonarServersComboBox.setSelectedItem(itemToSelect.get());
-  }
-
-  private SonarServerConfigurable showSonarServerConfigurableDialog() {
-    return showSonarServerConfigurableDialog(null);
-  }
-
-  private SonarServerConfigurable showSonarServerConfigurableDialog(SonarServerConfigurationBean oldSonarServerConfigurationBean) {
-    final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
-    if (null != oldSonarServerConfigurationBean)
-      dlg.setValuesFrom(oldSonarServerConfigurationBean);
-    dlg.show();
-    return dlg;
   }
 
   @Override
@@ -430,9 +130,9 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public ProjectSettingsBean toProjectSettingsBean() {
 
     ProjectSettingsBean projectSettingsBean = new ProjectSettingsBean();
-    projectSettingsBean.setSonarServerName(mySonarServersComboBox.getSelectedItem().toString());
-    projectSettingsBean.setResources(ImmutableList.copyOf(getCurrentSonarResources()));
-    projectSettingsBean.setScripts(ImmutableList.copyOf(myIncrementalAnalysisScriptsTable.getItems()));
+    projectSettingsBean.setSonarServerName(mySonarServersView.getSelectedItemFromComboBox());
+    projectSettingsBean.setResources(ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()));
+    projectSettingsBean.setScripts(ImmutableList.copyOf(myIncrementalAnalysisScriptsTableView.getTable().getItems()));
 
     return projectSettingsBean;
   }
@@ -440,23 +140,24 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   public void setValuesFromProjectSettingsBean(ProjectSettingsBean projectSettingsBean) {
 
     if (null == projectSettingsBean) return;
-    selectItemForSonarServersComboBoxByName(projectSettingsBean.getSonarServerName());
+    mySonarServersView.selectItemForSonarServersComboBoxByName(projectSettingsBean.getSonarServerName());
 
     final ArrayList<Resource> resources = Lists.newArrayList(projectSettingsBean.getResources());
-    setModelForSonarResourcesTable(resources);
+    mySonarResourcesTableView.setModel(resources);
 
     final ArrayList<IncrementalScriptBean> scripts = Lists.newArrayList(projectSettingsBean.getScripts());
-    setModelForIncrementalAnalysisScriptsTable(scripts);
+    myIncrementalAnalysisScriptsTableView.setModel(scripts);
   }
 
   private void addActionListenerForCheckConfigurationButton() {
-    myCheckConfigurationButton.addActionListener(new ProjectConfigurationCheckActionListener(
-        mySonarServersComboBox.getSelectedItem().toString(),
-        myProject,
-        mySonarResourcesTable.getItems(),
-        myIncrementalAnalysisScriptsTable.getItems()
-    ));
+    myCheckConfigurationButton.addActionListener(
+        new ConfigurationCheckActionListener(
+            mySonarServersView,
+            myProject,
+            mySonarResourcesTableView,
+            myIncrementalAnalysisScriptsTableView
+        )
+    );
   }
-
 
 }

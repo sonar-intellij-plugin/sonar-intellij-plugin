@@ -1,6 +1,7 @@
 package org.intellij.sonar.persistence;
 
 import org.intellij.sonar.configuration.SonarResourceMapping;
+import org.sonar.wsclient.services.Resource;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,11 +9,11 @@ import java.util.Collection;
 public class ModuleSettingsBean {
   private String sonarServerName = "";
 
-  private Collection<SonarResourceMapping> resources = new ArrayList<SonarResourceMapping>();
+  private Collection<Resource> resources = new ArrayList<Resource>();
 
   private Collection<IncrementalScriptBean> scripts = new ArrayList<IncrementalScriptBean>();
 
-  public static ModuleSettingsBean of(String sonarServerName, Collection<SonarResourceMapping> resources, Collection<IncrementalScriptBean> scripts) {
+  public static ModuleSettingsBean of(String sonarServerName, Collection<Resource> resources, Collection<IncrementalScriptBean> scripts) {
     ModuleSettingsBean bean = new ModuleSettingsBean();
     bean.sonarServerName = sonarServerName;
     bean.resources = resources;
@@ -32,11 +33,11 @@ public class ModuleSettingsBean {
     this.sonarServerName = sonarServerName;
   }
 
-  public Collection<SonarResourceMapping> getResources() {
+  public Collection<Resource> getResources() {
     return resources;
   }
 
-  public void setResources(Collection<SonarResourceMapping> resources) {
+  public void setResources(Collection<Resource> resources) {
     this.resources = resources;
   }
 
@@ -71,5 +72,14 @@ public class ModuleSettingsBean {
     result = 31 * result + (resources != null ? resources.hashCode() : 0);
     result = 31 * result + (scripts != null ? scripts.hashCode() : 0);
     return result;
+  }
+
+  @Override
+  public String toString() {
+    return "ModuleSettingsBean{" +
+        "sonarServerName='" + sonarServerName + '\'' +
+        ", resources=" + resources +
+        ", scripts=" + scripts +
+        '}';
   }
 }

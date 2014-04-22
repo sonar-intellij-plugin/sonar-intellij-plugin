@@ -73,7 +73,7 @@ public class IssuesRetrievalCheck implements Runnable, ConfigurationCheck {
       return warnMessage(String.format("Max results reached for %s !" +
           " Total issues size is greater then %s.\n", myResource.getName(), myIssues.paging().total()));
     } else {
-      return okMessage(String.format("Total issues size for %s is %d.\n", myResource.getName(), myIssues.paging().total()));
+      return okMessage(String.format("Total issues count for %s: %d.\n", myResource.getName(), myIssues.paging().total()));
     }
   }
 }
