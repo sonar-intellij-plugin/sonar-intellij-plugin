@@ -51,9 +51,15 @@
     </module-components>
 
     <actions>
-        <action id="Show.SyncWithSonar" class="org.intellij.sonar.SyncWithSonarAction" text="Sync with sonar">
+        <group id="Sonar" text="Sonar" popup="true">
+            <action text="Download quality profile" class="org.intellij.sonar.action.DownloadQualityProfileAction" id="Sonar.DownloadQualityProfile" />
+            <action text="Create index for current module" class="org.intellij.sonar.action.CreateIndexForModuleAction" id="Sonar.CreateIndexForModule" />
+            <action text="Create index for the project" class="org.intellij.sonar.action.CreateIndexForProjectAction" id="Sonar.CreateIndexForProject" />
+            <add-to-group group-id="EditorPopupMenu" />
+        </group>
+       <!-- <action id="Show.SyncWithSonar" class="org.intellij.sonar.action.SyncWithSonarAction" text="Sync with sonar">
             <add-to-group group-id="EditorPopupMenu"/>
-        </action>
+        </action>-->
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -64,6 +70,7 @@
         <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarRulesProvider"/>
+        <projectService serviceImplementation="org.intellij.sonar.persistence.IndexComponent"/>
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServersService" />
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesService" />
     </extensions>

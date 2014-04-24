@@ -1,6 +1,7 @@
 package org.intellij.sonar.sonarserver;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
+import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
 import org.sonar.wsclient.services.Profile;
@@ -343,6 +345,26 @@ public class SonarServer {
         .resolved(false)
         .pageSize(-1);
     return sonarClient.issueClient().find(query);
+  }
+
+  public ImmutableList<Issue> getAllIssuesFor(String resourceKey) {
+    final ImmutableList.Builder<Issue> builder = ImmutableList.builder();
+    IssueQuery query = IssueQuery.create()
+        .componentRoots(resourceKey)
+        .resolved(false)
+        .pageSize(-1);
+    Issues issues = sonarClient.issueClient().find(query);
+    builder.addAll(issues.list());
+    for (int i=2; i <= issues.paging().pages(); i++) {
+       query = IssueQuery.create()
+          .componentRoots(resourceKey)
+          .resolved(false)
+          .pageSize(-1)
+          .pageIndex(i);
+      issues = sonarClient.issueClient().find(query);
+      builder.addAll(issues.list());
+    }
+    return builder.build();
   }
 
 }

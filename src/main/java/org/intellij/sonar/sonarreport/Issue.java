@@ -28,44 +28,44 @@ public class Issue {
     this.updateDate = updateDate;
   }
 
-  public void setKey(String key) {
-    this.key = key;
+  public String getKey() {
+    return key;
   }
 
-  public void setComponent(String component) {
-    this.component = component;
+  public String getComponent() {
+    return component;
   }
 
-  public void setLine(Integer line) {
-    this.line = line;
+  public Integer getLine() {
+    return line;
   }
 
-  public void setMessage(String message) {
-    this.message = message;
+  public String getMessage() {
+    return message;
   }
 
-  public void setSeverity(String severity) {
-    this.severity = severity;
+  public String getSeverity() {
+    return severity;
   }
 
-  public void setRule(String rule) {
-    this.rule = rule;
+  public String getRule() {
+    return rule;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public String getStatus() {
+    return status;
   }
 
-  public void setIsNew(Boolean isNew) {
-    this.isNew = isNew;
+  public Boolean getIsNew() {
+    return isNew;
   }
 
-  public void setCreationDate(DateTime creationDate) {
-    this.creationDate = creationDate;
+  public DateTime getCreationDate() {
+    return creationDate;
   }
 
-  public void setUpdateDate(DateTime updateDate) {
-    this.updateDate = updateDate;
+  public DateTime getUpdateDate() {
+    return updateDate;
   }
 
   @Override
