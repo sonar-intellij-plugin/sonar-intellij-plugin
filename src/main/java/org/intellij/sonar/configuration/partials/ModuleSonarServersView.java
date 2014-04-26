@@ -7,7 +7,7 @@ import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.intellij.sonar.persistence.ProjectSettingsBean;
 import org.intellij.sonar.persistence.ProjectSettingsComponent;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersService;
+import org.intellij.sonar.persistence.SonarServersComponent;
 
 import javax.swing.*;
 
@@ -34,6 +34,13 @@ public class ModuleSonarServersView extends SonarServersView {
     }
     return selectedItem;
   }
+/*
+  public String getProperSonarServerName(String sonarServerName) {
+    if (ModuleSettingsConfigurable.PROJECT_SONAR.equals(sonarServerName)) {
+      final ProjectSettingsBean moduleSettingsBean = myProjectSettingsComponent.getState();
+      return null != moduleSettingsBean ? moduleSettingsBean.getSonarServerName() : ProjectSettingsConfigurable.NO_SONAR;
+    }
+  }*/
 
   @Override
   protected boolean editAndRemoveButtonsCanBeEnabled() {
@@ -44,7 +51,7 @@ public class ModuleSonarServersView extends SonarServersView {
 
   @Override
   protected void initSonarServersComboBox() {
-    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersService.getAll();
+    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersComponent.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
       mySonarServersComboBox.removeAllItems();
       mySonarServersComboBox.addItem(makeObj(PROJECT_SONAR));

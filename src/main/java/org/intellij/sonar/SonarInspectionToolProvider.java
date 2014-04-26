@@ -1,5 +1,6 @@
 package org.intellij.sonar;
 
+import com.google.common.base.Optional;
 import com.intellij.codeInspection.InspectionToolProvider;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
@@ -7,11 +8,16 @@ import com.intellij.openapi.project.ProjectManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
+import org.intellij.sonar.persistence.SonarRuleBean;
+import org.intellij.sonar.persistence.SonarRulesComponent;
 import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Set;
+
+import static com.google.common.base.Optional.fromNullable;
 
 public class SonarInspectionToolProvider implements InspectionToolProvider {
 
@@ -20,13 +26,14 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
     Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
     Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<Class<SonarLocalInspectionTool>>();
     for (Project project : openProjects) {
-      SonarRulesProvider sonarRulesProviderState = ServiceManager.getService(project, SonarRulesProvider.class).getState();
-      if (null != sonarRulesProviderState) {
-        Collection<Rule> allRules = sonarRulesProviderState.sonarRulesByRuleKey.values();
+      Optional<SonarRulesComponent> sonarRulesComponent = fromNullable(ServiceManager.getService(project, SonarRulesComponent.class));
+      if (sonarRulesComponent.isPresent()) {
+        Collection<SonarRuleBean> allRules = sonarRulesComponent.get().getSonarRulesByRuleKey().values();
 
-        for (Rule rule : allRules) {
+        for (SonarRuleBean rule : allRules) {
           try {
-            classes.add(getSonarLocalInspectionToolForOneRule(rule));
+            classes.add(getSonarLocalInspectionToolForOneRule(rule, false));
+            classes.add(getSonarLocalInspectionToolForOneRule(rule, true));
           } catch (IllegalAccessException ignore) {
           } catch (InstantiationException ignore) {
           }
@@ -37,13 +44,15 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
     return classes.toArray(new Class[classes.size()]);
   }
 
-  private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final Rule rule) throws IllegalAccessException, InstantiationException {
+  private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final SonarRuleBean rule, final boolean isNew) throws IllegalAccessException, InstantiationException {
     ProxyFactory f = new ProxyFactory();
     f.setSuperclass(SonarLocalInspectionTool.class);
     f.setFilter(new MethodFilter() {
       @Override
       public boolean isHandled(Method method) {
-        return method.getName().equals("getDisplayName")
+        return method.getName().equals("getGroupDisplayName")
+            || method.getName().equals("isNew")
+            || method.getName().equals("getDisplayName")
             || method.getName().equals("getStaticDescription")
             || method.getName().equals("getRuleKey")
             || method.getName().equals("hashCode");
@@ -57,14 +66,18 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
         */
     //noinspection deprecation
     f.setHandler(new MethodHandler() {
-      String myDisplayName = rule.getTitle();
+      String myDisplayName = rule.getDisplayName();
       String myStaticDescription = rule.getDescription();
       String myRuleKey = rule.getKey();
 
       @Override
       public Object invoke(Object o, Method method, Method method2, Object[] objects) throws Throwable {
-        if (method.getName().equals("getDisplayName")) {
-          return myDisplayName;
+        if (method.getName().equals("getGroupDisplayName")) {
+          return isNew ? "Sonar (New issues)" : "Sonar";
+        } else if (method.getName().equals("isNew")) {
+          return isNew;
+        } else if (method.getName().equals("getDisplayName")) {
+          return isNew ? myDisplayName + " (New issue)" : myDisplayName;
         } else if (method.getName().equals("getStaticDescription")) {
           return myStaticDescription;
         } else if (method.getName().equals("getRuleKey")) {

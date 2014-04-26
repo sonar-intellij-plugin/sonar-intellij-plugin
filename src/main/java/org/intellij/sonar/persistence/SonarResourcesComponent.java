@@ -16,23 +16,23 @@ import java.util.concurrent.ConcurrentHashMap;
         @Storage(id = "sonar-resources", file = StoragePathMacros.APP_CONFIG + "/sonar-resources-by-sonar-server-name.xml")
     }
 )
-public class SonarResourcesService implements PersistentStateComponent<SonarResourcesService> {
+public class SonarResourcesComponent implements PersistentStateComponent<SonarResourcesComponent> {
 
   public Map<String, List<Resource>> sonarResourcesBySonarServerName = new ConcurrentHashMap<String, List<Resource>>();
 
   @NotNull
-  public static SonarResourcesService getInstance() {
-    return ServiceManager.getService(SonarResourcesService.class);
+  public static SonarResourcesComponent getInstance() {
+    return ServiceManager.getService(SonarResourcesComponent.class);
   }
 
   @Nullable
   @Override
-  public SonarResourcesService getState() {
+  public SonarResourcesComponent getState() {
     return this;
   }
 
   @Override
-  public void loadState(SonarResourcesService state) {
+  public void loadState(SonarResourcesComponent state) {
     XmlSerializerUtil.copyBean(state, this);
   }
 }

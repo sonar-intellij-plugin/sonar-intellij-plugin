@@ -5,7 +5,19 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractSonarLocalInspectionTest extends LightCodeInsightFixtureTestCase {
-  protected SonarLocalInspectionTool sonarLocalInspectionTool = new SonarLocalInspectionTool(null) {
+  protected SonarLocalInspectionTool sonarLocalInspectionTool = new SonarLocalInspectionTool() {
+    @Nls
+    @NotNull
+    @Override
+    public String getGroupDisplayName() {
+      return "Sonar";
+    }
+
+    @Override
+    public boolean isNew() {
+      return false;
+    }
+
     @Nls
     @NotNull
     @Override

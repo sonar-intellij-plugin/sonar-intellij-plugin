@@ -1,5 +1,6 @@
 package org.intellij.sonar;
 
+import com.google.common.base.Optional;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -7,46 +8,40 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.sonarserver.SonarServer;
+import org.apache.commons.lang.StringUtils;
+import org.intellij.sonar.index.IssuesIndex;
+import org.intellij.sonar.index.IssuesIndexEntry;
+import org.intellij.sonar.index.IssuesIndexKey;
+import org.intellij.sonar.persistence.IndexComponent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.services.Rule;
-import org.sonar.wsclient.services.Violation;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Optional.fromNullable;
 
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
-  private static final Logger LOG = Logger.getInstance("SonarLocalInspectionTool");
+  private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
 
-  private SonarServer sonarServer;
 
-  @SuppressWarnings("UnusedDeclaration")
-  protected SonarLocalInspectionTool() {
-    sonarServer = ServiceManager.getService(SonarServer.class);
-  }
-
-  protected SonarLocalInspectionTool(SonarServer sonarServer) {
-    this.sonarServer = sonarServer;
-  }
 
   @Nls
   @NotNull
   @Override
-  public String getGroupDisplayName() {
-    return "Sonar";
-  }
+  abstract public String getGroupDisplayName();
+
+  abstract public boolean isNew();
 
   @NotNull
   @Override
@@ -71,98 +66,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     return true;
   }
 
-  @Nullable
-  private Map<String, Collection<Violation>> getViolationsMapFromPsiFile(PsiFile file) {
-    Map<String, Collection<Violation>> violationsMap = null;
-    if (null != file) {
-      Project project = file.getProject();
-      SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project, SonarIssuesProvider.class);
-      if (null != sonarIssuesProvider) {
-        violationsMap = sonarIssuesProvider.mySonarViolations;
-      }
-    }
-    return violationsMap;
-  }
-
-  public Collection<String> getSonarKeyCandidatesForPsiFile(@NotNull PsiFile file, @NotNull String sonarProjectKey) {
-    Collection<String> sonarKeyCandidates = new LinkedHashSet<String>();
-
-    String genericSonarKeyCandidate = createGenericSonarKeyCandidate(file, sonarProjectKey);
-    sonarKeyCandidates.add(genericSonarKeyCandidate);
-
-    String javaSonarKeyCandidate = createJavaSonarKeyCandidate(file, sonarProjectKey);
-    sonarKeyCandidates.add(javaSonarKeyCandidate);
-
-    String phpSonarKeyCandidate = createPhpSonarKeyCandidate(file, sonarProjectKey);
-    sonarKeyCandidates.add(phpSonarKeyCandidate);
-    return sonarKeyCandidates;
-  }
-
-  private String createJavaSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
-    String result = createGenericSonarKeyCandidate(file, sonarProjectKey);
-    result = result.replace("[root]", "[default]");
-    result = result.replaceAll("\\.java$", "");
-    result = result.replace("/", ".");
-
-    return result;
-  }
-
-  private String createPhpSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
-    String result = createGenericSonarKeyCandidate(file, sonarProjectKey);
-    result = result.replace("[root]/", "");
-
-    return result;
-  }
-
-  private String createGenericSonarKeyCandidate(PsiFile file, String sonarProjectKey) {
-    final StringBuilder result = new StringBuilder();
-    result.append(sonarProjectKey).append(":");
-    final VirtualFile virtualFile = file.getVirtualFile();
-    if (null != virtualFile) {
-      final String filePath = virtualFile.getPath();
-
-      ProjectFileIndex projectFileIndexService = ProjectFileIndex.SERVICE.getInstance(file.getProject());
-      VirtualFile sourceRootForFile = projectFileIndexService.getSourceRootForFile(virtualFile);
-      // in tools like phpstorm sourceRootForFile approach is not implemented, use contentRootForFile instead
-      if (null == sourceRootForFile)
-        sourceRootForFile = projectFileIndexService.getContentRootForFile(virtualFile);
-
-      if (null != sourceRootForFile) {
-        final String sourceRootForFilePath = sourceRootForFile.getPath() + "/";
-
-        String baseFileName = filePath.replace(sourceRootForFilePath, "");
-
-        if (baseFileName.equals(file.getName())) {
-          result.append("[root]/");
-        }
-
-        result.append(baseFileName);
-      }
-    }
-    return result.toString();
-  }
-
-  /*private SonarSettingsBean getSonarSettingsBeanForFile(PsiFile file) {
-    SonarSettingsBean sonarSettingsBean = null;
-    if (null != file) {
-      VirtualFile virtualFile = file.getVirtualFile();
-      if (null != virtualFile) {
-        Module module = ModuleUtil.findModuleForFile(virtualFile, file.getProject());
-        if (null != module) {
-//          SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
-//          SonarSettingsBean moduleSonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
-//          if (null != moduleSonarSettingsBean && !moduleSonarSettingsBean.isEmpty())
-//            sonarSettingsBean = moduleSonarSettingsBean;
-        }
-      }
-      if (null == sonarSettingsBean) {
-        sonarSettingsBean = getSonarSettingsBeanFromProject(file.getProject());
-      }
-    }
-
-    return sonarSettingsBean;
-  }*/
-
   @NotNull
   private TextRange getTextRange(@NotNull Document document, int line) {
     int lineStartOffset = document.getLineStartOffset(line - 1);
@@ -173,92 +76,65 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
-    /*// don't care about non physical files
-    VirtualFile virtualFile = psiFile.getVirtualFile();
+
+    // don't care about non physical files
+    final VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(virtualFile) == null) {
       return null;
     }
 
     final Project project = psiFile.getProject();
-    final Collection<ProblemDescriptor> result = new LinkedHashSet<ProblemDescriptor>();
-    final SonarSettingsBean sonarSettingsBean = getSonarSettingsBeanForFile(psiFile);
-    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(psiFile.getProject());
-    Document document = documentManager.getDocument(psiFile.getContainingFile());
+    Optional<IndexComponent> indexComponent = fromNullable(ServiceManager.getService(project, IndexComponent.class));
+    if (!indexComponent.isPresent()) {
+      LOG.error(String.format("Cannot retrieve %s", IndexComponent.class.getSimpleName()));
+      return null;
+    }
+
+    final PsiDocumentManager documentManager = PsiDocumentManager.getInstance(psiFile.getProject());
+    final Document document = documentManager.getDocument(psiFile.getContainingFile());
     if (document == null) {
       return null;
     }
 
-    if (null != sonarSettingsBean) {
-      Collection<String> sonarKeyCandidates = getSonarKeyCandidatesForPsiFile(psiFile, sonarSettingsBean.resource);
-      Map<String, Collection<Violation>> violationsMapFromPsiFile = getViolationsMapFromPsiFile(psiFile);
+    final Collection<ProblemDescriptor> result = new LinkedHashSet<ProblemDescriptor>();
 
-      String sonarKey = getFirstSonarKeyCandidateForFileToViolationsMap(sonarKeyCandidates, violationsMapFromPsiFile);
-      Collection<Violation> violations = null != sonarKey && null != violationsMapFromPsiFile ? violationsMapFromPsiFile.get(sonarKey) : null;
+    final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getIssuesIndex();
+    final Optional<Set<IssuesIndexEntry>> issuesForFile = fromNullable(
+        indexMap.get(new IssuesIndexKey(virtualFile.getPath(), isNew(), getRuleKey()))
+    );
+    if (issuesForFile.isPresent()) {
+      for (IssuesIndexEntry issueForFile : issuesForFile.get()) {
+        if (null != issueForFile && null != issueForFile.getLine() && issueForFile.getLine() <= document.getLineCount()) {
+          TextRange textRange = getTextRange(document, issueForFile.getLine());
+          final ProblemHighlightType problemHighlightType = sonarSeverityToProblemHighlightType(issueForFile.getSeverity());
 
-      if (null != violations) {
-        for (Violation violation : violations) {
-          // add only violations of this rule
-          if (this.getRuleKey().equals(violation.getRuleKey())) {
-            if (violation.getLine() == null) {
-              LOG.warn("Null line for Violation - " + violation.getRuleKey());
-              continue;
-            }
-            TextRange textRange = getTextRange(document, violation.getLine());
-            ProblemHighlightType problemHighlightType = getProblemHighlightTypeForRuleKey(project, violation.getRuleKey());
-//                        sonarKey: sonar file resource key
-
-            result.add(manager.createProblemDescriptor(psiFile, textRange,
-                violation.getMessage(),
-                problemHighlightType,
-                false,
-                new MarkAsFixedLocallyQuickFix(violation, sonarKey)
-            ));
-          }
+          result.add(manager.createProblemDescriptor(psiFile, textRange,
+              String.format("[%s] %s", issueForFile.getSeverity(), issueForFile.getMessage()),
+              problemHighlightType,
+              false
+          ));
         }
       }
     }
 
-    return result.toArray(new ProblemDescriptor[result.size()]);*/
-    return null;
+    return result.toArray(new ProblemDescriptor[result.size()]);
   }
 
-  @Nullable
-  private String getFirstSonarKeyCandidateForFileToViolationsMap(Collection<String> sonarKeyCandidates, Map<String, Collection<Violation>> violationsMapFromPsiFile) {
-    if (null != sonarKeyCandidates && null != violationsMapFromPsiFile) {
-      for (String sonarKeyCandidate : sonarKeyCandidates) {
-        if (violationsMapFromPsiFile.containsKey(sonarKeyCandidate)) {
-          return sonarKeyCandidate;
-        }
+  private static ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
+    if (StringUtils.isBlank(sonarSeverity)) {
+      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+    } else {
+      sonarSeverity = sonarSeverity.toUpperCase();
+      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity) || SonarSeverity.CRITICAL.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.ERROR;
+      } else if (SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+      } else if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.WEAK_WARNING;
+      } else {
+        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
       }
     }
-    return null;
   }
-
-  private ProblemHighlightType getProblemHighlightTypeForRuleKey(Project project, String ruleKey) {
-    SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
-    if (null != sonarRulesProvider) {
-      SonarRulesProvider sonarRulesProviderState = sonarRulesProvider.getState();
-      if (null != sonarRulesProviderState) {
-        Rule rule = sonarRulesProviderState.sonarRulesByRuleKey.get(ruleKey);
-        if (null != rule) {
-          return sonarServer.sonarSeverityToProblemHighlightType(rule.getSeverity());
-        }
-      }
-    }
-    return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-  }
-
-/*  private SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
-//    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
-//    if (null == sonarProjectComponent) {
-//      return null;
-//    }
-//    return sonarProjectComponent.getState();
-    return null;
-  }
-
-  private SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
-    return sonarSettingsComponent.getState();
-  }*/
 
 }

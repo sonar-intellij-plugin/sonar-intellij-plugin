@@ -2,6 +2,7 @@ package org.intellij.sonar.evaluation;
 
 import com.google.gson.Gson;
 import com.intellij.openapi.progress.util.CommandLineProgress;
+import org.intellij.sonar.persistence.SonarRuleBean;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.issue.Issues;
@@ -23,7 +24,8 @@ public class SonarTest {
 //    testGetAllProjectsAndModulesBySonarService();
 //    testGetResourceWithProfile();
 //    testGetProfile();
-    testGetIssues();
+//    testGetIssues();
+    testGetRules();
   }
 
   private static void testGetIssues() {
@@ -39,6 +41,16 @@ public class SonarTest {
     SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
     final Profile profile = sonarServer.getProfile("java", "mobile_relaxed");
     System.out.println("rules count: " + profile.getRules().size());
+  }
+
+  private static void testGetRules() {
+    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+    final List<Rule> rules = sonarServer.getRules("java");
+    System.out.println("rules count: " + rules.size());
+    // title, description, key,
+//    new SonarRuleBean()
+    // title
+    // key
   }
 
   private static void testGetResourceWithProfile() {

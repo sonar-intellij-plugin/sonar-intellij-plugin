@@ -1,9 +1,12 @@
 package org.intellij.sonar.action;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
@@ -19,14 +22,23 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
-import org.intellij.sonar.index.Index;
+import org.intellij.sonar.index.IssuesIndex;
 import org.intellij.sonar.index.Indexer;
+import org.intellij.sonar.index.IssuesIndexEntry;
+import org.intellij.sonar.index.IssuesIndexKey;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.services.Resource;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static com.google.common.base.Optional.fromNullable;
 
 public class CreateIndexForModuleAction extends AnAction {
 
@@ -76,7 +88,7 @@ public class CreateIndexForModuleAction extends AnAction {
       return;
     }
 
-    final BackgroundTask backgroundTask = new BackgroundTask(module.getProject(), "Create Index For Module " + module.getName(), true, PerformInBackgroundOption.ALWAYS_BACKGROUND);
+    final BackgroundTask backgroundTask = new BackgroundTask(module.getProject(), "Create IssuesIndex For Module " + module.getName(), true, PerformInBackgroundOption.ALWAYS_BACKGROUND);
     backgroundTask.withModule(module).queue();
   }
 
@@ -99,27 +111,50 @@ public class CreateIndexForModuleAction extends AnAction {
     ImmutableList<Issue> issuesFromSonarServer = ImmutableList.of();
     ImmutableList<Resource> moduleSonarResources = ImmutableList.of();
     final ModuleSettingsComponent moduleSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
-    final ModuleSettingsBean state = moduleSettingsComponent.getState();
-    if (state != null) {
-      moduleSonarResources = ImmutableList.copyOf(state.getResources());
-      final Optional<SonarServerConfigurationBean> sonarServerConfigurationBeanOptional = SonarServersService.get(state.getSonarServerName());
-      if (sonarServerConfigurationBeanOptional.isPresent()) {
-        final SonarServer sonarServer = SonarServer.create(sonarServerConfigurationBeanOptional.get());
-        final ImmutableList.Builder<Issue> allIssuesBuilder = ImmutableList.builder();
-        for (Resource moduleSonarResource : moduleSonarResources) {
-          final ImmutableList<Issue> allIssuesForResource = sonarServer.getAllIssuesFor(moduleSonarResource.getKey());
-          allIssuesBuilder.addAll(allIssuesForResource);
+    final Optional<ModuleSettingsBean> state = fromNullable(moduleSettingsComponent.getState());
+    if (state.isPresent()) {
+      moduleSonarResources = ImmutableList.copyOf(state.get().getResources());
+      final Optional<String> properServerName = state.get().getProperServerName(module.getProject());
+      if (properServerName.isPresent()) {
+        final Optional<SonarServerConfigurationBean> sonarServerConfigurationBeanOptional = SonarServersComponent.get(properServerName.get());
+        if (sonarServerConfigurationBeanOptional.isPresent()) {
+          final SonarServer sonarServer = SonarServer.create(sonarServerConfigurationBeanOptional.get());
+          final ImmutableList.Builder<Issue> allIssuesBuilder = ImmutableList.builder();
+          for (Resource moduleSonarResource : moduleSonarResources) {
+            final ImmutableList<Issue> allIssuesForResource = sonarServer.getAllIssuesFor(moduleSonarResource.getKey());
+            allIssuesBuilder.addAll(allIssuesForResource);
+          }
+          issuesFromSonarServer = allIssuesBuilder.build();
         }
-        issuesFromSonarServer = allIssuesBuilder.build();
       }
 
     }
     final Indexer indexer = new Indexer(moduleFiles, moduleSonarResources);
-    final ImmutableMap<Index.Key, ImmutableSet<Index.Entry>> indexMapFromSonarServer = indexer.withSonarServerIssues(issuesFromSonarServer).create();
+    final Map<IssuesIndexKey, Set<IssuesIndexEntry>> indexMapFromSonarServer = indexer.withSonarServerIssues(issuesFromSonarServer).create();
 
     final IndexComponent indexComponent = ServiceManager.getService(module.getProject(), IndexComponent.class);
-    Index indexFromSonarServer = new Index(indexMapFromSonarServer);
-    indexComponent.loadState(indexFromSonarServer);
+    final IssuesIndex issuesIndexFromSonarServer = new IssuesIndex(indexMapFromSonarServer);
+    final Map<IssuesIndexKey, Set<IssuesIndexEntry>> currentIssuesIndex = indexComponent.getIssuesIndex();
+
+    final ImmutableSet<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>> currentIndexEntriesWithoutIssuesFromSonarServer =
+        FluentIterable.from(currentIssuesIndex.entrySet())
+        .filter(new Predicate<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>>() {
+          @Override
+          public boolean apply(Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndexKeySetEntry) {
+            return !issuesIndexFromSonarServer.getIndexValue().containsKey(issuesIndexKeySetEntry.getKey());
+          }
+        }).toSet();
+    final ImmutableSet<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>> currentIndexEntriesWithIssuesFromSonarServer =
+        ImmutableSet.<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>>builder()
+        .addAll(currentIndexEntriesWithoutIssuesFromSonarServer)
+        .addAll(issuesIndexFromSonarServer.getIndexValue().entrySet())
+        .build();
+    final ConcurrentMap<IssuesIndexKey, Set<IssuesIndexEntry>> newIndexMap = Maps.newConcurrentMap();
+    for(Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>> entry: currentIndexEntriesWithIssuesFromSonarServer) {
+      newIndexMap.put(entry.getKey(), entry.getValue());
+    }
+    indexComponent.setIssuesIndex(newIndexMap);
+
 //    createSonarReportForModule(module);
 //    indexer.withSonarReportIssues(issuesFromSonarReport);
   }

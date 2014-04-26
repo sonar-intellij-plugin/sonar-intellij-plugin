@@ -3,13 +3,14 @@ package org.intellij.sonar.index;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.mock.MockVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.fest.assertions.Assertions;
+import com.intellij.util.xmlb.XmlSerializer;
+import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.fest.assertions.MapAssert;
-import org.intellij.sonar.index.Indexer;
+import org.intellij.sonar.persistence.IndexComponent;
+import org.jdom.Element;
 import org.junit.Test;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueComment;
@@ -19,11 +20,10 @@ import org.sonar.wsclient.services.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.fest.assertions.MapAssert.entry;
-import static org.intellij.sonar.index.Index.Entry;
-import static org.intellij.sonar.index.Index.Key;
 
 public class IndexerTests {
 
@@ -39,6 +39,7 @@ public class IndexerTests {
   }).toList();
 
   private static final ImmutableList<Resource> SONAR_RESOURCES;
+
   static {
     final Resource resource = new Resource();
     resource.setKey("sonar:project");
@@ -46,24 +47,139 @@ public class IndexerTests {
   }
 
   private static final MapAssert.Entry[] EXPECTED_ENTRIES = new MapAssert.Entry[]{entry(
-      new Key("MOCK_ROOT://my/dir/project/src/main/java/foo/bar/Bar.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
-      ImmutableList.of(
-          new Entry(null, "sonar:project:foo.bar.Bar", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 11, null, null, null),
-          new Entry(null, "sonar:project:foo.bar.Bar", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 12, null, null, null)
+      new IssuesIndexKey("MOCK_ROOT://my/dir/project/src/main/java/foo/bar/Bar.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
+      ImmutableSet.of(
+          new IssuesIndexEntry(null, "sonar:project:foo.bar.Bar", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 11, null ),
+          new IssuesIndexEntry(null, "sonar:project:foo.bar.Bar", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 12, null)
       )
   ),
       entry(
-          new Key("MOCK_ROOT://my/dir/project/src/main/java/foo/Foo.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
-          ImmutableList.of(
-              new Entry(null, "sonar:project:foo.Foo", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 3, null, null, null)
+          new IssuesIndexKey("MOCK_ROOT://my/dir/project/src/main/java/foo/Foo.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
+          ImmutableSet.of(
+              new IssuesIndexEntry(null, "sonar:project:foo.Foo", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 3, null)
           )
       ),
       entry(
-          new Key("MOCK_ROOT://my/dir/project/src/main/java/Main.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
-          ImmutableList.of(
-              new Entry(null, "sonar:project:[default].Main", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 7, null, null, null)
+          new IssuesIndexKey("MOCK_ROOT://my/dir/project/src/main/java/Main.java", false, "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck"),
+          ImmutableSet.of(
+              new IssuesIndexEntry(null, "sonar:project:[default].Main", "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck", null, "Simplify Boolean Expression", 7, null)
           )
       )};
+
+  @Test
+  public void createIndexFromSonarServerIssuesShouldWork() {
+
+    ImmutableList<Issue> sonarIssues = FluentIterable.from(ImmutableList.of(
+        new MockIssue(
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            "sonar:project:foo.bar.Bar",
+            11,
+            "Simplify Boolean Expression"),
+        new MockIssue(
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            "sonar:project:foo.bar.Bar",
+            12,
+            "Simplify Boolean Expression"),
+        new MockIssue(
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            "sonar:project:[default].Main",
+            7,
+            "Simplify Boolean Expression"),
+        new MockIssue(
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            "sonar:project:foo.Foo",
+            3,
+            "Simplify Boolean Expression")
+    )).transform(new Function<MockIssue, Issue>() {
+      @Override
+      public Issue apply(MockIssue mockIssue) {
+        return mockIssue;
+      }
+    }).toList();
+
+    Indexer indexer = new Indexer(PROJECT_FILES, SONAR_RESOURCES).withSonarServerIssues(sonarIssues);
+
+    final Map<IssuesIndexKey, Set<IssuesIndexEntry>> index = indexer.create();
+
+    assertThat(index)
+        .includes(
+            EXPECTED_ENTRIES
+        );
+
+    final IndexComponent indexComponent = new IndexComponent();
+    indexComponent.setIssuesIndex(index);
+    final Element element = XmlSerializer.serialize(indexComponent);
+    final IndexComponent deserialize = XmlSerializer.deserialize(element, IndexComponent.class);
+  }
+
+  @Test
+  public void createIndexFromSonarReportIssuesShouldWork() {
+
+    ImmutableList<org.intellij.sonar.sonarreport.Issue> issues = ImmutableList.of(
+        new org.intellij.sonar.sonarreport.Issue(
+            null,
+            "sonar:project:foo.bar.Bar",
+            11,
+            "Simplify Boolean Expression",
+            null,
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            null,
+            true,
+            null,
+            null
+        ),
+        new org.intellij.sonar.sonarreport.Issue(
+            null,
+            "sonar:project:foo.bar.Bar",
+            12,
+            "Simplify Boolean Expression",
+            null,
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            null,
+            false,
+            null,
+            null
+        ),
+        new org.intellij.sonar.sonarreport.Issue(
+            null,
+            "sonar:project:[default].Main",
+            7,
+            "Simplify Boolean Expression",
+            null,
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            null,
+            false,
+            null,
+            null
+        ),
+        new org.intellij.sonar.sonarreport.Issue(
+            null,
+            "sonar:project:foo.Foo",
+            3,
+            "Simplify Boolean Expression",
+            null,
+            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
+            null,
+            false,
+            null,
+            null
+        )
+    );
+
+    Indexer indexer = new Indexer(PROJECT_FILES, SONAR_RESOURCES).withSonarReportIssues(issues);
+
+    final Map<IssuesIndexKey, Set<IssuesIndexEntry>> index = indexer.create();
+
+    assertThat(index)
+        .includes(
+            EXPECTED_ENTRIES
+        );
+
+    final IndexComponent indexComponent = new IndexComponent();
+    indexComponent.setIssuesIndex(index);
+    indexComponent.loadState(indexComponent);
+    XmlSerializerUtil.getAccessors(IndexComponent.class);
+  }
 
   private class MockIssue implements Issue {
 
@@ -221,110 +337,5 @@ public class IndexerTests {
           ", message='" + message + '\'' +
           '}';
     }
-  }
-
-  @Test
-  public void createIndexFromSonarServerIssuesShouldWork() {
-
-    ImmutableList<Issue> sonarIssues = FluentIterable.from(ImmutableList.of(
-        new MockIssue(
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            "sonar:project:foo.bar.Bar",
-            11,
-            "Simplify Boolean Expression"),
-        new MockIssue(
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            "sonar:project:foo.bar.Bar",
-            12,
-            "Simplify Boolean Expression"),
-        new MockIssue(
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            "sonar:project:[default].Main",
-            7,
-            "Simplify Boolean Expression"),
-        new MockIssue(
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            "sonar:project:foo.Foo",
-            3,
-            "Simplify Boolean Expression")
-    )).transform(new Function<MockIssue, Issue>() {
-          @Override
-          public Issue apply(MockIssue mockIssue) {
-            return mockIssue;
-          }
-        }).toList();
-
-    Indexer indexer = new Indexer(PROJECT_FILES, SONAR_RESOURCES).withSonarServerIssues(sonarIssues);
-
-    final ImmutableMap<Key, ImmutableSet<Entry>> index = indexer.create();
-
-    assertThat(index)
-        .includes(
-            EXPECTED_ENTRIES
-        );
-  }
-
-  @Test
-  public void createIndexFromSonarReportIssuesShouldWork() {
-
-    ImmutableList<org.intellij.sonar.sonarreport.Issue> issues = ImmutableList.of(
-        new org.intellij.sonar.sonarreport.Issue(
-            null,
-            "sonar:project:foo.bar.Bar",
-            11,
-            "Simplify Boolean Expression",
-            null,
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            null,
-            true,
-            null,
-            null
-        ),
-        new org.intellij.sonar.sonarreport.Issue(
-            null,
-            "sonar:project:foo.bar.Bar",
-            12,
-            "Simplify Boolean Expression",
-            null,
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            null,
-            false,
-            null,
-            null
-        ),
-        new org.intellij.sonar.sonarreport.Issue(
-            null,
-            "sonar:project:[default].Main",
-            7,
-            "Simplify Boolean Expression",
-            null,
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            null,
-            false,
-            null,
-            null
-        ),
-        new org.intellij.sonar.sonarreport.Issue(
-            null,
-            "sonar:project:foo.Foo",
-            3,
-            "Simplify Boolean Expression",
-            null,
-            "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
-            null,
-            false,
-            null,
-            null
-        )
-    );
-
-    Indexer indexer = new Indexer(PROJECT_FILES, SONAR_RESOURCES).withSonarReportIssues(issues);
-
-    final ImmutableMap<Key, ImmutableSet<Entry>> index = indexer.create();
-
-    assertThat(index)
-        .includes(
-            EXPECTED_ENTRIES
-        );
   }
 }

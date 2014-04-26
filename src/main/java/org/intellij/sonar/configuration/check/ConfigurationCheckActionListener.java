@@ -5,17 +5,15 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.intellij.sonar.configuration.partials.IncrementalAnalysisScriptsTableView;
-import org.intellij.sonar.configuration.partials.ModuleSonarServersView;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.configuration.partials.SonarServersView;
 import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersService;
+import org.intellij.sonar.persistence.SonarServersComponent;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.services.Resource;
 
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -61,7 +59,7 @@ public class ConfigurationCheckActionListener implements ActionListener {
     if (ProjectSettingsConfigurable.NO_SONAR.equals(getSelectedSonarServerName())) {
       testResultMessageBuilder.append(warnMessage("No sonar server selected\n"));
     } else {
-      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(getSelectedSonarServerName());
+      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersComponent.get(getSelectedSonarServerName());
 
       if (!sonarServerConfiguration.isPresent()) {
         testResultMessageBuilder.append(String.format("Cannot find configuration for %s\n", getSelectedSonarServerName()));

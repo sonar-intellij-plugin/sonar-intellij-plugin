@@ -14,17 +14,17 @@ import org.jetbrains.annotations.Nullable;
     }
 )
 public class ModuleSettingsComponent implements PersistentStateComponent<ModuleSettingsBean>, ModuleComponent {
-  protected ModuleSettingsBean projectSettingsBean;
+  protected ModuleSettingsBean moduleSettingsBean;
 
   @Nullable
   @Override
   public ModuleSettingsBean getState() {
-    return projectSettingsBean;
+    return moduleSettingsBean;
   }
 
   @Override
-  public void loadState(ModuleSettingsBean projectSettingsBean) {
-    this.projectSettingsBean = projectSettingsBean;
+  public void loadState(ModuleSettingsBean moduleSettingsBean) {
+    this.moduleSettingsBean = moduleSettingsBean;
   }
 
   @Override
@@ -55,6 +55,6 @@ public class ModuleSettingsComponent implements PersistentStateComponent<ModuleS
   @NotNull
   @Override
   public String getComponentName() {
-    return "ProjectSettings";
+    return "ModuleSettings";
   }
 }

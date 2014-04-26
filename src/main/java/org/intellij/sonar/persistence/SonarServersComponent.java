@@ -21,19 +21,19 @@ import java.util.LinkedList;
     }
 )
 
-public class SonarServersService implements PersistentStateComponent<SonarServersService>, Serializable {
+public class SonarServersComponent implements PersistentStateComponent<SonarServersComponent>, Serializable {
 
   // generated
   private static final long serialVersionUID = 6992816913889884502L;
   public Collection<SonarServerConfigurationBean> beans = new LinkedList<SonarServerConfigurationBean>();
 
   @NotNull
-  public static SonarServersService getInstance() {
-    return ServiceManager.getService(SonarServersService.class);
+  public static SonarServersComponent getInstance() {
+    return ServiceManager.getService(SonarServersComponent.class);
   }
 
   public static void add(final SonarServerConfigurationBean newSonarServerConfigurationBean) {
-    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServersService.getInstance().getState().beans;
+    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServersComponent.getInstance().getState().beans;
     final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfigurationBean>() {
       @Override
       public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
@@ -78,17 +78,17 @@ public class SonarServersService implements PersistentStateComponent<SonarServer
   }
 
   public static Optional<Collection<SonarServerConfigurationBean>> getAll() {
-    return Optional.fromNullable(SonarServersService.getInstance().getState().beans);
+    return Optional.fromNullable(SonarServersComponent.getInstance().getState().beans);
   }
 
   @NotNull
   @Override
-  public SonarServersService getState() {
+  public SonarServersComponent getState() {
     return this;
   }
 
   @Override
-  public void loadState(SonarServersService state) {
+  public void loadState(SonarServersComponent state) {
     XmlSerializerUtil.copyBean(state, this);
   }
 
@@ -97,7 +97,7 @@ public class SonarServersService implements PersistentStateComponent<SonarServer
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    SonarServersService that = (SonarServersService) o;
+    SonarServersComponent that = (SonarServersComponent) o;
 
     if (beans != null ? !beans.equals(that.beans) : that.beans != null) return false;
 

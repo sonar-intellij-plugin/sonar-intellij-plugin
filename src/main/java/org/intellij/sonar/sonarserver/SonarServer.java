@@ -3,15 +3,12 @@ package org.intellij.sonar.sonarserver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.intellij.codeInspection.ProblemHighlightType;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SonarIssuesProvider;
-import org.intellij.sonar.SonarRulesProvider;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.SyncWithSonarResult;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
@@ -24,10 +21,7 @@ import org.sonar.wsclient.SonarClient;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
-import org.sonar.wsclient.services.Profile;
-import org.sonar.wsclient.services.ProfileQuery;
-import org.sonar.wsclient.services.Resource;
-import org.sonar.wsclient.services.ResourceQuery;
+import org.sonar.wsclient.services.*;
 
 import java.io.IOException;
 import java.net.*;
@@ -216,7 +210,7 @@ public class SonarServer {
    * }
    * </pre>
    *
-   * @param resourceKey like myproject:myname
+   * @param resourceKey like sonar:project
    */
   public Resource getResourceWithProfile(String resourceKey) {
     final ResourceQuery query = ResourceQuery.createForMetrics(resourceKey, "profile");
@@ -226,11 +220,27 @@ public class SonarServer {
 
 // GET LIST OF RULES FOR A SONAR PROFILE language is mandatory!
 //  https://sonar.corp.mobile.de/sonar/api/profiles?language=java&name=mobile_relaxed&format=json
-
+  /**
+   * @param language like java
+   * @param profileName like Sonar Way
+   * @return Quality profile containing enabled rules
+   */
   public Profile getProfile(String language, String profileName) {
     ProfileQuery query = ProfileQuery.create(language, profileName);
     query.setTimeoutMilliseconds(READ_TIMEOUT);
     return sonar.find(query);
+  }
+
+  // https://sonar.corp.mobile.de/sonar/api/rules?language=java&format=json
+  // Unfortunately profile query contains neither rule title nor rule description
+  /**
+   * @param language like java
+   * @return list of all rules for a language
+   */
+  public List<Rule> getRules(String language) {
+    RuleQuery query = new RuleQuery(language);
+    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    return sonar.findAll(query);
   }
 
  /* public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
@@ -277,34 +287,17 @@ public class SonarServer {
   public SyncWithSonarResult sync(Project project, @NotNull ProgressIndicator indicator) {
 
     SyncWithSonarResult syncWithSonarResult = new SyncWithSonarResult();
-    SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project,
+    /*SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project,
         SonarIssuesProvider.class);
     if (null != sonarIssuesProvider) {
 //      syncWithSonarResult.violationsCount = sonarIssuesProvider.syncWithSonar(project, indicator);
     }
-    SonarRulesProvider sonarRulesProvider = ServiceManager.getService(project, SonarRulesProvider.class);
-    if (null != sonarRulesProvider) {
-      syncWithSonarResult.rulesCount = sonarRulesProvider.syncWithSonar(project, indicator);
-    }
+    SonarRulesComponent sonarRulesComponent = ServiceManager.getService(project, SonarRulesComponent.class);
+    if (null != sonarRulesComponent) {
+      syncWithSonarResult.rulesCount = sonarRulesComponent.syncWithSonar(project, indicator);
+    }*/
 
     return syncWithSonarResult;
-  }
-
-  public ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
-    if (StringUtils.isBlank(sonarSeverity)) {
-      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-    } else {
-      sonarSeverity = sonarSeverity.toUpperCase();
-      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.ERROR;
-      } else if (SonarSeverity.CRITICAL.toString().equals(sonarSeverity) || SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-      } else if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.WEAK_WARNING;
-      } else {
-        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-      }
-    }
   }
 
   public List<Resource> getAllProjectsAndModules() {

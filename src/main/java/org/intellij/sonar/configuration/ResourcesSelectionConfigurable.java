@@ -13,9 +13,9 @@ import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.persistence.SonarResource;
-import org.intellij.sonar.persistence.SonarResourcesService;
+import org.intellij.sonar.persistence.SonarResourcesComponent;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersService;
+import org.intellij.sonar.persistence.SonarServersComponent;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,7 +77,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   protected JComponent createCenterPanel() {
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(createResourcesTableComponent(), BorderLayout.CENTER);
-    myAllProjectsAndModules = SonarResourcesService.getInstance().sonarResourcesBySonarServerName.get(mySonarServerName);
+    myAllProjectsAndModules = SonarResourcesComponent.getInstance().sonarResourcesBySonarServerName.get(mySonarServerName);
     if (null == myAllProjectsAndModules) myAllProjectsAndModules = new ArrayList<Resource>();
     myResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, myAllProjectsAndModules, 0));
     new TableSpeedSearch(myResourcesTable);
@@ -106,12 +106,12 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
 
     @Override
     public void run() {
-      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersService.get(mySonarServerName);
+      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersComponent.get(mySonarServerName);
       if (sonarServerConfiguration.isPresent()) {
         final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
         try {
           myAllProjectsAndModules = sonarServer.getAllProjectsAndModules();
-          SonarResourcesService.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(myAllProjectsAndModules));
+          SonarResourcesComponent.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(myAllProjectsAndModules));
           SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

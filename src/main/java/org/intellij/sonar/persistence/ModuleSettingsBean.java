@@ -1,6 +1,10 @@
 package org.intellij.sonar.persistence;
 
+import com.google.common.base.Optional;
+import com.intellij.openapi.project.Project;
 import org.intellij.sonar.configuration.SonarResourceMapping;
+import org.intellij.sonar.configuration.module.ModuleSettingsConfigurable;
+import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.sonar.wsclient.services.Resource;
 
 import java.util.ArrayList;
@@ -27,6 +31,23 @@ public class ModuleSettingsBean {
 
   public String getSonarServerName() {
     return sonarServerName;
+  }
+
+  public Optional<String> getProperServerName(Project project) {
+    Optional<String> properServerName = Optional.absent();
+    final String name = getSonarServerName();
+    if (ModuleSettingsConfigurable.PROJECT_SONAR.equals(name)) {
+      final Optional<ProjectSettingsComponent> projectComponent = Optional.fromNullable(project.getComponent(ProjectSettingsComponent.class));
+      if (projectComponent.isPresent()) {
+        final Optional<ProjectSettingsBean> projectComponentState = Optional.fromNullable(projectComponent.get().getState());
+        if (projectComponentState.isPresent()) {
+          return projectComponentState.get().getProperSonarServerName();
+        }
+      }
+    } else if (!ProjectSettingsConfigurable.NO_SONAR.equals(name)) {
+      return Optional.of(name);
+    }
+    return properServerName;
   }
 
   public void setSonarServerName(String sonarServerName) {
