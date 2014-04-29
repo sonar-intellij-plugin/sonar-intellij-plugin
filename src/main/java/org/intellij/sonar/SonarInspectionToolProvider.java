@@ -10,12 +10,10 @@ import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import org.intellij.sonar.persistence.SonarRuleBean;
 import org.intellij.sonar.persistence.SonarRulesComponent;
-import org.sonar.wsclient.services.Rule;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 

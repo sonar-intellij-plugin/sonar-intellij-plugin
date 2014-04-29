@@ -115,8 +115,8 @@ public class IndexerTests {
   @Test
   public void createIndexFromSonarReportIssuesShouldWork() {
 
-    ImmutableList<org.intellij.sonar.sonarreport.Issue> issues = ImmutableList.of(
-        new org.intellij.sonar.sonarreport.Issue(
+    ImmutableList<org.intellij.sonar.sonarreport.data.Issue> issues = ImmutableList.of(
+        new org.intellij.sonar.sonarreport.data.Issue(
             null,
             "sonar:project:foo.bar.Bar",
             11,
@@ -124,11 +124,9 @@ public class IndexerTests {
             null,
             "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
             null,
-            true,
-            null,
-            null
+            true
         ),
-        new org.intellij.sonar.sonarreport.Issue(
+        new org.intellij.sonar.sonarreport.data.Issue(
             null,
             "sonar:project:foo.bar.Bar",
             12,
@@ -136,11 +134,9 @@ public class IndexerTests {
             null,
             "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
             null,
-            false,
-            null,
-            null
+            false
         ),
-        new org.intellij.sonar.sonarreport.Issue(
+        new org.intellij.sonar.sonarreport.data.Issue(
             null,
             "sonar:project:[default].Main",
             7,
@@ -148,11 +144,9 @@ public class IndexerTests {
             null,
             "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
             null,
-            false,
-            null,
-            null
+            false
         ),
-        new org.intellij.sonar.sonarreport.Issue(
+        new org.intellij.sonar.sonarreport.data.Issue(
             null,
             "sonar:project:foo.Foo",
             3,
@@ -160,9 +154,7 @@ public class IndexerTests {
             null,
             "checkstyle:com.puppycrawl.tools.checkstyle.checks.coding.SimplifyBooleanExpressionCheck",
             null,
-            false,
-            null,
-            null
+            false
         )
     );
 

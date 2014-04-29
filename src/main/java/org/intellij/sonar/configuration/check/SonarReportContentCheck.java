@@ -2,17 +2,13 @@ package org.intellij.sonar.configuration.check;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.sonar.persistence.IncrementalScriptBean;
-import org.intellij.sonar.sonarreport.SonarReport;
-import org.intellij.sonar.util.MessagesUtil;
+import org.intellij.sonar.sonarreport.data.SonarReport;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 import static org.intellij.sonar.util.MessagesUtil.errorMessage;

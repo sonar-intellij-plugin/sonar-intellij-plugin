@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import org.joda.time.DateTime;
+import org.intellij.sonar.sonarreport.data.*;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,9 +31,7 @@ public class SonarReportTests {
             "MAJOR",
             "pmd:CyclomaticComplexity",
             "OPEN",
-            false,
-            new DateTime("2013-11-20T18:28:49+0100"),
-            new DateTime("2014-02-06T22:17:02+0100")
+            false
         )
         , new Issue(
             "15658627-d8eb-4310-abef-25bd5925815f",
@@ -43,9 +41,7 @@ public class SonarReportTests {
             "MAJOR",
             "squid:CallToDeprecatedMethod",
             "OPEN",
-            false,
-            new DateTime("2013-12-04T04:45:42+0100"),
-            new DateTime("2014-02-06T22:17:02+0100")
+            false
         )
     ), ImmutableList.of(new Component("de.mobile.dealer:dealer-admin:de.mobile.dealer.homepage.HomepageSettingsApplicationImpl"))
         , ImmutableList.of(

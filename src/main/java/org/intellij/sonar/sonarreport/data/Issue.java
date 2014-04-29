@@ -1,6 +1,4 @@
-package org.intellij.sonar.sonarreport;
-
-import org.joda.time.DateTime;
+package org.intellij.sonar.sonarreport.data;
 
 public class Issue {
 
@@ -12,10 +10,8 @@ public class Issue {
   private String rule;
   private String status;
   private Boolean isNew;
-  private DateTime creationDate;
-  private DateTime updateDate;
 
-  public Issue(String key, String component, Integer line, String message, String severity, String rule, String status, Boolean isNew, DateTime creationDate, DateTime updateDate) {
+  public Issue(String key, String component, Integer line, String message, String severity, String rule, String status, Boolean isNew) {
     this.key = key;
     this.component = component;
     this.line = line;
@@ -24,8 +20,6 @@ public class Issue {
     this.rule = rule;
     this.status = status;
     this.isNew = isNew;
-    this.creationDate = creationDate;
-    this.updateDate = updateDate;
   }
 
   public String getKey() {
@@ -60,14 +54,6 @@ public class Issue {
     return isNew;
   }
 
-  public DateTime getCreationDate() {
-    return creationDate;
-  }
-
-  public DateTime getUpdateDate() {
-    return updateDate;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -76,8 +62,6 @@ public class Issue {
     Issue issue = (Issue) o;
 
     if (component != null ? !component.equals(issue.component) : issue.component != null)
-      return false;
-    if (creationDate != null ? !creationDate.equals(issue.creationDate) : issue.creationDate != null)
       return false;
     if (isNew != null ? !isNew.equals(issue.isNew) : issue.isNew != null)
       return false;
@@ -93,8 +77,6 @@ public class Issue {
       return false;
     if (status != null ? !status.equals(issue.status) : issue.status != null)
       return false;
-    if (updateDate != null ? !updateDate.equals(issue.updateDate) : issue.updateDate != null)
-      return false;
 
     return true;
   }
@@ -109,8 +91,6 @@ public class Issue {
     result = 31 * result + (rule != null ? rule.hashCode() : 0);
     result = 31 * result + (status != null ? status.hashCode() : 0);
     result = 31 * result + (isNew != null ? isNew.hashCode() : 0);
-    result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
-    result = 31 * result + (updateDate != null ? updateDate.hashCode() : 0);
     return result;
   }
 
@@ -125,8 +105,6 @@ public class Issue {
         ", rule='" + rule + '\'' +
         ", status='" + status + '\'' +
         ", isNew=" + isNew +
-        ", creationDate=" + creationDate +
-        ", updateDate=" + updateDate +
         '}';
   }
 }

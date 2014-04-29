@@ -50,7 +50,9 @@ public class ScriptExecutionCheck implements Runnable, ConfigurationCheck {
           errorMessage = String.format("Terminated with exit code %d", exitCode);
         }
       } catch (IllegalThreadStateException e) {
+        // process is still running, which is fine
         canBeExecuted = true;
+        // stop the process, we want only to check if it runs, not to execute it to the very end
         process.destroy();
       }
     } catch (Exception e) {

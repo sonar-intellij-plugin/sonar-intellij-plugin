@@ -1,4 +1,4 @@
-package org.intellij.sonar.sonarreport;
+package org.intellij.sonar.sonarreport.data;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

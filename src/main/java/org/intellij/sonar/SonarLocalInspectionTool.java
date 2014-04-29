@@ -1,20 +1,24 @@
 package org.intellij.sonar;
 
 import com.google.common.base.Optional;
-import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.LocalInspectionTool;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.analysis.AnalysisScope;
+import com.intellij.analysis.AnalysisScopeUtil;
+import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.ex.UnfairLocalInspectionTool;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang.StringUtils;
+import org.intellij.sonar.analysis.IncrementalScriptProcess;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.IssuesIndex;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
@@ -33,8 +37,6 @@ import static com.google.common.base.Optional.fromNullable;
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
   private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
-
-
 
   @Nls
   @NotNull
@@ -73,10 +75,41 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     return new TextRange(lineStartOffset, lineEndOffset);
   }
 
-  @Nullable
+  @NotNull
   @Override
-  public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
+  public PsiElementVisitor buildVisitor(final @NotNull ProblemsHolder holder, final boolean isOnTheFly) {
+    return new PsiElementVisitor() {
+      @Override
+      public void visitFile(PsiFile psiFile) {
+        // don't care about non physical files
+        final VirtualFile virtualFile = psiFile.getVirtualFile();
+        if (virtualFile == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(virtualFile) == null) {
+          return;
+        }
 
+        final Project project = psiFile.getProject();
+        if (! project.getComponent(FileChangesListener.class).shouldIndexBeUpdatedFor(fromNullable(virtualFile))) {
+          // skip updating from index if an incremental script is running at the moment
+          // this avoids showing of issues on wrong lines of code
+          return;
+        }
+//        SonarConsole.get(project).info(String.format("PRE checkFile for %s", virtualFile.getPath()));
+        addDescriptors(myCheckFile(psiFile, holder.getManager(), isOnTheFly));
+      }
+
+      private void addDescriptors(final ProblemDescriptor[] descriptors) {
+        if (descriptors != null) {
+          for (ProblemDescriptor descriptor : descriptors) {
+            LOG.assertTrue(descriptor != null, SonarLocalInspectionTool.this.getClass().getName());
+            holder.registerProblem(descriptor);
+          }
+        }
+      }
+    };
+  }
+
+  @Nullable
+  public ProblemDescriptor[] myCheckFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
     // don't care about non physical files
     final VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(virtualFile) == null) {
@@ -84,6 +117,14 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     }
 
     final Project project = psiFile.getProject();
+//    SonarConsole.get(project).info(String.format("IN checkFile for %s", virtualFile.getPath()));
+
+    if (! project.getComponent(FileChangesListener.class).shouldIndexBeUpdatedFor(fromNullable(virtualFile))) {
+      // skip updating from index if an incremental script is running at the moment
+      // this avoids showing of issues on wrong lines of code
+      return null;
+    }
+
     Optional<IndexComponent> indexComponent = fromNullable(ServiceManager.getService(project, IndexComponent.class));
     if (!indexComponent.isPresent()) {
       LOG.error(String.format("Cannot retrieve %s", IndexComponent.class.getSimpleName()));

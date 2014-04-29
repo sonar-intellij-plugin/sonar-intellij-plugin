@@ -3,16 +3,15 @@ package org.intellij.sonar.index;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
-import org.intellij.sonar.sonarreport.Issue;
-import org.joda.time.DateTime;
+import org.intellij.sonar.sonarreport.data.Issue;
 import org.sonar.wsclient.services.Resource;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +20,7 @@ public class Indexer {
   private final static Logger LOG = Logger.getInstance(Indexer.class);
 
   private ImmutableList<Issue> issues;
+  private Map<String, Issue> issuesByKey = new ConcurrentHashMap<String, Issue>();
   private final ImmutableList<VirtualFile> files;
   private final ImmutableList<Resource> sonarResources;
 
@@ -29,13 +29,20 @@ public class Indexer {
     this.sonarResources = sonarResources;
   }
 
-  public Indexer withSonarReportIssues(ImmutableList<Issue> issues) {
+  public void setIssues(ImmutableList<Issue> issues) {
     this.issues = issues;
+    for (Issue issue: issues) {
+      issuesByKey.put(issue.getKey(), issue);
+    }
+  }
+
+  public Indexer withSonarReportIssues(List<Issue> issues) {
+    setIssues(ImmutableList.copyOf(issues));
     return this;
   }
 
   public Indexer withSonarServerIssues(ImmutableList<org.sonar.wsclient.issue.Issue> issues) {
-    this.issues = FluentIterable.from(issues)
+    setIssues(FluentIterable.from(issues)
         .transform(new Function<org.sonar.wsclient.issue.Issue, Issue>() {
           @Override
           public Issue apply(org.sonar.wsclient.issue.Issue issue) {
@@ -47,12 +54,10 @@ public class Indexer {
                 issue.severity(),
                 issue.ruleKey(),
                 issue.status(),
-                false,
-                null != issue.creationDate() ? new DateTime(issue.creationDate()) : null,
-                null != issue.updateDate() ? new DateTime(issue.updateDate()) : null
+                false // issues from sonar server cannot be new
             );
           }
-        }).toList();
+        }).toList());
     return this;
   }
 
@@ -80,7 +85,8 @@ public class Indexer {
         }
         final ImmutableList<IssuesIndexEntry> entries = entriesBuilder.build();
         for (IssuesIndexEntry entry: entries) {
-          final IssuesIndexKey key = new IssuesIndexKey(fullFilePath, false, entry.getRuleKey());
+          final Issue issue = issuesByKey.get(entry.getKey());
+          final IssuesIndexKey key = new IssuesIndexKey(fullFilePath, issue.getIsNew(), entry.getRuleKey());
           index.putIfAbsent(key, new HashSet<IssuesIndexEntry>());
           final ImmutableSet<IssuesIndexEntry> newEntries = ImmutableSet.<IssuesIndexEntry>builder().addAll(index.get(key)).add(entry).build();
           index.replace(key, new HashSet<IssuesIndexEntry>(newEntries));
