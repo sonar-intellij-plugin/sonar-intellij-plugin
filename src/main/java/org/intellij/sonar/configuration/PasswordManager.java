@@ -16,7 +16,7 @@ public final class PasswordManager {
         try {
           PasswordSafe.getInstance().storePassword(null, PasswordManager.class, key, value);
         } catch (PasswordSafeException e) {
-          LOG.warn("Cannot store password", e);
+          LOG.error("Cannot store password", e);
         }
       }
     });
@@ -32,7 +32,7 @@ public final class PasswordManager {
         try {
           password = PasswordSafe.getInstance().getPassword(null, PasswordManager.class, key);
         } catch (PasswordSafeException e) {
-          LOG.warn("Cannot get password", e);
+          LOG.error("Cannot get password", e);
         }
       }
     });

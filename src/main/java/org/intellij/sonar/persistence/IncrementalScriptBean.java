@@ -68,10 +68,6 @@ public class IncrementalScriptBean {
 
   @Override
   public String toString() {
-    return "IncrementalScriptBean{" +
-        "sourcePaths=" + sourcePaths +
-        ", sourceCodeOfScript='" + sourceCodeOfScript + '\'' +
-        ", pathToSonarReport='" + pathToSonarReport + '\'' +
-        '}';
+    return String.format("%s (generates: %s)", sourceCodeOfScript, pathToSonarReport);
   }
 }

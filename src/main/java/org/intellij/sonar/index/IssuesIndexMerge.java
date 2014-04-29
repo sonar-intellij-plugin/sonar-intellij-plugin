@@ -38,7 +38,7 @@ public class IssuesIndexMerge {
             return issuesIndexKeySetEntry.getKey().getFullFilePath();
           }
         }).toSet();
-    final ImmutableSet<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>> currentIndexEntriesWithoutIssuesFromSonarServer =
+    final ImmutableSet<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>> currentIndexEntriesWithoutIssuesFromSonar =
         FluentIterable.from(current.entrySet())
             .filter(new Predicate<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>>() {
               @Override
@@ -48,7 +48,7 @@ public class IssuesIndexMerge {
             }).toSet();
     final ImmutableSet<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>> currentIndexEntriesWithIssuesFromSonarServer =
         ImmutableSet.<Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>>>builder()
-            .addAll(currentIndexEntriesWithoutIssuesFromSonarServer)
+            .addAll(currentIndexEntriesWithoutIssuesFromSonar)
             .addAll(update.entrySet())
             .build();
     final ConcurrentMap<IssuesIndexKey, Set<IssuesIndexEntry>> newIndexMap = Maps.newConcurrentMap();

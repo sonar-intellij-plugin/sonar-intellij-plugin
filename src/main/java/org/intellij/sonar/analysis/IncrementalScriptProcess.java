@@ -100,7 +100,7 @@ public class IncrementalScriptProcess {
     try {
       final int exitCode = this.process.waitFor();
       if (!restarted && 0 != exitCode) {
-        LOG.error(String.format("Cannot execute. Exit code: %d\nScript: %s", exitCode, incrementalScriptBean.getSourceCodeOfScript()));
+        console.error(String.format("Cannot execute. Exit code: %d\nScript: %s", exitCode, incrementalScriptBean.getSourceCodeOfScript()));
       }
       return exitCode;
     } catch (InterruptedException e) {

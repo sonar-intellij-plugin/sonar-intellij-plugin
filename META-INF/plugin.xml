@@ -47,7 +47,7 @@
         </component>
         <component>
             <implementation-class>
-                org.intellij.sonar.FileChangesListener
+                org.intellij.sonar.FileChangeListener
             </implementation-class>
         </component>
     </project-components>
@@ -84,4 +84,11 @@
         <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
     </extensions>
 
+    <application-components>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.FileSaveListener
+            </implementation-class>
+        </component>
+    </application-components>
 </idea-plugin>

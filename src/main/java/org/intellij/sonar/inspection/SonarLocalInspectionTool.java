@@ -1,14 +1,12 @@
-package org.intellij.sonar;
+package org.intellij.sonar.inspection;
 
 import com.google.common.base.Optional;
-import com.intellij.analysis.AnalysisScope;
-import com.intellij.analysis.AnalysisScopeUtil;
 import com.intellij.codeInspection.*;
 import com.intellij.codeInspection.ex.UnfairLocalInspectionTool;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
@@ -17,9 +15,9 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.analysis.IncrementalScriptProcess;
-import org.intellij.sonar.console.SonarConsole;
-import org.intellij.sonar.index.IssuesIndex;
+import org.intellij.sonar.FileChangeListener;
+import org.intellij.sonar.FileSaveListener;
+import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
 import org.intellij.sonar.persistence.IndexComponent;
@@ -34,7 +32,7 @@ import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 
-public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
+public abstract class SonarLocalInspectionTool extends LocalInspectionTool implements UnfairLocalInspectionTool {
 
   private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
 
@@ -87,8 +85,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
           return;
         }
 
-        final Project project = psiFile.getProject();
-        if (! project.getComponent(FileChangesListener.class).shouldIndexBeUpdatedFor(fromNullable(virtualFile))) {
+        if (!shouldIndexBeUpdatedFor(psiFile)) {
           // skip updating from index if an incremental script is running at the moment
           // this avoids showing of issues on wrong lines of code
           return;
@@ -108,22 +105,17 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     };
   }
 
+  private static boolean shouldIndexBeUpdatedFor(PsiFile psiFile) {
+    return ! FileChangeListener.changedPsiFiles.contains(psiFile);
+  }
+
   @Nullable
   public ProblemDescriptor[] myCheckFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
-    // don't care about non physical files
-    final VirtualFile virtualFile = psiFile.getVirtualFile();
-    if (virtualFile == null || ProjectFileIndex.SERVICE.getInstance(psiFile.getProject()).getContentRootForFile(virtualFile) == null) {
-      return null;
-    }
+
+    VirtualFile virtualFile = psiFile.getVirtualFile();
 
     final Project project = psiFile.getProject();
 //    SonarConsole.get(project).info(String.format("IN checkFile for %s", virtualFile.getPath()));
-
-    if (! project.getComponent(FileChangesListener.class).shouldIndexBeUpdatedFor(fromNullable(virtualFile))) {
-      // skip updating from index if an incremental script is running at the moment
-      // this avoids showing of issues on wrong lines of code
-      return null;
-    }
 
     Optional<IndexComponent> indexComponent = fromNullable(ServiceManager.getService(project, IndexComponent.class));
     if (!indexComponent.isPresent()) {
@@ -137,6 +129,22 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       return null;
     }
 
+    // TODO: remove experimental code
+    /*final Editor[] editors = EditorFactory.getInstance().getEditors(document);
+    if (editors.length == 1) {
+      SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          final int fixedLineNumber = 5;
+          final Editor editor = editors[0];
+          editor.getMarkupModel();
+          final MarkupModel markupModel = editor.getMarkupModel();
+          TextAttributes textAttributes = new TextAttributes(Color.BLACK, Color.WHITE, Color.YELLOW, EffectType.WAVE_UNDERSCORE, 1);
+          final RangeHighlighter lineHighlighter = markupModel.addLineHighlighter(fixedLineNumber, 1, textAttributes);
+        }
+      });
+
+    }*/
     final Collection<ProblemDescriptor> result = new LinkedHashSet<ProblemDescriptor>();
 
     final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getIssuesIndex();
@@ -149,11 +157,12 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
           TextRange textRange = getTextRange(document, issueForFile.getLine());
           final ProblemHighlightType problemHighlightType = sonarSeverityToProblemHighlightType(issueForFile.getSeverity());
 
-          result.add(manager.createProblemDescriptor(psiFile, textRange,
+          final ProblemDescriptor problemDescriptor = manager.createProblemDescriptor(psiFile, textRange,
               String.format("[%s] %s", issueForFile.getSeverity(), issueForFile.getMessage()),
               problemHighlightType,
               false
-          ));
+          );
+          result.add(problemDescriptor);
         }
       }
     }

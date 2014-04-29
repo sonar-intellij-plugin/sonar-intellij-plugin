@@ -1,19 +1,5 @@
 package org.intellij.sonar.javaassist;
 
-import com.intellij.openapi.progress.util.CommandLineProgress;
-import javassist.util.proxy.MethodFilter;
-import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.ProxyFactory;
-import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SonarLocalInspectionTool;
-import org.intellij.sonar.sonarserver.SonarServer;
-import org.sonar.wsclient.services.Rule;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 @SuppressWarnings("UnusedDeclaration")
 public class Test {
   /*public static void main(String[] args) throws IllegalAccessException, InstantiationException {

@@ -8,6 +8,7 @@ import com.intellij.openapi.project.ProjectManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
+import org.intellij.sonar.inspection.SonarLocalInspectionTool;
 import org.intellij.sonar.persistence.SonarRuleBean;
 import org.intellij.sonar.persistence.SonarRulesComponent;
 
@@ -19,10 +20,11 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class SonarInspectionToolProvider implements InspectionToolProvider {
 
+  public static Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<Class<SonarLocalInspectionTool>>();
+
   @Override
   public Class[] getInspectionClasses() {
     Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
-    Collection<Class<SonarLocalInspectionTool>> classes = new LinkedList<Class<SonarLocalInspectionTool>>();
     for (Project project : openProjects) {
       Optional<SonarRulesComponent> sonarRulesComponent = fromNullable(ServiceManager.getService(project, SonarRulesComponent.class));
       if (sonarRulesComponent.isPresent()) {

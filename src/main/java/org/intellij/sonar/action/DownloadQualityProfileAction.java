@@ -222,7 +222,7 @@ public class DownloadQualityProfileAction extends AnAction {
   }*/
 
   private void showRestartIdeDialog(final Map<String, SonarRuleBean> currentSonarRulesByRuleKey, final Map<String, SonarRuleBean> newSonarRulesByRuleKey) {
-    SwingUtilities.invokeLater(new Runnable() {
+    ApplicationManager.getApplication().invokeLater(new Runnable() {
       @Override
       public void run() {
         final int ret = Messages.showOkCancelDialog(

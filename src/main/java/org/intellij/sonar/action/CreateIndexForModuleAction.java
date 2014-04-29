@@ -123,9 +123,9 @@ public class CreateIndexForModuleAction extends AnAction {
               createIndexFromSonarReport(moduleFiles, moduleSonarResources, indexComponent, incrementalScriptBean);
             }
           } catch (IOException e) {
-            LOG.error(String.format("Cannot execute %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));
+            console.error(String.format("Cannot execute %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));
           } catch (InterruptedException e) {
-            LOG.error(String.format("Interrupted execution of %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));
+            console.error(String.format("Interrupted execution of %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));
           } catch (FileNotInSourcePathException ignore) {
             // script execution is not based on a changed file, skip
           }

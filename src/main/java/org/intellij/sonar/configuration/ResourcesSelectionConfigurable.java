@@ -3,6 +3,7 @@ package org.intellij.sonar.configuration;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -112,7 +113,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
         try {
           myAllProjectsAndModules = sonarServer.getAllProjectsAndModules();
           SonarResourcesComponent.getInstance().sonarResourcesBySonarServerName.put(mySonarServerName, ImmutableList.copyOf(myAllProjectsAndModules));
-          SwingUtilities.invokeLater(new Runnable() {
+          ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
               myResourcesTable.setModelAndUpdateColumns(new ListTableModel<Resource>(new ColumnInfo[]{NAME_COLUMN, KEY_COLUMN}, myAllProjectsAndModules, 0));
@@ -121,7 +122,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
         } catch (Exception e) {
           final String message = "Cannot fetch sonar project and modules from " + mySonarServerName
               + "\n\n" + Throwables.getStackTraceAsString(e);
-          SwingUtilities.invokeLater(new Runnable() {
+          ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
               Messages.showErrorDialog(message, "Sonar Server Error");
