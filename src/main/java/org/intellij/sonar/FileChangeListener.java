@@ -35,6 +35,18 @@ public class FileChangeListener extends AbstractProjectComponent {
         final Optional<VirtualFile> virtualFile = fromNullable(psiFile.get().getVirtualFile());
         if (!virtualFile.isPresent() || virtualFile.get().isDirectory()) return;
 
+        // exclude intellij system files
+        if ("workspace.xml".equals(psiFile.get().getName())
+            || psiFile.get().getName().endsWith(".iml")
+            || psiFile.get().getName().endsWith(".ipr")
+            || psiFile.get().getName().endsWith(".iml")
+            || psiFile.get().getName().endsWith(".iws")
+            || virtualFile.get().getPath().contains("plugins-sandbox")
+            || virtualFile.get().getPath().contains(".idea")
+            ) {
+          return;
+        }
+
         changedPsiFiles.add(psiFile.get());
       }
     });

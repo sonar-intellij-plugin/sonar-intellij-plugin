@@ -84,6 +84,8 @@
         <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
     </extensions>
 
+
+
     <application-components>
         <component>
             <implementation-class>

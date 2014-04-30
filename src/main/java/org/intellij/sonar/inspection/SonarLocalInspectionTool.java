@@ -3,10 +3,14 @@ package org.intellij.sonar.inspection;
 import com.google.common.base.Optional;
 import com.intellij.codeInspection.*;
 import com.intellij.codeInspection.ex.UnfairLocalInspectionTool;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.editor.event.EditorMouseEvent;
+import com.intellij.openapi.editor.event.EditorMouseMotionAdapter;
+import com.intellij.openapi.editor.event.EditorMouseMotionListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
@@ -16,7 +20,6 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.FileChangeListener;
-import org.intellij.sonar.FileSaveListener;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
@@ -25,6 +28,8 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -35,6 +40,34 @@ import static com.google.common.base.Optional.fromNullable;
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool implements UnfairLocalInspectionTool {
 
   private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
+
+  @NotNull
+  public static TextRange getTextRange(@NotNull Document document, int line) {
+    int lineStartOffset = document.getLineStartOffset(line - 1);
+    int lineEndOffset = document.getLineEndOffset(line - 1);
+    return new TextRange(lineStartOffset, lineEndOffset);
+  }
+
+  private static boolean shouldReadFromIndexFor(PsiFile psiFile) {
+    return !FileChangeListener.changedPsiFiles.contains(psiFile);
+  }
+
+  private static ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
+    if (StringUtils.isBlank(sonarSeverity)) {
+      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+    } else {
+      sonarSeverity = sonarSeverity.toUpperCase();
+      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity) || SonarSeverity.CRITICAL.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.ERROR;
+      } else if (SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+      } else if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString().equals(sonarSeverity)) {
+        return ProblemHighlightType.WEAK_WARNING;
+      } else {
+        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+      }
+    }
+  }
 
   @Nls
   @NotNull
@@ -67,13 +100,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
   }
 
   @NotNull
-  private TextRange getTextRange(@NotNull Document document, int line) {
-    int lineStartOffset = document.getLineStartOffset(line - 1);
-    int lineEndOffset = document.getLineEndOffset(line - 1);
-    return new TextRange(lineStartOffset, lineEndOffset);
-  }
-
-  @NotNull
   @Override
   public PsiElementVisitor buildVisitor(final @NotNull ProblemsHolder holder, final boolean isOnTheFly) {
     return new PsiElementVisitor() {
@@ -85,12 +111,12 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
           return;
         }
 
-        if (!shouldIndexBeUpdatedFor(psiFile)) {
+        if (!shouldReadFromIndexFor(psiFile)) {
           // skip updating from index if an incremental script is running at the moment
           // this avoids showing of issues on wrong lines of code
           return;
         }
-//        SonarConsole.get(project).info(String.format("PRE checkFile for %s", virtualFile.getPath()));
+
         addDescriptors(myCheckFile(psiFile, holder.getManager(), isOnTheFly));
       }
 
@@ -98,15 +124,13 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
         if (descriptors != null) {
           for (ProblemDescriptor descriptor : descriptors) {
             LOG.assertTrue(descriptor != null, SonarLocalInspectionTool.this.getClass().getName());
+            // we do assertTrue above
+            //noinspection ConstantConditions
             holder.registerProblem(descriptor);
           }
         }
       }
     };
-  }
-
-  private static boolean shouldIndexBeUpdatedFor(PsiFile psiFile) {
-    return ! FileChangeListener.changedPsiFiles.contains(psiFile);
   }
 
   @Nullable
@@ -115,7 +139,6 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
     VirtualFile virtualFile = psiFile.getVirtualFile();
 
     final Project project = psiFile.getProject();
-//    SonarConsole.get(project).info(String.format("IN checkFile for %s", virtualFile.getPath()));
 
     Optional<IndexComponent> indexComponent = fromNullable(ServiceManager.getService(project, IndexComponent.class));
     if (!indexComponent.isPresent()) {
@@ -129,23 +152,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
       return null;
     }
 
-    // TODO: remove experimental code
-    /*final Editor[] editors = EditorFactory.getInstance().getEditors(document);
-    if (editors.length == 1) {
-      SwingUtilities.invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          final int fixedLineNumber = 5;
-          final Editor editor = editors[0];
-          editor.getMarkupModel();
-          final MarkupModel markupModel = editor.getMarkupModel();
-          TextAttributes textAttributes = new TextAttributes(Color.BLACK, Color.WHITE, Color.YELLOW, EffectType.WAVE_UNDERSCORE, 1);
-          final RangeHighlighter lineHighlighter = markupModel.addLineHighlighter(fixedLineNumber, 1, textAttributes);
-        }
-      });
-
-    }*/
-    final Collection<ProblemDescriptor> result = new LinkedHashSet<ProblemDescriptor>();
+    final Collection<ProblemDescriptor> problemDescriptors = new LinkedHashSet<ProblemDescriptor>();
 
     final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getIssuesIndex();
     final Optional<Set<IssuesIndexEntry>> issuesForFile = fromNullable(
@@ -162,29 +169,11 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
               problemHighlightType,
               false
           );
-          result.add(problemDescriptor);
+          problemDescriptors.add(problemDescriptor);
         }
       }
     }
-
-    return result.toArray(new ProblemDescriptor[result.size()]);
-  }
-
-  private static ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
-    if (StringUtils.isBlank(sonarSeverity)) {
-      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-    } else {
-      sonarSeverity = sonarSeverity.toUpperCase();
-      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity) || SonarSeverity.CRITICAL.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.ERROR;
-      } else if (SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-      } else if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString().equals(sonarSeverity)) {
-        return ProblemHighlightType.WEAK_WARNING;
-      } else {
-        return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-      }
-    }
+    return problemDescriptors.toArray(new ProblemDescriptor[problemDescriptors.size()]);
   }
 
 }
