@@ -1,25 +1,39 @@
 package org.intellij.sonar.inspection;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.daemon.impl.HighlightInfoProcessor;
+import com.intellij.codeInsight.daemon.impl.LocalInspectionsPass;
+import com.intellij.codeInsight.daemon.impl.UpdateHighlightersUtil;
 import com.intellij.codeInspection.*;
-import com.intellij.codeInspection.ex.UnfairLocalInspectionTool;
+import com.intellij.codeInspection.ex.GlobalInspectionContextImpl;
+import com.intellij.codeInspection.ex.InspectionManagerEx;
+import com.intellij.codeInspection.ex.LocalInspectionToolWrapper;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.LogicalPosition;
-import com.intellij.openapi.editor.event.EditorMouseEvent;
-import com.intellij.openapi.editor.event.EditorMouseMotionAdapter;
-import com.intellij.openapi.editor.event.EditorMouseMotionListener;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.FileChangeListener;
+import org.intellij.sonar.SonarInspectionToolProvider;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
@@ -27,17 +41,17 @@ import org.intellij.sonar.persistence.IndexComponent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joda.time.DateTime;
 
-import java.awt.*;
-import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
+import static org.intellij.sonar.FileChangeListener.changedPsiFiles;
 
-public abstract class SonarLocalInspectionTool extends LocalInspectionTool implements UnfairLocalInspectionTool {
+public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
   private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
 
@@ -67,6 +81,102 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool imple
         return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
       }
     }
+  }
+
+  public static void refreshInspectionsInEditor(final Project project) {
+
+    final ImmutableSet<PsiFile> openPsiFiles = ApplicationManager.getApplication().runReadAction(new Computable<ImmutableSet<PsiFile>>() {
+      @Override
+      public ImmutableSet<PsiFile> compute() {
+        final Optional<VirtualFile[]> openFiles = fromNullable(FileEditorManager.getInstance(project).getOpenFiles());
+        if (!(openFiles.isPresent() && !(openFiles.get().length < 1))) {
+          // nothing to do if no files are visible in editor
+          return ImmutableSet.of();
+        }
+        return FluentIterable.from(ImmutableSet.copyOf(openFiles.get()))
+            .transform(new Function<VirtualFile, PsiFile>() {
+              @Override
+              public PsiFile apply(VirtualFile virtualFile) {
+                return PsiManager.getInstance(project).findFile(virtualFile);
+              }
+            }).toSet();
+      }
+    });
+
+    final InspectionManagerEx managerEx = (InspectionManagerEx) InspectionManager.getInstance(project);
+    final GlobalInspectionContextImpl context = managerEx.createNewGlobalContext(false);
+    final Collection<Class<SonarLocalInspectionTool>> sonarInspectionClasses = SonarInspectionToolProvider.classes;
+    final ImmutableList<LocalInspectionToolWrapper> sonarLocalInspectionTools = FluentIterable.from(sonarInspectionClasses)
+        .transform(new Function<Class<SonarLocalInspectionTool>, SonarLocalInspectionTool>() {
+          @Override
+          public SonarLocalInspectionTool apply(Class<SonarLocalInspectionTool> sonarLocalInspectionToolClass) {
+            try {
+              return sonarLocalInspectionToolClass.newInstance();
+            } catch (InstantiationException e) {
+              LOG.error(e.getMessage());
+            } catch (IllegalAccessException e) {
+              LOG.error(e.getMessage());
+            }
+            return null;
+          }
+        }).filter(new Predicate<SonarLocalInspectionTool>() {
+          @Override
+          public boolean apply(SonarLocalInspectionTool sonarLocalInspectionTool) {
+            return null != sonarLocalInspectionTool;
+          }
+        })
+        .transform(new Function<SonarLocalInspectionTool, LocalInspectionToolWrapper>() {
+          @Override
+          public LocalInspectionToolWrapper apply(SonarLocalInspectionTool sonarLocalInspectionTool) {
+            return new LocalInspectionToolWrapper(sonarLocalInspectionTool);
+          }
+        }).toList();
+
+    for (final PsiFile psiFile : openPsiFiles) {
+
+      final Optional<VirtualFile> virtualFile = fromNullable(psiFile.getVirtualFile());
+      if (!virtualFile.isPresent()) continue;
+
+      PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
+      final Optional<Document> document = fromNullable(psiDocumentManager.getDocument(psiFile));
+      if (!document.isPresent()) continue;
+
+      final LocalInspectionsPass localInspectionsPass =
+          new LocalInspectionsPass(psiFile, document.get(), 0, document.get().getTextLength(), LocalInspectionsPass.EMPTY_PRIORITY_RANGE, true,
+              HighlightInfoProcessor.getEmpty());
+
+      final Runnable inspect = new Runnable() {
+        @Override
+        public void run() {
+          localInspectionsPass.doInspectInBatch(context, managerEx, sonarLocalInspectionTools);
+          final java.util.List<HighlightInfo> infos = localInspectionsPass.getInfos();
+          UpdateHighlightersUtil.setHighlightersToEditor(
+              project,
+              document.get(),
+              0,
+              document.get().getTextLength(),
+              infos,
+              null,
+              0
+          );
+        }
+      };
+
+      ApplicationManager.getApplication().invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          ApplicationManager.getApplication().runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+              ProgressManager.getInstance().executeProcessUnderProgress(inspect, new ProgressIndicatorBase());
+            }
+          });
+        }
+      });
+
+    }
+
+    changedPsiFiles.clear();
   }
 
   @Nls

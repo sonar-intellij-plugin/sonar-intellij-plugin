@@ -1,15 +1,20 @@
 package org.intellij.sonar.action;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.PerformInBackgroundOption;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -20,10 +25,14 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import org.intellij.sonar.FileChangeListener;
 import org.intellij.sonar.analysis.FileNotInSourcePathException;
 import org.intellij.sonar.analysis.IncrementalScriptProcess;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.*;
+import org.intellij.sonar.inspection.SonarLocalInspectionTool;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.intellij.sonar.sonarserver.SonarServer;
@@ -121,6 +130,9 @@ public class CreateIndexForModuleAction extends AnAction {
                 .waitFor();
             if (0 == exitCode) {
               createIndexFromSonarReport(moduleFiles, moduleSonarResources, indexComponent, incrementalScriptBean);
+              SonarLocalInspectionTool.refreshInspectionsInEditor(myProject);
+              // we have just freshly updated the index, clear all changed files
+              FileChangeListener.changedPsiFiles.clear();
             }
           } catch (IOException e) {
             console.error(String.format("Cannot execute %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));

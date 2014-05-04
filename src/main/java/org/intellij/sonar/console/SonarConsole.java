@@ -9,6 +9,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import javax.swing.*;
 
@@ -56,11 +58,15 @@ public class SonarConsole extends AbstractProjectComponent {
   }
 
   public void info(String msg) {
-    getConsoleView().print(String.format("%s > %s\n", INFO, msg), ConsoleViewContentType.NORMAL_OUTPUT);
+    getConsoleView().print(String.format("%s %s > %s\n", INFO, getNowFormatted(), msg), ConsoleViewContentType.NORMAL_OUTPUT);
   }
 
   public void error(String msg) {
-    getConsoleView().print(String.format("%s > %s\n", ERROR, msg), ConsoleViewContentType.ERROR_OUTPUT);
+    getConsoleView().print(String.format("%s %s > %s\n", ERROR, getNowFormatted(), msg), ConsoleViewContentType.ERROR_OUTPUT);
+  }
+
+  private String getNowFormatted() {
+    return DateTimeFormat.forPattern("HH:mm:ss.SSS").print(DateTime.now());
   }
 
   private synchronized ConsoleView getConsoleView() {

@@ -50,6 +50,11 @@
                 org.intellij.sonar.FileChangeListener
             </implementation-class>
         </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.FileEditorListener
+            </implementation-class>
+        </component>
     </project-components>
 
     <module-components>

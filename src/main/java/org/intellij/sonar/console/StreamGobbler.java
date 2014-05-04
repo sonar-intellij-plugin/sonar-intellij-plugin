@@ -22,7 +22,7 @@ public class StreamGobbler extends Thread {
       InputStreamReader isr = new InputStreamReader(is);
       BufferedReader br = new BufferedReader(isr);
       String line;
-      while ((line = br.readLine()) != null) {
+      while (!isInterrupted() && (line = br.readLine()) != null) {
         console.log(line, logLevel);
       }
     } catch (IOException ignore) {

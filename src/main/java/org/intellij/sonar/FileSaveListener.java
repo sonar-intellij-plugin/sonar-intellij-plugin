@@ -1,32 +1,17 @@
 package org.intellij.sonar;
 
 import com.google.common.base.*;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import com.intellij.codeInsight.daemon.impl.HighlightInfo;
-import com.intellij.codeInsight.daemon.impl.HighlightInfoProcessor;
-import com.intellij.codeInsight.daemon.impl.LocalInspectionsPass;
-import com.intellij.codeInsight.daemon.impl.UpdateHighlightersUtil;
-import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ex.GlobalInspectionContextImpl;
-import com.intellij.codeInspection.ex.InspectionManagerEx;
-import com.intellij.codeInspection.ex.LocalInspectionToolWrapper;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.progress.PerformInBackgroundOption;
 import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ContentIterator;
@@ -37,10 +22,8 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
-import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.util.containers.ConcurrentHashSet;
 import com.intellij.util.messages.MessageBusConnection;
 import org.intellij.sonar.analysis.FileNotInSourcePathException;
 import org.intellij.sonar.analysis.IncrementalScriptProcess;
@@ -57,34 +40,31 @@ import org.intellij.sonar.persistence.ModuleSettingsComponent;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joda.time.DateTime;
 import org.sonar.wsclient.services.Resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Optional.fromNullable;
 import static org.intellij.sonar.FileChangeListener.changedPsiFiles;
+import static org.intellij.sonar.inspection.SonarLocalInspectionTool.refreshInspectionsInEditor;
 
 public class FileSaveListener implements ApplicationComponent, BulkFileListener {
 
-  public final static ConcurrentHashSet<IncrementalScriptBean> runningScripts = new ConcurrentHashSet<IncrementalScriptBean>();
   private final static Logger LOG = Logger.getInstance(FileSaveListener.class);
-  public static volatile boolean isBlocked = false;
   private final MessageBusConnection connection;
+
+  public static volatile DateTime lastFired = DateTime.now();
 
   public FileSaveListener() {
     connection = ApplicationManager.getApplication().getMessageBus().connect();
   }
-
-  /*private static List<ProblemDescriptor> runInspectionOnFile(@NotNull PsiFile file,
-                                                             @NotNull LocalInspectionTool inspectionTool) {
-    InspectionManagerEx inspectionManager = (InspectionManagerEx) InspectionManager.getInstance(file.getProject());
-    GlobalInspectionContext context = inspectionManager.createNewGlobalContext(false);
-    final List<ProblemDescriptor> problemDescriptors = InspectionEngine.runInspectionOnFile(file, new LocalInspectionToolWrapper(inspectionTool), context);
-    return problemDescriptors;
-  }*/
 
   @Override
   public void initComponent() {
@@ -97,9 +77,13 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
   }
 
   @Override
+  /**
+   * Executes after file(s) are saved to the disc. Note it does not happen immediately if you type new code
+   */
   public void after(@NotNull List<? extends VFileEvent> events) {
 
-    if (isBlocked) return;
+    lastFired = DateTime.now();
+
     if (changedPsiFiles.isEmpty()) return;
 
     for (VFileEvent event : events) {
@@ -114,7 +98,16 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     final Optional<Project> projectForFile = fromNullable(ProjectUtil.guessProjectForFile(file.get()));
     if (!projectForFile.isPresent()) return;
 
-    final Optional<PsiFile> psiFile = fromNullable(PsiManager.getInstance(projectForFile.get()).findFile(file.get()));
+    final SonarConsole console = SonarConsole.get(projectForFile.get());
+
+    console.info(String.format("Fired after file save for %s", file.get().getName()));
+
+    Optional<PsiFile> psiFile = Optional.absent();
+    try {
+      psiFile = fromNullable(PsiManager.getInstance(projectForFile.get()).findFile(file.get()));
+    } catch (Throwable e) {
+      return;
+    }
     if (!psiFile.isPresent() || !changedPsiFiles.contains(psiFile.get())) return;
 
     final Optional<Module> moduleForFile = fromNullable(ModuleUtil.findModuleForFile(file.get(), projectForFile.get()));
@@ -125,19 +118,15 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     if (!moduleSettingsComponentState.isPresent()) return;
     final Collection<IncrementalScriptBean> incrementalScriptBeans = moduleSettingsComponentState.get().getScripts();
     for (IncrementalScriptBean incrementalScriptBean : incrementalScriptBeans) {
-      // TODO: restart the script if it is already running
-      if (!runningScripts.contains(incrementalScriptBean)) {
+
         final BackgroundTask backgroundTask = new BackgroundTask(
             projectForFile.get(), "Executing incremental Analysis", true, PerformInBackgroundOption.ALWAYS_BACKGROUND, incrementalScriptBean, file.get());
         backgroundTask
             .withModule(moduleForFile.get())
             .queue();
-        runningScripts.add(incrementalScriptBean);
-      }
     }
 
   }
-
 
   @Override
   public void before(@NotNull List<? extends VFileEvent> events) {
@@ -156,6 +145,7 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     private final SonarConsole console;
     private ProgressIndicator indicator;
     private Module module;
+    private Process process;
 
     private BackgroundTask(@Nullable Project project, @NotNull String title, boolean canBeCancelled, @Nullable PerformInBackgroundOption backgroundOption, IncrementalScriptBean incrementalScriptBean, VirtualFile file) {
       super(project, title, canBeCancelled, backgroundOption);
@@ -175,20 +165,25 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
       try {
         final String workingDirectory = getProject().getBaseDir().getPath();
         indicator.setText(String.format("Executing %s in %s", incrementalScriptBean.getSourceCodeOfScript(), workingDirectory));
-        IncrementalScriptProcess.of(incrementalScriptBean, workingDirectory, getProject())
+        final IncrementalScriptProcess incrementalScriptProcess = IncrementalScriptProcess.of(incrementalScriptBean, workingDirectory, getProject())
             .onChangeOf(file.getPath())
-            .exec()
-            .waitFor();
+            .exec();
+        final int exitCode = incrementalScriptProcess.waitFor();
+        if (0 == exitCode) {
+          updateIssuesIndex();
+          refreshInspectionsInEditor(getProject());
+        }
       } catch (IOException e) {
         console.error(String.format("Cannot execute %s\nRoot cause:\n\n%s", incrementalScriptBean.getSourceCodeOfScript(), e.getMessage()));
       } catch (InterruptedException e) {
-        console.error(String.format("Interrupted execution of %s\nRoot cause:\n\n%s", incrementalScriptBean.getSourceCodeOfScript(), e.getMessage()));
+        console.info(String.format("Interrupted execution of %s\nRoot cause:\n\n%s", incrementalScriptBean.getSourceCodeOfScript(), e.getMessage()));
       } catch (FileNotInSourcePathException ignore) {
         // don't execute anything is file is not in source paths
-      } finally {
-        runningScripts.remove(incrementalScriptBean);
       }
 
+    }
+
+    private void updateIssuesIndex() {
       final ModuleSettingsComponent moduleSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
       Optional<ModuleSettingsBean> moduleSettingsBean = fromNullable(moduleSettingsComponent.getState());
       if (moduleSettingsBean.isPresent()) {
@@ -204,87 +199,6 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
           ));
         }
       }
-
-      taskDone();
-    }
-
-    private void taskDone() {
-
-      final InspectionManagerEx managerEx = (InspectionManagerEx) InspectionManager.getInstance(getProject());
-      final GlobalInspectionContextImpl context = managerEx.createNewGlobalContext(false);
-      final Collection<Class<SonarLocalInspectionTool>> sonarInspectionClasses = SonarInspectionToolProvider.classes;
-      final ImmutableList<LocalInspectionToolWrapper> sonarLocalInspectionTools = FluentIterable.from(sonarInspectionClasses)
-          .transform(new Function<Class<SonarLocalInspectionTool>, SonarLocalInspectionTool>() {
-            @Override
-            public SonarLocalInspectionTool apply(Class<SonarLocalInspectionTool> sonarLocalInspectionToolClass) {
-              try {
-                return sonarLocalInspectionToolClass.newInstance();
-              } catch (InstantiationException e) {
-                LOG.error(e.getMessage());
-              } catch (IllegalAccessException e) {
-                LOG.error(e.getMessage());
-              }
-              return null;
-            }
-          }).filter(new Predicate<SonarLocalInspectionTool>() {
-            @Override
-            public boolean apply(SonarLocalInspectionTool sonarLocalInspectionTool) {
-              return null != sonarLocalInspectionTool;
-            }
-          })
-          .transform(new Function<SonarLocalInspectionTool, LocalInspectionToolWrapper>() {
-            @Override
-            public LocalInspectionToolWrapper apply(SonarLocalInspectionTool sonarLocalInspectionTool) {
-              return new LocalInspectionToolWrapper(sonarLocalInspectionTool);
-            }
-          }).toList();
-
-      for (final PsiFile psiFile: changedPsiFiles) {
-
-        final Optional<VirtualFile> virtualFile = fromNullable(psiFile.getVirtualFile());
-        if (!virtualFile.isPresent()) continue;
-
-        PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(getProject());
-        final Optional<Document> document = fromNullable(psiDocumentManager.getDocument(psiFile));
-        if (!document.isPresent()) continue;
-
-        final LocalInspectionsPass localInspectionsPass =
-            new LocalInspectionsPass(psiFile, document.get(), 0, document.get().getTextLength(), LocalInspectionsPass.EMPTY_PRIORITY_RANGE, true,
-            HighlightInfoProcessor.getEmpty());
-
-        final Runnable inspect = new Runnable() {
-          @Override
-          public void run() {
-            localInspectionsPass.doInspectInBatch(context, managerEx, sonarLocalInspectionTools);
-            final List<HighlightInfo> infos = localInspectionsPass.getInfos();
-
-            UpdateHighlightersUtil.setHighlightersToEditor(
-                getProject(),
-                document.get(),
-                0,
-                document.get().getTextLength(),
-                infos,
-                null,
-                0
-            );
-          }
-        };
-
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-          @Override
-          public void run() {
-            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-              @Override
-              public void run() {
-                ProgressManager.getInstance().executeProcessUnderProgress(inspect, new ProgressIndicatorBase());
-              }
-            });
-          }
-        });
-
-      }
-
-      changedPsiFiles.clear();
     }
 
     private ImmutableList<VirtualFile> getAllModuleFiles() {

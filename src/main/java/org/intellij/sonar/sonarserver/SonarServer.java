@@ -2,19 +2,13 @@ package org.intellij.sonar.sonarserver;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SonarSeverity;
-import org.intellij.sonar.SyncWithSonarResult;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
-import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
@@ -284,21 +278,7 @@ public class SonarServer {
     return rulesResult;
   }
 */
-  public SyncWithSonarResult sync(Project project, @NotNull ProgressIndicator indicator) {
 
-    SyncWithSonarResult syncWithSonarResult = new SyncWithSonarResult();
-    /*SonarIssuesProvider sonarIssuesProvider = ServiceManager.getService(project,
-        SonarIssuesProvider.class);
-    if (null != sonarIssuesProvider) {
-//      syncWithSonarResult.violationsCount = sonarIssuesProvider.syncWithSonar(project, indicator);
-    }
-    SonarRulesComponent sonarRulesComponent = ServiceManager.getService(project, SonarRulesComponent.class);
-    if (null != sonarRulesComponent) {
-      syncWithSonarResult.rulesCount = sonarRulesComponent.syncWithSonar(project, indicator);
-    }*/
-
-    return syncWithSonarResult;
-  }
 
   public List<Resource> getAllProjectsAndModules() {
     List<Resource> allResources = new LinkedList<Resource>();
