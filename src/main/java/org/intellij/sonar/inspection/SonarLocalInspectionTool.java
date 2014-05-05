@@ -24,7 +24,6 @@ import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
@@ -32,16 +31,15 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.FileChangeListener;
 import org.intellij.sonar.SonarInspectionToolProvider;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
+import org.intellij.sonar.persistence.ChangedFilesComponent;
 import org.intellij.sonar.persistence.IndexComponent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -49,7 +47,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
-import static org.intellij.sonar.FileChangeListener.changedPsiFiles;
 
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
@@ -63,7 +60,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   }
 
   private static boolean shouldReadFromIndexFor(PsiFile psiFile) {
-    return !FileChangeListener.changedPsiFiles.contains(psiFile);
+    return !psiFile.getProject().getComponent(ChangedFilesComponent.class).changedFiles.contains(psiFile);
   }
 
   private static ProblemHighlightType sonarSeverityToProblemHighlightType(String sonarSeverity) {
@@ -176,7 +173,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
     }
 
-    changedPsiFiles.clear();
+    project.getComponent(ChangedFilesComponent.class).changedFiles.clear();
   }
 
   @Nls

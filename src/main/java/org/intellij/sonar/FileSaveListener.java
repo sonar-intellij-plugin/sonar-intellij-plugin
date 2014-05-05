@@ -1,6 +1,8 @@
 package org.intellij.sonar;
 
-import com.google.common.base.*;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.intellij.openapi.application.ApplicationManager;
@@ -32,11 +34,7 @@ import org.intellij.sonar.index.Indexer;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
 import org.intellij.sonar.index.IssuesIndexMerge;
-import org.intellij.sonar.inspection.SonarLocalInspectionTool;
-import org.intellij.sonar.persistence.IncrementalScriptBean;
-import org.intellij.sonar.persistence.IndexComponent;
-import org.intellij.sonar.persistence.ModuleSettingsBean;
-import org.intellij.sonar.persistence.ModuleSettingsComponent;
+import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +50,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Optional.fromNullable;
-import static org.intellij.sonar.FileChangeListener.changedPsiFiles;
 import static org.intellij.sonar.inspection.SonarLocalInspectionTool.refreshInspectionsInEditor;
 
 public class FileSaveListener implements ApplicationComponent, BulkFileListener {
@@ -82,9 +79,6 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
    */
   public void after(@NotNull List<? extends VFileEvent> events) {
 
-    lastFired = DateTime.now();
-
-    if (changedPsiFiles.isEmpty()) return;
 
     for (VFileEvent event : events) {
       final Optional<VirtualFile> file = fromNullable(event.getFile());
@@ -98,9 +92,16 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     final Optional<Project> projectForFile = fromNullable(ProjectUtil.guessProjectForFile(file.get()));
     if (!projectForFile.isPresent()) return;
 
+    final Set<PsiFile> changedPsiFiles = projectForFile.get().getComponent(ChangedFilesComponent.class).getPsiFiles();
+    if (changedPsiFiles.isEmpty()) {
+      return;
+    }
+
+    lastFired = DateTime.now();
     final SonarConsole console = SonarConsole.get(projectForFile.get());
 
-    console.info(String.format("Fired after file save for %s", file.get().getName()));
+// TODO: console.debug
+//    console.info(String.format("Fired after file save for %s", file.get().getName()));
 
     Optional<PsiFile> psiFile = Optional.absent();
     try {
@@ -235,7 +236,7 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     }
 
     private void createIndexFromSonarReport(ImmutableList<VirtualFile> moduleFiles, ImmutableList<Resource> moduleSonarResources, IndexComponent indexComponent, IncrementalScriptBean incrementalScriptBean) throws IOException {
-      final String createIndexMessage = String.format("Creating index for module %s from %s", module.getName(), incrementalScriptBean.getPathToSonarReport());
+      final String createIndexMessage = String.format("Create index for module %s from %s", module.getName(), incrementalScriptBean.getPathToSonarReport());
       console.info(createIndexMessage);
       indicator.setText(createIndexMessage);
       // read json report

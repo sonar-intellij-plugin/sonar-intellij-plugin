@@ -8,14 +8,13 @@ import com.intellij.openapi.fileEditor.FileEditorManagerAdapter;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.messages.MessageBusConnection;
 import org.intellij.sonar.inspection.SonarLocalInspectionTool;
+import org.intellij.sonar.persistence.ChangedFilesComponent;
 import org.jetbrains.annotations.NotNull;
-import org.joda.time.DateTime;
 
 import static com.google.common.base.Optional.fromNullable;
 
@@ -43,7 +42,7 @@ public class FileEditorListener extends AbstractProjectComponent {
 
           private void refreshInspectionsInEditorIfNeededFor(VirtualFile file) {
             final Optional<PsiFile> psiFile = fromNullable(PsiManager.getInstance(project).findFile(file));
-            if (psiFile.isPresent() && !FileChangeListener.changedPsiFiles.contains(psiFile.get())) {
+            if (psiFile.isPresent() && !project.getComponent(ChangedFilesComponent.class).changedFiles.contains(psiFile.get())) {
               SonarLocalInspectionTool.refreshInspectionsInEditor(project);
             }
           }

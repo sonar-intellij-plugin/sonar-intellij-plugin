@@ -12,8 +12,6 @@ import com.intellij.ui.content.Content;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-import javax.swing.*;
-
 import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
 import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
 

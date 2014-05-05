@@ -1,20 +1,15 @@
 package org.intellij.sonar.action;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.PerformInBackgroundOption;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -25,9 +20,6 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import org.intellij.sonar.FileChangeListener;
 import org.intellij.sonar.analysis.FileNotInSourcePathException;
 import org.intellij.sonar.analysis.IncrementalScriptProcess;
 import org.intellij.sonar.console.SonarConsole;
@@ -132,7 +124,7 @@ public class CreateIndexForModuleAction extends AnAction {
               createIndexFromSonarReport(moduleFiles, moduleSonarResources, indexComponent, incrementalScriptBean);
               SonarLocalInspectionTool.refreshInspectionsInEditor(myProject);
               // we have just freshly updated the index, clear all changed files
-              FileChangeListener.changedPsiFiles.clear();
+              myProject.getComponent(ChangedFilesComponent.class).changedFiles.clear();
             }
           } catch (IOException e) {
             console.error(String.format("Cannot execute %s\nRoot cause:\n\n%s", sourceCodeOfScript, e.getMessage()));
@@ -148,7 +140,7 @@ public class CreateIndexForModuleAction extends AnAction {
     }
 
     private void createIndexFromSonarReport(ImmutableList<VirtualFile> moduleFiles, ImmutableList<Resource> moduleSonarResources, IndexComponent indexComponent, IncrementalScriptBean incrementalScriptBean) throws IOException {
-      final String createIndexMessage = String.format("Creating index for module %s from %s", module.getName(), incrementalScriptBean.getPathToSonarReport());
+      final String createIndexMessage = String.format("Create index for module %s from %s", module.getName(), incrementalScriptBean.getPathToSonarReport());
       console.info(createIndexMessage);
       indicator.setText(createIndexMessage);
       // read json report
@@ -174,7 +166,7 @@ public class CreateIndexForModuleAction extends AnAction {
     }
 
     private IndexComponent createIndexForModule(ImmutableList<VirtualFile> moduleFiles, ImmutableList<Resource> moduleSonarResources, ImmutableList<Issue> issuesFromSonarServer) {
-      final String creatingIndexFromSonarServerMessage = String.format("Creating index for module %s from sonar server", module.getName());
+      final String creatingIndexFromSonarServerMessage = String.format("Create index for module %s from sonar server", module.getName());
       indicator.setText(creatingIndexFromSonarServerMessage);
       console.info(creatingIndexFromSonarServerMessage);
 

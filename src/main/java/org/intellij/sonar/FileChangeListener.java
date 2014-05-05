@@ -8,25 +8,18 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiTreeChangeAdapter;
 import com.intellij.psi.PsiTreeChangeEvent;
-import com.intellij.util.containers.ConcurrentHashSet;
 import org.intellij.sonar.analysis.IncrementalScriptProcess;
-import org.intellij.sonar.console.SonarConsole;
+import org.intellij.sonar.persistence.ChangedFilesComponent;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
-import org.joda.time.Seconds;
-
-import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 
 public class FileChangeListener extends AbstractProjectComponent {
 
-  public final static Set<PsiFile> changedPsiFiles = new ConcurrentHashSet<PsiFile>();
-  private final SonarConsole console;
-
-  protected FileChangeListener(Project project) {
+  protected FileChangeListener(final Project project) {
     super(project);
-    console = SonarConsole.get(project);
+
     PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
 
       @Override
@@ -34,11 +27,10 @@ public class FileChangeListener extends AbstractProjectComponent {
        * // executes on every small change in the editor
        */
       public void beforeChildrenChange(@NotNull PsiTreeChangeEvent event) {
-
         final Optional<PsiFile> psiFile = fromNullable(event.getFile());
         if (!psiFile.isPresent()) return;
-
-        console.info(String.format("Fired before file change for %s", psiFile.get().getName()));
+// TODO: console.debug
+//        console.info(String.format("Fired before file change for %s", psiFile.get().getName()));
 
         final Optional<VirtualFile> virtualFile = fromNullable(psiFile.get().getVirtualFile());
         if (!virtualFile.isPresent() || virtualFile.get().isDirectory()) return;
@@ -57,13 +49,14 @@ public class FileChangeListener extends AbstractProjectComponent {
 
         // workaround: don't call if FileSaveListener was recently called
         // sometimes if call "Save All" a FileChangeListener event is immediately called
-        if (DateTime.now().getMillis() - FileSaveListener.lastFired.getMillis() <= 300) {
-          console.info(String.format("%s avoided", FileChangeListener.class.getSimpleName()));
+        if (DateTime.now().getMillis() - FileSaveListener.lastFired.getMillis() <= 100) {
+// TODO: console.debug
+//          console.info(String.format("%s avoided", FileChangeListener.class.getSimpleName()));
           return;
         }
 
-        console.info(String.format("stop all processes for %s", psiFile.get().getName()));
-        changedPsiFiles.add(psiFile.get());
+
+        project.getComponent(ChangedFilesComponent.class).add(psiFile.get());
 
         stopAllRunningProcesses();
       }

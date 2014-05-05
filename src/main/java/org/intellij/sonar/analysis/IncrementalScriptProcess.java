@@ -4,22 +4,17 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ConcurrentHashSet;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.StreamGobbler;
-import org.intellij.sonar.persistence.*;
+import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -99,7 +94,7 @@ public class IncrementalScriptProcess {
   }
 
   public IncrementalScriptProcess restart() throws IOException, FileNotInSourcePathException {
-    console.info(String.format("Restarting: %s", incrementalScriptBean.toString()));
+    console.info(String.format("Restart: %s", incrementalScriptBean.toString()));
     restarting = true;
     final IncrementalScriptProcess incrementalScriptProcess = kill().start();
     restarting = false;
@@ -120,7 +115,7 @@ public class IncrementalScriptProcess {
       try {
         exitCode = this.process.waitFor();
         if (stopwatch.isRunning()) {
-          console.info(String.format("(%d) Stopped execution after %d ms of %s",
+          console.info(String.format("Stopped execution with exit code %d after %d ms of %s",
               exitCode,
               stopwatch.stop().elapsed(TimeUnit.MILLISECONDS),
               incrementalScriptBean.toString()));
