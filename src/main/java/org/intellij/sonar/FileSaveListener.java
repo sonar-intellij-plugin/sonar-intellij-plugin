@@ -86,10 +86,10 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     }
   }
 
-  public void tryToTriggerIncrementalAnalysisFor(Optional<VirtualFile> file) {
-    if (!file.isPresent()) return;
+  public void tryToTriggerIncrementalAnalysisFor(Optional<VirtualFile> virtualFile) {
+    if (!virtualFile.isPresent() || virtualFile.get().isDirectory() || !virtualFile.get().isValid() || !virtualFile.get().isInLocalFileSystem()) return;
 
-    final Optional<Project> projectForFile = fromNullable(ProjectUtil.guessProjectForFile(file.get()));
+    final Optional<Project> projectForFile = fromNullable(ProjectUtil.guessProjectForFile(virtualFile.get()));
     if (!projectForFile.isPresent()) return;
 
     final Set<PsiFile> changedPsiFiles = projectForFile.get().getComponent(ChangedFilesComponent.class).getPsiFiles();
@@ -105,13 +105,13 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
 
     Optional<PsiFile> psiFile = Optional.absent();
     try {
-      psiFile = fromNullable(PsiManager.getInstance(projectForFile.get()).findFile(file.get()));
+      psiFile = fromNullable(PsiManager.getInstance(projectForFile.get()).findFile(virtualFile.get()));
     } catch (Throwable e) {
       return;
     }
-    if (!psiFile.isPresent() || !changedPsiFiles.contains(psiFile.get())) return;
+    if (!psiFile.isPresent() || !psiFile.get().isValid() || !psiFile.get().isPhysical()) return;
 
-    final Optional<Module> moduleForFile = fromNullable(ModuleUtil.findModuleForFile(file.get(), projectForFile.get()));
+    final Optional<Module> moduleForFile = fromNullable(ModuleUtil.findModuleForFile(virtualFile.get(), projectForFile.get()));
     if (!moduleForFile.isPresent()) return;
 
     final ModuleSettingsComponent moduleSettingsComponent = moduleForFile.get().getComponent(ModuleSettingsComponent.class);
@@ -121,7 +121,7 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
     for (IncrementalScriptBean incrementalScriptBean : incrementalScriptBeans) {
 
         final BackgroundTask backgroundTask = new BackgroundTask(
-            projectForFile.get(), "Executing incremental Analysis", true, PerformInBackgroundOption.ALWAYS_BACKGROUND, incrementalScriptBean, file.get());
+            projectForFile.get(), "Executing incremental Analysis", true, PerformInBackgroundOption.ALWAYS_BACKGROUND, incrementalScriptBean, virtualFile.get());
         backgroundTask
             .withModule(moduleForFile.get())
             .queue();

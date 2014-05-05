@@ -28,12 +28,12 @@ public class FileChangeListener extends AbstractProjectComponent {
        */
       public void beforeChildrenChange(@NotNull PsiTreeChangeEvent event) {
         final Optional<PsiFile> psiFile = fromNullable(event.getFile());
-        if (!psiFile.isPresent()) return;
+        if (!psiFile.isPresent() || !psiFile.get().isValid() || !psiFile.get().isPhysical()) return;
 // TODO: console.debug
 //        console.info(String.format("Fired before file change for %s", psiFile.get().getName()));
 
         final Optional<VirtualFile> virtualFile = fromNullable(psiFile.get().getVirtualFile());
-        if (!virtualFile.isPresent() || virtualFile.get().isDirectory()) return;
+        if (!virtualFile.isPresent() || virtualFile.get().isDirectory() || !virtualFile.get().isValid() || !virtualFile.get().isInLocalFileSystem()) return;
 
         // exclude intellij system files
         if ("workspace.xml".equals(psiFile.get().getName())
@@ -43,6 +43,8 @@ public class FileChangeListener extends AbstractProjectComponent {
             || psiFile.get().getName().endsWith(".iws")
             || virtualFile.get().getPath().contains("plugins-sandbox")
             || virtualFile.get().getPath().contains(".idea")
+            || virtualFile.get().getPath().contains("/target/")
+            || virtualFile.get().getPath().contains("/out/")
             ) {
           return;
         }
