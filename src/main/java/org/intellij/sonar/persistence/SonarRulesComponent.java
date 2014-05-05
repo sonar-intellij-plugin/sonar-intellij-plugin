@@ -1,17 +1,11 @@
 package org.intellij.sonar.persistence;
 
-import com.intellij.ide.IdeBundle;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.services.Rule;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -20,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @State(
     name = "sonar-rules-component",
     storages = {
-        @Storage(id = "sonar-rules-component" + SonarRulesComponent.serialVersionUID, file = BaseDir.PATH + "sonar-rules.xml")
+        @Storage(id = "sonar-rules-component" + SonarRulesComponent.serialVersionUID, file = StoragePathMacros.PROJECT_FILE)
     }
 )
 public class SonarRulesComponent implements PersistentStateComponent<SonarRulesComponent>, Serializable {

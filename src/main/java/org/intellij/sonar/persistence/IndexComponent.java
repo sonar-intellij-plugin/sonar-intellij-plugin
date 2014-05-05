@@ -3,14 +3,13 @@ package org.intellij.sonar.persistence;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import org.intellij.sonar.index.IssuesIndex;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @State(
     name = "index-component",
     storages = {
-        @Storage(id = "index-component" + IndexComponent.serialVersionUID , file = BaseDir.PATH + "index-component.xml")
+        @Storage(id = "index-component" + IndexComponent.serialVersionUID , file = StoragePathMacros.PROJECT_FILE)
     }
 )
 public class IndexComponent implements PersistentStateComponent<IndexComponent>, Serializable {

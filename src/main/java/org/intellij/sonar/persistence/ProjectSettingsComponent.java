@@ -1,16 +1,13 @@
 package org.intellij.sonar.persistence;
 
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @State(
     name = "project-settings-component",
     storages = {
-        @Storage(id = "project-settings-component", file = BaseDir.PATH + "project-settings.xml")
+        @Storage(id = "project-settings-component", file = StoragePathMacros.PROJECT_FILE)
     }
 )
 public class ProjectSettingsComponent implements PersistentStateComponent<ProjectSettingsBean>, ProjectComponent {

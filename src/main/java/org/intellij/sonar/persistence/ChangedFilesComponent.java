@@ -4,10 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.Pair;
@@ -26,7 +23,7 @@ import java.util.Set;
 @State(
     name = "changed-files-component",
     storages = {
-        @Storage(id = "changed-files-component", file = BaseDir.PATH + "changed-files.xml")
+        @Storage(id = "changed-files-component", file = StoragePathMacros.PROJECT_FILE)
     }
 )
 public class ChangedFilesComponent implements PersistentStateComponent<ChangedFilesComponent>, ProjectComponent {
