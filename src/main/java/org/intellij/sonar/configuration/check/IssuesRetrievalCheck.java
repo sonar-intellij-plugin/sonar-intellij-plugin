@@ -9,9 +9,7 @@ import org.sonar.wsclient.services.Resource;
 
 import java.util.List;
 
-import static org.intellij.sonar.util.MessagesUtil.errorMessage;
-import static org.intellij.sonar.util.MessagesUtil.okMessage;
-import static org.intellij.sonar.util.MessagesUtil.warnMessage;
+import static org.intellij.sonar.util.MessagesUtil.*;
 
 public class IssuesRetrievalCheck implements Runnable, ConfigurationCheck {
 
@@ -69,6 +67,10 @@ public class IssuesRetrievalCheck implements Runnable, ConfigurationCheck {
     }
     if (null == myIssues || null == myIssues.maxResultsReached()) {
       return errorMessage(String.format("Cannot retrieve issues for %s\n", myResourceKey));
+    } else if (null == myResource) {
+      return errorMessage(String.format("Cannot retrieve resource for %s\n", myResourceKey));
+    } else if (null == myIssues.paging()) {
+      return errorMessage("Cannot retrieve issues count. Empty Paging.\n");
     } else if (myIssues.maxResultsReached()) {
       return warnMessage(String.format("Max results reached for %s !" +
           " Total issues size is greater then %s.\n", myResource.getName(), myIssues.paging().total()));
