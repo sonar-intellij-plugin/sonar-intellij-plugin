@@ -1,7 +1,7 @@
 package org.intellij.sonar;
 
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
-import org.intellij.sonar.inspection.SonarLocalInspectionTool;
+import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 

@@ -50,7 +50,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Optional.fromNullable;
-import static org.intellij.sonar.inspection.SonarLocalInspectionTool.refreshInspectionsInEditor;
+import static org.intellij.sonar.analysis.SonarLocalInspectionTool.refreshInspectionsInEditor;
 
 public class FileSaveListener implements ApplicationComponent, BulkFileListener {
 
@@ -78,7 +78,8 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
    * Executes after file(s) are saved to the disc. Note it does not happen immediately if you type new code
    */
   public void after(@NotNull List<? extends VFileEvent> events) {
-
+    //TODO: deactivated
+    if (true) return;
 
     for (VFileEvent event : events) {
       final Optional<VirtualFile> file = fromNullable(event.getFile());

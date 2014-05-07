@@ -8,7 +8,7 @@ import com.intellij.openapi.project.ProjectManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
-import org.intellij.sonar.inspection.SonarLocalInspectionTool;
+import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.intellij.sonar.persistence.SonarRuleBean;
 import org.intellij.sonar.persistence.SonarRulesComponent;
 

@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.messages.MessageBusConnection;
-import org.intellij.sonar.inspection.SonarLocalInspectionTool;
+import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.intellij.sonar.persistence.ChangedFilesComponent;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +29,8 @@ public class FileEditorListener extends AbstractProjectComponent {
         new FileEditorManagerAdapter() {
           @Override
           public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+            //TODO: deactivated
+            if (true) return;
             final VirtualFile virtualFile = event.getNewFile();
             if (null != virtualFile) {
               refreshInspectionsInEditorIfNeededFor(virtualFile);
@@ -37,6 +39,8 @@ public class FileEditorListener extends AbstractProjectComponent {
 
           @Override
           public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile virtualFile) {
+            //TODO: deactivated
+            if (true) return;
             refreshInspectionsInEditorIfNeededFor(virtualFile);
           }
 

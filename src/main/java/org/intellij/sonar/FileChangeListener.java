@@ -27,6 +27,9 @@ public class FileChangeListener extends AbstractProjectComponent {
        * // executes on every small change in the editor
        */
       public void beforeChildrenChange(@NotNull PsiTreeChangeEvent event) {
+        //TODO: deactivated
+        if (true) return;
+
         final Optional<PsiFile> psiFile = fromNullable(event.getFile());
         if (!psiFile.isPresent() || !psiFile.get().isValid() || !psiFile.get().isPhysical()) return;
 // TODO: console.debug

@@ -60,6 +60,11 @@
                 org.intellij.sonar.persistence.ChangedFilesComponent
             </implementation-class>
         </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.DocumentChangeListener
+            </implementation-class>
+        </component>
     </project-components>
 
     <module-components>
@@ -75,9 +80,6 @@
             <action text="Create index for the project" class="org.intellij.sonar.action.CreateIndexForProjectAction" id="Sonar.CreateIndexForProject" />
             <add-to-group group-id="EditorPopupMenu" />
         </group>
-       <!-- <action id="Show.SyncWithSonar" class="org.intellij.sonar.action.SyncWithSonarAction" text="Sync with sonar">
-            <add-to-group group-id="EditorPopupMenu"/>
-        </action>-->
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -92,6 +94,8 @@
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServersComponent" />
         <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent" />
         <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
+        <!--<globalInspection
+                implementationClass="org.intellij.sonar.analysis.SonarGlobalInspectionTool"/>-->
     </extensions>
 
 
