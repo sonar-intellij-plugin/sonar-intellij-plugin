@@ -10,15 +10,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.colors.EditorFontType;
-import com.intellij.openapi.editor.markup.*;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.MarkupModel;
+import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.ui.JBColor;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
@@ -307,7 +307,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
                         textRange.get().getStartOffset(),
                         textRange.get().getEndOffset(),
                         0,
-                        new TextAttributes(JBColor.BLUE, null, null, EffectType.WAVE_UNDERSCORE, EditorFontType.BOLD.ordinal()),
+                        null,
                         HighlighterTargetArea.EXACT_RANGE);
                     Map<IssuesIndexKey, Set<IssuesIndexEntry>> newIssuesIndexOfHighlighter = new ConcurrentHashMap<IssuesIndexKey, Set<IssuesIndexEntry>>();
                     newIssuesIndexOfHighlighter.put(issuesIndexKey, Sets.newHashSet(issueForFile));

@@ -1,5 +1,7 @@
 package org.intellij.sonar;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.editor.Editor;
@@ -7,10 +9,13 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
+import org.intellij.sonar.persistence.IndexComponent;
 import org.intellij.sonar.util.Finders;
 
 import java.util.Map;
@@ -97,8 +102,52 @@ public class DocumentChangeListener extends AbstractProjectComponent {
                   }
                 }
 
-                // TODO: remove issue index entries without highlighters
-                // assumption is that highlighters are removed if we remove the corresponding source code in editor
+                final Optional<IndexComponent> indexComponent = Finders.findIndexComponent(project);
+                if (indexComponent.isPresent()) {
+                  final Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex = indexComponent.get().getIssuesIndex();
+                  final Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(e.getDocument());
+                  Set<IssuesIndexKey> issuesIndexKeysToBeRemoved = Sets.newHashSet();
+                  for (Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>> entry : issuesIndex.entrySet()) {
+                    for (IssuesIndexEntry issuesIndexEntry : entry.getValue()) {
+
+                      // skip if document do not correspond to file of issue
+                      final String fullFilePathOfIssue = entry.getKey().getFullFilePath();
+                      final Optional<VirtualFile> file = Optional.fromNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
+                      if (file.isPresent()) {
+                        final String fullFilePathOfDocument = file.get().getPath();
+                        if (fullFilePathOfIssue.equals(fullFilePathOfDocument)) {
+                          final Integer lineOfIssue = issuesIndexEntry.getLine();
+
+                          // try to find any highlighter on that line
+                          boolean keepAlive = false;
+                          for (RangeHighlighter highlighter : highlighters) {
+                            for (Editor editor : EditorFactory.getInstance().getEditors(highlighter.getDocument())) {
+
+                              final int lineOfRangeHighlighter = Finders.findLineOfRangeHighlighter(highlighter, editor);
+                              if (lineOfIssue == lineOfRangeHighlighter + 1) {
+                                keepAlive = true;
+                                break;
+                              }
+                            }
+                            if (keepAlive) break;
+
+                          }
+
+                          // if not found highlighter for issue remove issue from index
+                          // this happens if code containing an issue is deleted in editor
+                          if (!keepAlive) {
+                            issuesIndexKeysToBeRemoved.add(entry.getKey());
+                          }
+
+                        }
+                      }
+                    }
+                  }
+
+                  for (IssuesIndexKey indexKey : issuesIndexKeysToBeRemoved) {
+                    issuesIndex.remove(indexKey);
+                  }
+                }
               }
             });
           }
