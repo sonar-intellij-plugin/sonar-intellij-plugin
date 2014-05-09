@@ -15,11 +15,14 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import org.intellij.sonar.index.IssuesIndexEntry;
+import org.intellij.sonar.index.IssuesIndexKey;
 import org.intellij.sonar.persistence.IndexComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
@@ -68,9 +71,20 @@ public class Finders {
 
   @NotNull
   public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final int line) {
-    final HighlighterLineFinder finder = new HighlighterLineFinder(editor, line);
-    ApplicationManager.getApplication().invokeLater(finder);
-    return fromNullable(finder.getFoundHighlighter());
+    final MarkupModel markupModel = editor.getMarkupModel();
+    final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
+    for (RangeHighlighter highlighter : highlighters) {
+      final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
+      final int lineOfHighlighter = logicalPosition.line;
+      if (lineOfHighlighter == line - 1) {
+        return Optional.of(highlighter);
+      }
+    }
+
+    return Optional.absent();
+//    final HighlighterLineFinder finder = new HighlighterLineFinder(editor, line - 1);
+//    ApplicationManager.getApplication().invokeLater(finder);
+//    return fromNullable(finder.getFoundHighlighter());
   }
 
   @NotNull
@@ -87,6 +101,11 @@ public class Finders {
   public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter, @NotNull Editor editor) {
     final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
     return logicalPosition.line;
+  }
+
+  @NotNull
+  public static Map<IssuesIndexKey, Set<IssuesIndexEntry>> findIssuesIndex(Project project) {
+    return ServiceManager.getService(project, IndexComponent.class).getIssuesIndex();
   }
 
   private static class HighlighterLineFinder implements Runnable {

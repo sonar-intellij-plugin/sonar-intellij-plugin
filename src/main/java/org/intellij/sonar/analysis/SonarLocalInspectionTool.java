@@ -10,16 +10,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.LogicalPosition;
-import com.intellij.openapi.editor.markup.HighlighterTargetArea;
-import com.intellij.openapi.editor.markup.MarkupModel;
-import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.editor.colors.EditorFontType;
+import com.intellij.openapi.editor.markup.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.ui.JBColor;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
@@ -32,23 +31,34 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Optional.fromNullable;
 import static org.intellij.sonar.util.Finders.findFirstElementAtLine;
 
 public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
+  public static final Key<Map<IssuesIndexKey, Set<IssuesIndexEntry>>> ISSUES_INDEX = new Key<Map<IssuesIndexKey, Set<IssuesIndexEntry>>>("issuesIndexEntries");
+  public static final Key<String> SOURCE_CODE = new Key<String>("sourceCode");
+  public static final Key<String> OLD_SOURCE_CODE = new Key<String>("oldSourceCode");
   private static final Logger LOG = Logger.getInstance(SonarLocalInspectionTool.class);
-  public static final Key<Set<IssuesIndexEntry>> PROBLEM_DESCRIPTORS_KEY = new Key<Set<IssuesIndexEntry>>("issuesIndexEntries");
 
   @NotNull
   public static Optional<TextRange> getTextRange(@NotNull PsiFile psiFile, int line) {
-    final Optional<PsiElement> element = findFirstElementAtLine(psiFile, line);
-    if (element.isPresent()) {
-      return fromNullable(element.get().getTextRange());
-    } else {
-      return Optional.absent();
+
+    final Optional<PsiElement> firstElementAtLine = findFirstElementAtLine(psiFile, line);
+    if (firstElementAtLine.isPresent()) {
+      final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+      if (document.isPresent()) {
+        final int endOffset = document.get().getLineEndOffset(line - 1);
+        final int startOffset = firstElementAtLine.get().getTextOffset();
+        if (endOffset > startOffset) {
+          return Optional.of(new TextRange(startOffset, endOffset));
+        }
+      }
     }
+
+    return Optional.absent();
   }
 
   private static boolean shouldReadFromIndexFor(@NotNull PsiFile psiFile) {
@@ -254,14 +264,17 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     final Collection<ProblemDescriptor> problemDescriptors = new LinkedHashSet<ProblemDescriptor>();
 
     final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getIssuesIndex();
+    final IssuesIndexKey issuesIndexKey = new IssuesIndexKey(virtualFile.getPath(), isNew(), getRuleKey());
     final Optional<Set<IssuesIndexEntry>> issuesForFile = fromNullable(
-        indexMap.get(new IssuesIndexKey(virtualFile.getPath(), isNew(), getRuleKey()))
+        indexMap.get(issuesIndexKey)
     );
     if (issuesForFile.isPresent()) {
       for (final IssuesIndexEntry issueForFile : issuesForFile.get()) {
         if (null != issueForFile && null != issueForFile.getLine() && issueForFile.getLine() <= document.get().getLineCount()) {
+
           final Optional<TextRange> textRange = getTextRange(psiFile, issueForFile.getLine());
           if (textRange.isPresent()) {
+            // add problem descriptor
             final ProblemHighlightType problemHighlightType = sonarSeverityToProblemHighlightType(issueForFile.getSeverity());
             final ProblemDescriptor problemDescriptor = manager.createProblemDescriptor(psiFile, textRange.get(),
                 String.format("[%s] %s", issueForFile.getSeverity(), issueForFile.getMessage()),
@@ -272,28 +285,34 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
             final List<Editor> editors = Finders.findEditorsFrom(document.get());
             // in most cases there is only one editor for a file
-            for (final Editor editor: editors) {
-              final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(findFirstElementAtLine(psiFile, issueForFile.getLine()).get().getTextOffset());
-              final int lineEndOffset = document.get().getLineEndOffset(logicalPosition.line);
+            for (final Editor editor : editors) {
+
               final MarkupModel markupModel = editor.getMarkupModel();
 
+              // add invisible highlighter
               ApplicationManager.getApplication().invokeLater(new Runnable() {
                 @Override
                 public void run() {
                   final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(editor, issueForFile.getLine());
+                  final String highlightedSourceCode = document.get().getText(textRange.get());
                   if (rangeHighlighterAtLine.isPresent()) {
-                    // user data is instantiated some lines below
-                    //noinspection ConstantConditions
-                    rangeHighlighterAtLine.get().getUserData(PROBLEM_DESCRIPTORS_KEY).add(issueForFile);
+                    final Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndexOfHighlighter = rangeHighlighterAtLine.get().getUserData(ISSUES_INDEX);
+                    if (null != issuesIndexOfHighlighter && issuesIndexOfHighlighter.containsKey(issuesIndexKey)) {
+                      final Set<IssuesIndexEntry> issuesIndexEntries = issuesIndexOfHighlighter.get(issuesIndexKey);
+                      issuesIndexEntries.add(issueForFile);
+                      putSourceCodeToHighlighter(highlightedSourceCode, rangeHighlighterAtLine.get());
+                    }
                   } else {
                     final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
                         textRange.get().getStartOffset(),
-                        lineEndOffset,
+                        textRange.get().getEndOffset(),
                         0,
-                        null,
+                        new TextAttributes(JBColor.BLUE, null, null, EffectType.WAVE_UNDERSCORE, EditorFontType.BOLD.ordinal()),
                         HighlighterTargetArea.EXACT_RANGE);
-                    final Key<Set<IssuesIndexEntry>> descriptorsKey = PROBLEM_DESCRIPTORS_KEY;
-                    rangeHighlighter.putUserData(descriptorsKey, Sets.newHashSet(issueForFile));
+                    Map<IssuesIndexKey, Set<IssuesIndexEntry>> newIssuesIndexOfHighlighter = new ConcurrentHashMap<IssuesIndexKey, Set<IssuesIndexEntry>>();
+                    newIssuesIndexOfHighlighter.put(issuesIndexKey, Sets.newHashSet(issueForFile));
+                    rangeHighlighter.putUserData(ISSUES_INDEX, newIssuesIndexOfHighlighter);
+                    putSourceCodeToHighlighter(highlightedSourceCode, rangeHighlighter);
                   }
                 }
               });
@@ -303,6 +322,14 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       }
     }
     return problemDescriptors.toArray(new ProblemDescriptor[problemDescriptors.size()]);
+  }
+
+  private void putSourceCodeToHighlighter(@NotNull String newSourceCode, @NotNull RangeHighlighter highlighter) {
+    final String oldSourceCode = String.valueOf(highlighter.getUserData(SOURCE_CODE));
+    if (!newSourceCode.equals(oldSourceCode)) {
+      highlighter.putUserData(OLD_SOURCE_CODE, oldSourceCode);
+    }
+    highlighter.putUserData(SOURCE_CODE, newSourceCode);
   }
 
 }
