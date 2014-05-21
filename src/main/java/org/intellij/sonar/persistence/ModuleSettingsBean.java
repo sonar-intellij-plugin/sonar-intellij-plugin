@@ -2,7 +2,6 @@ package org.intellij.sonar.persistence;
 
 import com.google.common.base.Optional;
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.configuration.SonarResourceMapping;
 import org.intellij.sonar.configuration.module.ModuleSettingsConfigurable;
 import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.sonar.wsclient.services.Resource;

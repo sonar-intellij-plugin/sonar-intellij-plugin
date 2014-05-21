@@ -1,10 +1,5 @@
 package org.intellij.sonar;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-
 public class SonarSettingsUtils {
 
   /*public static SonarSettingsBean getSonarSettingsBeanForFile(VirtualFile virtualFile, Project project) {

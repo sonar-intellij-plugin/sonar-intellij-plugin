@@ -1,8 +1,5 @@
 package org.intellij.sonar.evaluation;
 
-import com.google.gson.Gson;
-import com.intellij.openapi.progress.util.CommandLineProgress;
-import org.intellij.sonar.persistence.SonarRuleBean;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.issue.Issues;
@@ -11,9 +8,6 @@ import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
 import org.sonar.wsclient.services.Rule;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")

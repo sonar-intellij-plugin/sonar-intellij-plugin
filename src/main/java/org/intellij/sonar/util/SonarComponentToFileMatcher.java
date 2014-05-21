@@ -1,7 +1,6 @@
 package org.intellij.sonar.util;
 
 import com.google.common.base.Optional;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Trinity;
 import com.intellij.openapi.util.text.StringUtil;
 

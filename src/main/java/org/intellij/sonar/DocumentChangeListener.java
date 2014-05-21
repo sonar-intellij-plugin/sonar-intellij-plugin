@@ -80,7 +80,10 @@ public class DocumentChangeListener extends AbstractProjectComponent {
                 }*/
 
                 // update index entries based on highlighters position
-                for (RangeHighlighter highlighter : Finders.findAllRangeHighlightersFrom(e.getDocument())) {
+                final Set<RangeHighlighter> allRangeHighlightersFromDocument = Finders.findAllRangeHighlightersFrom(e.getDocument());
+                if (allRangeHighlightersFromDocument.isEmpty()) return;
+
+                for (RangeHighlighter highlighter : allRangeHighlightersFromDocument) {
                   for (Editor editor : EditorFactory.getInstance().getEditors(highlighter.getDocument())) {
 
                     final int intellijLineOfHighlighter = Finders.findLineOfRangeHighlighter(highlighter, editor);
@@ -102,9 +105,9 @@ public class DocumentChangeListener extends AbstractProjectComponent {
                   }
                 }
 
-                final Optional<IndexComponent> indexComponent = Finders.findIndexComponent(project);
+                final Optional<IndexComponent> indexComponent = IndexComponent.getInstance(project);
                 if (indexComponent.isPresent()) {
-                  final Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex = indexComponent.get().getIssuesIndex();
+                  final Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex = indexComponent.get().getState();
                   final Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(e.getDocument());
                   Set<IssuesIndexKey> issuesIndexKeysToBeRemoved = Sets.newHashSet();
                   for (Map.Entry<IssuesIndexKey, Set<IssuesIndexEntry>> entry : issuesIndex.entrySet()) {

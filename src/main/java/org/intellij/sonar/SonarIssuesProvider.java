@@ -1,20 +1,15 @@
 package org.intellij.sonar;
 
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.Transient;
-import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.sonar.wsclient.services.Violation;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -6,8 +6,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.intellij.sonar.util.SonarComponentToFileMatcher;
 import org.intellij.sonar.sonarreport.data.Issue;
+import org.intellij.sonar.util.SonarComponentToFileMatcher;
 import org.sonar.wsclient.services.Resource;
 
 import java.util.HashSet;

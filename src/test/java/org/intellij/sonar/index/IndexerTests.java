@@ -106,8 +106,8 @@ public class IndexerTests {
             EXPECTED_ENTRIES
         );
 
-    final IndexComponent indexComponent = new IndexComponent();
-    indexComponent.setIssuesIndex(index);
+    final IndexComponent indexComponent = new IndexComponent(null);
+    indexComponent.loadState(index);
     final Element element = XmlSerializer.serialize(indexComponent);
     final IndexComponent deserialize = XmlSerializer.deserialize(element, IndexComponent.class);
   }
@@ -167,9 +167,8 @@ public class IndexerTests {
             EXPECTED_ENTRIES
         );
 
-    final IndexComponent indexComponent = new IndexComponent();
-    indexComponent.setIssuesIndex(index);
-    indexComponent.loadState(indexComponent);
+    final IndexComponent indexComponent = new IndexComponent(null);
+    indexComponent.loadState(index);
     XmlSerializerUtil.getAccessors(IndexComponent.class);
   }
 

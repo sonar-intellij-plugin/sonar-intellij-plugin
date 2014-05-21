@@ -65,6 +65,16 @@
                 org.intellij.sonar.DocumentChangeListener
             </implementation-class>
         </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.analysis.NotificationManager
+            </implementation-class>
+        </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.persistence.IndexComponent
+            </implementation-class>
+        </component>
     </project-components>
 
     <module-components>

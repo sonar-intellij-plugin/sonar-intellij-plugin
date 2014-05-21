@@ -8,8 +8,8 @@ import com.google.common.io.Files;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.PerformInBackgroundOption;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -22,6 +22,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
 import org.intellij.sonar.analysis.FileNotInSourcePathException;
 import org.intellij.sonar.analysis.IncrementalScriptProcess;
+import org.intellij.sonar.analysis.NotificationManager;
 import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.*;
@@ -73,6 +74,8 @@ public class CreateIndexForModuleAction extends AnAction {
       return;
     }
     console = SonarConsole.get(module.getProject());
+
+    FileDocumentManager.getInstance().saveAllDocuments();
 
     final BackgroundTask backgroundTask = new BackgroundTask(module.getProject(), "Create IssuesIndex For Module " + module.getName(), true, PerformInBackgroundOption.ALWAYS_BACKGROUND);
     backgroundTask.withModule(module).queue();
@@ -154,10 +157,11 @@ public class CreateIndexForModuleAction extends AnAction {
       // update index from json report
       indicator.setText(String.format("Merging index with issues from sonar report"));
       final Map<IssuesIndexKey, Set<IssuesIndexEntry>> newIndexMapFromSonarReport =
-          IssuesIndexMerge.from(indexComponent.getIssuesIndex())
+          IssuesIndexMerge.from(indexComponent.getState())
               .with(issuesFromSonarReport)
               .get();
-      indexComponent.setIssuesIndex(newIndexMapFromSonarReport);
+      indexComponent.loadState(newIndexMapFromSonarReport);
+      myProject.getComponent(NotificationManager.class).showNotificationFor(issuesFromSonarReport);
       console.info(String.format("Created index for module %s from %s in %d ms"
           , module.getName()
           , incrementalScriptBean.getPathToSonarReport()
@@ -174,19 +178,19 @@ public class CreateIndexForModuleAction extends AnAction {
       final Indexer indexer = new Indexer(moduleFiles, moduleSonarResources);
       final Map<IssuesIndexKey, Set<IssuesIndexEntry>> indexMapFromSonarServer = indexer.withSonarServerIssues(issuesFromSonarServer).create();
 
-      final IndexComponent indexComponent = ServiceManager.getService(module.getProject(), IndexComponent.class);
+      final Optional<IndexComponent> indexComponent = IndexComponent.getInstance(module.getProject());
       final IssuesIndex issuesIndexFromSonarServer = new IssuesIndex(indexMapFromSonarServer);
 
       indicator.setText(String.format("Merging index with issues from sonar server"));
       final Map<IssuesIndexKey, Set<IssuesIndexEntry>> newIndexMapFromSonarServer =
-          IssuesIndexMerge.from(indexComponent.getIssuesIndex())
+          IssuesIndexMerge.from(indexComponent.get().getState())
               .with(issuesIndexFromSonarServer.getIndexValue())
               .get();
 
-      indexComponent.setIssuesIndex(newIndexMapFromSonarServer);
+      indexComponent.get().loadState(newIndexMapFromSonarServer);
       console.info(String.format("Created index for module %s from sonar server in %d ms"
       , module.getName(), stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
-      return indexComponent;
+      return indexComponent.get();
     }
 
     private ImmutableList<VirtualFile> getAllModuleFiles() {

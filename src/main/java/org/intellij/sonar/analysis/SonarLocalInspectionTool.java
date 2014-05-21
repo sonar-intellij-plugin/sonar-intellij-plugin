@@ -1,11 +1,23 @@
 package org.intellij.sonar.analysis;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.daemon.impl.HighlightInfoProcessor;
+import com.intellij.codeInsight.daemon.impl.LocalInspectionsPass;
+import com.intellij.codeInsight.daemon.impl.UpdateHighlightersUtil;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ex.GlobalInspectionContextImpl;
+import com.intellij.codeInspection.ex.InspectionManagerEx;
+import com.intellij.codeInspection.ex.LocalInspectionToolWrapper;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -13,13 +25,20 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import org.apache.commons.lang.StringUtils;
+import org.intellij.sonar.SonarInspectionToolProvider;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
@@ -82,9 +101,31 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
     }
   }
 
-  public static void refreshInspectionsInEditor(final Project project) {
+  private static GlobalInspectionContextImpl getGlobalInspectionContext(Project project) {
+    return ((InspectionManagerEx) InspectionManager.getInstance(project)).createNewGlobalContext(false);
+  }
 
-    /*final ImmutableSet<PsiFile> openPsiFiles = ApplicationManager.getApplication().runReadAction(new Computable<ImmutableSet<PsiFile>>() {
+  public static void refreshInspectionsInEditor(@NotNull final Project project) {
+
+    // runs analyse code manually, but still does not update highlights in editor
+    /*ApplicationManager.getApplication().runReadAction(new Runnable() {
+      @Override
+      public void run() {
+        final VirtualFile[] openFiles = FileEditorManager.getInstance(project).getOpenFiles();
+        if (openFiles.length == 0) return;
+
+        final AnalysisScope scope = new AnalysisScope(project, Sets.newHashSet(openFiles));
+        InspectionProfile inspectionProfile = (InspectionProfile) InspectionProfileManager.getInstance().getProfile("Sonar");
+
+        scope.setSearchInLibraries(false);
+        final GlobalInspectionContextImpl inspectionContext = getGlobalInspectionContext(project);
+        inspectionContext.setExternalProfile(inspectionProfile);
+        inspectionContext.setCurrentScope(scope);
+        inspectionContext.doInspections(scope);
+      }
+    });*/
+
+    final ImmutableSet<PsiFile> openPsiFiles = ApplicationManager.getApplication().runReadAction(new Computable<ImmutableSet<PsiFile>>() {
       @Override
       public ImmutableSet<PsiFile> compute() {
         final Optional<VirtualFile[]> openFiles = fromNullable(FileEditorManager.getInstance(project).getOpenFiles());
@@ -149,12 +190,32 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         public void run() {
           localInspectionsPass.doInspectInBatch(context, managerEx, sonarLocalInspectionTools);
           final java.util.List<HighlightInfo> infos = localInspectionsPass.getInfos();
+
+          // highlight only if no highlighter already exists on that line
+          final ImmutableList<HighlightInfo> missingInfos = FluentIterable.from(infos)
+              .filter(new Predicate<HighlightInfo>() {
+                @Override
+                public boolean apply(HighlightInfo highlightInfoFromInspection) {
+                  final int lineNumberOfHighlightFromInspection = document.get().getLineNumber(highlightInfoFromInspection.getStartOffset());
+                  final Set<RangeHighlighter> highlightersFromDocument = Finders.findAllRangeHighlightersFrom(document.get());
+                  for (RangeHighlighter highlighterFromDocument : highlightersFromDocument) {
+                    for (Editor editor : Finders.findEditorsFrom(document.get())) {
+                      final int lineNumberOfHighlightFromDocument = Finders.findLineOfRangeHighlighter(highlighterFromDocument, editor);
+                      if (lineNumberOfHighlightFromInspection == lineNumberOfHighlightFromDocument)
+                        return false;
+                    }
+                  }
+                  return true;
+                }
+              }).toList();
+
+          //TODO: copy paste the util class from intellij sources to avoid dependency to intellij 13
           UpdateHighlightersUtil.setHighlightersToEditor(
               project,
               document.get(),
               0,
               document.get().getTextLength(),
-              infos,
+              missingInfos,
               null,
               0
           );
@@ -175,7 +236,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
     }
 
-    project.getComponent(ChangedFilesComponent.class).changedFiles.clear();*/
+    project.getComponent(ChangedFilesComponent.class).changedFiles.clear();
   }
 
   @Nls
@@ -250,7 +311,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
     final Project project = psiFile.getProject();
 
-    Optional<IndexComponent> indexComponent = Finders.findIndexComponent(project);
+    Optional<IndexComponent> indexComponent = IndexComponent.getInstance(project);
     if (!indexComponent.isPresent()) {
       LOG.error(String.format("Cannot retrieve %s", IndexComponent.class.getSimpleName()));
       return null;
@@ -263,7 +324,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
 
     final Collection<ProblemDescriptor> problemDescriptors = new LinkedHashSet<ProblemDescriptor>();
 
-    final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getIssuesIndex();
+    final Map<IssuesIndexKey, ? extends Set<IssuesIndexEntry>> indexMap = indexComponent.get().getState();
     final IssuesIndexKey issuesIndexKey = new IssuesIndexKey(virtualFile.getPath(), isNew(), getRuleKey());
     final Optional<Set<IssuesIndexEntry>> issuesForFile = fromNullable(
         indexMap.get(issuesIndexKey)

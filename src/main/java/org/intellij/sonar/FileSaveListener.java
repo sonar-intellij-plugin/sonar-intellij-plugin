@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
@@ -190,10 +189,11 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
       Optional<ModuleSettingsBean> moduleSettingsBean = fromNullable(moduleSettingsComponent.getState());
       if (moduleSettingsBean.isPresent()) {
         ImmutableList<Resource> moduleSonarResources = ImmutableList.copyOf(moduleSettingsBean.get().getResources());
-        final IndexComponent indexComponent = ServiceManager.getService(module.getProject(), IndexComponent.class);
+        final Optional<IndexComponent> indexComponent = IndexComponent.getInstance(module.getProject());
+        if (!indexComponent.isPresent()) return;
         try {
           // TODO: copy pasted the report logic from CreateIndexForModuleAction
-          createIndexFromSonarReport(getAllModuleFiles(), moduleSonarResources, indexComponent, incrementalScriptBean);
+          createIndexFromSonarReport(getAllModuleFiles(), moduleSonarResources, indexComponent.get(), incrementalScriptBean);
         } catch (IOException e) {
           console.error(String.format("Cannot read sonar report from %s\nRoot cause: %s"
               , incrementalScriptBean.getPathToSonarReport()
@@ -251,10 +251,10 @@ public class FileSaveListener implements ApplicationComponent, BulkFileListener 
       // update index from json report
       indicator.setText(String.format("Merging index with issues from sonar report"));
       final Map<IssuesIndexKey, Set<IssuesIndexEntry>> newIndexMapFromSonarReport =
-          IssuesIndexMerge.from(indexComponent.getIssuesIndex())
+          IssuesIndexMerge.from(indexComponent.getState())
               .with(issuesFromSonarReport)
               .get();
-      indexComponent.setIssuesIndex(newIndexMapFromSonarReport);
+      indexComponent.loadState(newIndexMapFromSonarReport);
       console.info(String.format("Created index for module %s from %s in %d ms"
           , module.getName()
           , incrementalScriptBean.getPathToSonarReport()

@@ -1,12 +1,11 @@
 package org.intellij.sonar.persistence;
 
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.google.common.base.Optional;
+import com.intellij.openapi.components.*;
+import com.intellij.openapi.project.Project;
 import org.intellij.sonar.index.IssuesIndexEntry;
 import org.intellij.sonar.index.IssuesIndexKey;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
@@ -14,37 +13,38 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.google.common.base.Optional.fromNullable;
+
 @State(
     name = "index-component",
     storages = {
         @Storage(id = "index-component" + IndexComponent.serialVersionUID , file = StoragePathMacros.PROJECT_FILE)
     }
 )
-public class IndexComponent implements PersistentStateComponent<IndexComponent>, Serializable {
+public class IndexComponent extends AbstractProjectComponent implements PersistentStateComponent<Map<IssuesIndexKey, Set<IssuesIndexEntry>>>, Serializable {
 
   public static final long serialVersionUID = -2073972896207461743L;
-  private Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex;
 
-  public IndexComponent() {
-    issuesIndex = new ConcurrentHashMap<IssuesIndexKey, Set<IssuesIndexEntry>>();
+  public static Optional<IndexComponent> getInstance(@NotNull Project project) {
+    if (project.isDisposed()) return Optional.absent();
+    return fromNullable(project.getComponent(IndexComponent.class));
+  }
+
+  private Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex = new ConcurrentHashMap<IssuesIndexKey, Set<IssuesIndexEntry>>();
+
+  public IndexComponent(Project project) {
+    super(project);
   }
 
   @Nullable
   @Override
-  public IndexComponent getState() {
-    return this;
-  }
-
-  @Override
-  public void loadState(IndexComponent state) {
-    XmlSerializerUtil.copyBean(state, this);
-  }
-
-  public Map<IssuesIndexKey, Set<IssuesIndexEntry>> getIssuesIndex() {
+  public Map<IssuesIndexKey, Set<IssuesIndexEntry>> getState() {
     return issuesIndex;
   }
 
-  public void setIssuesIndex(Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex) {
-    this.issuesIndex = issuesIndex;
+  @Override
+  public void loadState(Map<IssuesIndexKey, Set<IssuesIndexEntry>> state) {
+    this.issuesIndex = state;
   }
+
 }

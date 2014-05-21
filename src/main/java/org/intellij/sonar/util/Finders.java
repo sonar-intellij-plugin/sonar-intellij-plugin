@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -15,14 +14,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.index.IssuesIndexEntry;
-import org.intellij.sonar.index.IssuesIndexKey;
-import org.intellij.sonar.persistence.IndexComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
@@ -65,11 +60,6 @@ public class Finders {
   }
 
   @NotNull
-  public static Optional<IndexComponent> findIndexComponent(@NotNull Project project) {
-    return fromNullable(ServiceManager.getService(project, IndexComponent.class));
-  }
-
-  @NotNull
   public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final int line) {
     final MarkupModel markupModel = editor.getMarkupModel();
     final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
@@ -101,11 +91,6 @@ public class Finders {
   public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter, @NotNull Editor editor) {
     final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
     return logicalPosition.line;
-  }
-
-  @NotNull
-  public static Map<IssuesIndexKey, Set<IssuesIndexEntry>> findIssuesIndex(Project project) {
-    return ServiceManager.getService(project, IndexComponent.class).getIssuesIndex();
   }
 
   private static class HighlighterLineFinder implements Runnable {

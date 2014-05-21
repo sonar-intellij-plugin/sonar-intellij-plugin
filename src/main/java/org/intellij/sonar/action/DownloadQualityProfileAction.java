@@ -4,7 +4,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.ide.IdeBundle;
@@ -30,9 +29,7 @@ import org.sonar.wsclient.services.Profile;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.Rule;
 
-import javax.swing.*;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

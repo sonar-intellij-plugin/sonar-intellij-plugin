@@ -10,7 +10,6 @@ import org.intellij.sonar.persistence.SonarServerConfigurationBean;
 import org.intellij.sonar.persistence.SonarServersComponent;
 
 import javax.swing.*;
-
 import java.util.Collection;
 
 import static org.intellij.sonar.configuration.module.ModuleSettingsConfigurable.PROJECT_SONAR;

@@ -9,9 +9,7 @@ import org.sonar.wsclient.services.Resource;
 
 import java.util.List;
 
-import static org.intellij.sonar.util.MessagesUtil.errorMessage;
-import static org.intellij.sonar.util.MessagesUtil.okMessage;
-import static org.intellij.sonar.util.MessagesUtil.warnMessage;
+import static org.intellij.sonar.util.MessagesUtil.*;
 
 public class RulesRetrievalCheck implements Runnable, ConfigurationCheck {
 
