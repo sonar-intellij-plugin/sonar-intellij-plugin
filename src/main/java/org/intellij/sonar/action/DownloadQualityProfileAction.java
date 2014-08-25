@@ -52,7 +52,7 @@ public class DownloadQualityProfileAction extends AnAction {
   public void actionPerformed(AnActionEvent e) {
     final Optional<Project> project = Optional.fromNullable(e.getData(DataKeys.PROJECT));
     if (!project.isPresent()) {
-      LOG.error(String.format("project not available for the %s", DownloadQualityProfileAction.class.getSimpleName()));
+      LOG.error(String.format("Project not available. Action: %s", DownloadQualityProfileAction.class.getSimpleName()));
       return;
     }
 
@@ -66,13 +66,13 @@ public class DownloadQualityProfileAction extends AnAction {
     // handle project
     final Optional<ProjectSettingsComponent> projectComponent = Optional.fromNullable(project.getComponent(ProjectSettingsComponent.class));
     if (!projectComponent.isPresent()) {
-      LOG.error(String.format("%s not available for the %s", ProjectSettingsComponent.class.getSimpleName(), DownloadQualityProfileAction.class.getSimpleName()));
+      LOG.error(String.format("%s not available. Action: %s, Project: %s", ProjectSettingsComponent.class.getSimpleName(), DownloadQualityProfileAction.class.getSimpleName(), project.getName()));
       return;
     }
 
     final Optional<ProjectSettingsBean> projectComponentState = Optional.fromNullable(projectComponent.get().getState());
     if (!projectComponentState.isPresent()) {
-      LOG.error(String.format("No %s found for the %s", ProjectSettingsBean.class.getSimpleName(), DownloadQualityProfileAction.class.getSimpleName()));
+      LOG.error(String.format("%s is empty. Action: %s, Project: %s", ProjectSettingsBean.class.getSimpleName(), DownloadQualityProfileAction.class.getSimpleName(), project.getName()));
       return;
     }
     final ProjectSettingsBean projectSettingsBean = projectComponentState.get();
