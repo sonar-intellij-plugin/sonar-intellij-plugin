@@ -4,18 +4,18 @@ import com.google.common.base.Optional;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import org.intellij.sonar.configuration.partials.IncrementalAnalysisScriptsTableView;
+import org.intellij.sonar.configuration.partials.LocalAnalysisScriptView;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.configuration.partials.SonarServersView;
-import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.intellij.sonar.persistence.IncrementalScriptBean;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersComponent;
+import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.services.Resource;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
 import java.util.List;
 
 import static org.intellij.sonar.configuration.check.FileExistenceCheck.checkSourceDirectoryPaths;
@@ -30,9 +30,9 @@ public class ConfigurationCheckActionListener implements ActionListener {
   private final Project myProject;
   private final SonarServersView mySonarServersView;
   private final SonarResourcesTableView mySonarResourcesTableView;
-  private final IncrementalAnalysisScriptsTableView myIncrementalAnalysisScriptsTableView;
+  private final LocalAnalysisScriptView myIncrementalAnalysisScriptsTableView;
 
-  public ConfigurationCheckActionListener(SonarServersView sonarServersView, Project myProject, SonarResourcesTableView sonarResourcesTableView, IncrementalAnalysisScriptsTableView incrementalAnalysisScriptsTableView) {
+  public ConfigurationCheckActionListener(SonarServersView sonarServersView, Project myProject, SonarResourcesTableView sonarResourcesTableView, LocalAnalysisScriptView incrementalAnalysisScriptsTableView) {
     this.mySonarServersView = sonarServersView;
     this.myProject = myProject;
     this.mySonarResourcesTableView = sonarResourcesTableView;
@@ -44,7 +44,9 @@ public class ConfigurationCheckActionListener implements ActionListener {
   }
 
   private List<IncrementalScriptBean> getIncrementalScriptBeans() {
-    return myIncrementalAnalysisScriptsTableView.getTable().getItems();
+    // TODO: get local analysis script
+    return Collections.emptyList();
+//    return myIncrementalAnalysisScriptsTableView.getTable().getItems();
   }
 
   private List<Resource> getResources() {
@@ -56,10 +58,10 @@ public class ConfigurationCheckActionListener implements ActionListener {
 
     StringBuilder testResultMessageBuilder = new StringBuilder();
 
-    if (ProjectSettingsConfigurable.NO_SONAR.equals(getSelectedSonarServerName())) {
+    if (SonarServers.NO_SONAR.equals(getSelectedSonarServerName())) {
       testResultMessageBuilder.append(warnMessage("No sonar server selected\n"));
     } else {
-      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersComponent.get(getSelectedSonarServerName());
+      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServers.get(getSelectedSonarServerName());
 
       if (!sonarServerConfiguration.isPresent()) {
         testResultMessageBuilder.append(String.format("Cannot find configuration for %s\n", getSelectedSonarServerName()));

@@ -7,10 +7,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.intellij.codeInsight.daemon.impl.HighlightInfo;
-import com.intellij.codeInsight.daemon.impl.HighlightInfoProcessor;
-import com.intellij.codeInsight.daemon.impl.LocalInspectionsPass;
-import com.intellij.codeInsight.daemon.impl.UpdateHighlightersUtil;
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -26,14 +23,11 @@ import com.intellij.openapi.editor.markup.HighlighterTargetArea;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -71,7 +65,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
       if (document.isPresent()) {
         final int endOffset = document.get().getLineEndOffset(line - 1);
         final int startOffset = firstElementAtLine.get().getTextOffset();
-        if (endOffset > startOffset) {
+        if (endOffset >= startOffset) {
           return Optional.of(new TextRange(startOffset, endOffset));
         }
       }
@@ -173,67 +167,7 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
         }).toList();
 
     for (final PsiFile psiFile : openPsiFiles) {
-
-      final Optional<VirtualFile> virtualFile = fromNullable(psiFile.getVirtualFile());
-      if (!virtualFile.isPresent()) continue;
-
-      PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
-      final Optional<Document> document = fromNullable(psiDocumentManager.getDocument(psiFile));
-      if (!document.isPresent()) continue;
-
-      final LocalInspectionsPass localInspectionsPass =
-          new LocalInspectionsPass(psiFile, document.get(), 0, document.get().getTextLength(), LocalInspectionsPass.EMPTY_PRIORITY_RANGE, true,
-              HighlightInfoProcessor.getEmpty());
-
-      final Runnable inspect = new Runnable() {
-        @Override
-        public void run() {
-          localInspectionsPass.doInspectInBatch(context, managerEx, sonarLocalInspectionTools);
-          final java.util.List<HighlightInfo> infos = localInspectionsPass.getInfos();
-
-          // highlight only if no highlighter already exists on that line
-          final ImmutableList<HighlightInfo> missingInfos = FluentIterable.from(infos)
-              .filter(new Predicate<HighlightInfo>() {
-                @Override
-                public boolean apply(HighlightInfo highlightInfoFromInspection) {
-                  final int lineNumberOfHighlightFromInspection = document.get().getLineNumber(highlightInfoFromInspection.getStartOffset());
-                  final Set<RangeHighlighter> highlightersFromDocument = Finders.findAllRangeHighlightersFrom(document.get());
-                  for (RangeHighlighter highlighterFromDocument : highlightersFromDocument) {
-                    for (Editor editor : Finders.findEditorsFrom(document.get())) {
-                      final int lineNumberOfHighlightFromDocument = Finders.findLineOfRangeHighlighter(highlighterFromDocument, editor);
-                      if (lineNumberOfHighlightFromInspection == lineNumberOfHighlightFromDocument)
-                        return false;
-                    }
-                  }
-                  return true;
-                }
-              }).toList();
-
-          //TODO: copy paste the util class from intellij sources to avoid dependency to intellij 13
-          UpdateHighlightersUtil.setHighlightersToEditor(
-              project,
-              document.get(),
-              0,
-              document.get().getTextLength(),
-              missingInfos,
-              null,
-              0
-          );
-        }
-      };
-
-      ApplicationManager.getApplication().invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          ApplicationManager.getApplication().runWriteAction(new Runnable() {
-            @Override
-            public void run() {
-              ProgressManager.getInstance().executeProcessUnderProgress(inspect, new ProgressIndicatorBase());
-            }
-          });
-        }
-      });
-
+      DaemonCodeAnalyzer.getInstance(project).restart(psiFile);
     }
 
     project.getComponent(ChangedFilesComponent.class).changedFiles.clear();
@@ -306,7 +240,8 @@ public abstract class SonarLocalInspectionTool extends LocalInspectionTool {
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
-
+    //TODO: isOnTheFly=true -> in editor, false -> batch process
+    //TODO: if batch process, then start sonar analysis first
     VirtualFile virtualFile = psiFile.getVirtualFile();
 
     final Project project = psiFile.getProject();

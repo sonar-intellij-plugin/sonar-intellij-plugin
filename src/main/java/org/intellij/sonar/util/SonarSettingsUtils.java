@@ -1,4 +1,4 @@
-package org.intellij.sonar;
+package org.intellij.sonar.util;
 
 public class SonarSettingsUtils {
 

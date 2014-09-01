@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -24,7 +25,8 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class Finders {
 
-  public static Optional<PsiElement> findFirstElementAtLine(@NotNull final PsiFile file, int line) {
+  public static Optional<PsiElement> findFirstElementAtLine(@NotNull final PsiFile file, Integer line) {
+    if (line == null) return Optional.absent();
     int ijLine = line - 1;
     final Document document = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
     Optional<PsiElement> element = Optional.absent();
@@ -44,6 +46,9 @@ public class Finders {
       element = fromNullable(element.get().getNextSibling());
     }
 
+    if (document != null && element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
+      element = Optional.absent();
+    }
     return element;
   }
 
@@ -60,7 +65,8 @@ public class Finders {
   }
 
   @NotNull
-  public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final int line) {
+  public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final Integer line) {
+    if (line == null) return Optional.absent();
     final MarkupModel markupModel = editor.getMarkupModel();
     final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
     for (RangeHighlighter highlighter : highlighters) {
@@ -126,5 +132,41 @@ public class Finders {
     public RangeHighlighter getFoundHighlighter() {
       return foundHighlighter;
     }
+  }
+
+  @NotNull
+  public static TextRange getLineRange(@NotNull PsiFile psiFile, Integer line) {
+    if (line == null) return TextRange.EMPTY_RANGE;
+    Project project = psiFile.getProject();
+    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+    Document document = documentManager.getDocument(psiFile.getContainingFile());
+    if (document == null) {
+      return TextRange.EMPTY_RANGE;
+    }
+    int ijLine = line > 0 ? line - 1 : 0;
+    return getTextRangeForLine(document, ijLine);
+  }
+
+  private static TextRange getTextRangeForLine(Document document, int line) {
+    try {
+      int lineStartOffset = document.getLineStartOffset(line);
+      int lineEndOffset = document.getLineEndOffset(line);
+      return new TextRange(lineStartOffset, lineEndOffset);
+    } catch (IndexOutOfBoundsException e) {
+      // Local file should be different than remote
+      return TextRange.EMPTY_RANGE;
+    }
+  }
+
+  public static TextRange getLineRange(@NotNull PsiElement psiElement) {
+    Project project = psiElement.getProject();
+    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+    Document document = documentManager.getDocument(psiElement.getContainingFile().getContainingFile());
+    if (document == null) {
+      return TextRange.EMPTY_RANGE;
+    }
+    int line = document.getLineNumber(psiElement.getTextOffset());
+    int lineEndOffset = document.getLineEndOffset(line);
+    return new TextRange(psiElement.getTextOffset(), lineEndOffset);
   }
 }

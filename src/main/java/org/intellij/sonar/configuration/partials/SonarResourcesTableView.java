@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.intellij.sonar.configuration.project.ProjectSettingsConfigurable.NO_SONAR;
+import static org.intellij.sonar.persistence.SonarServers.NO_SONAR;
 
 public class SonarResourcesTableView {
 

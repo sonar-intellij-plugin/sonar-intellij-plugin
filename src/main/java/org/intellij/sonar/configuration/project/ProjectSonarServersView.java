@@ -1,14 +1,16 @@
-package org.intellij.sonar.configuration.partials;
+package org.intellij.sonar.configuration.project;
 
 import com.google.common.base.Optional;
 import com.intellij.openapi.project.Project;
+import org.intellij.sonar.configuration.partials.SonarServersView;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersComponent;
+import org.intellij.sonar.persistence.SonarServers;
 
 import javax.swing.*;
 import java.util.Collection;
 
-import static org.intellij.sonar.configuration.project.ProjectSettingsConfigurable.NO_SONAR;
+import static org.intellij.sonar.persistence.SonarServers.NO_SONAR;
+import static org.intellij.sonar.util.UIUtil.makeObj;
 
 public class ProjectSonarServersView extends SonarServersView {
   public ProjectSonarServersView(JComboBox mySonarServersComboBox, JButton myAddSonarServerButton, JButton myEditSonarServerButton, JButton myRemoveSonarServerButton, Project myProject) {
@@ -16,13 +18,13 @@ public class ProjectSonarServersView extends SonarServersView {
   }
 
   @Override
-  boolean editAndRemoveButtonsCanBeEnabled() {
-    return NO_SONAR.equals(mySonarServersComboBox.getSelectedItem().toString());
+  protected boolean editAndRemoveButtonsCanBeEnabled() {
+    return !NO_SONAR.equals(mySonarServersComboBox.getSelectedItem().toString());
   }
 
   @Override
   protected void initSonarServersComboBox() {
-    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServersComponent.getAll();
+    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServers.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
       mySonarServersComboBox.removeAllItems();
       mySonarServersComboBox.addItem(makeObj(NO_SONAR));

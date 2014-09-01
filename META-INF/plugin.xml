@@ -40,8 +40,9 @@
 
     <project-components>
         <component>
-            <implementation-class>org.intellij.sonar.persistence.ProjectSettingsComponent</implementation-class>
+            <implementation-class>org.intellij.sonar.persistence.ProjectSettings</implementation-class>
         </component>
+        <!--
         <component>
             <implementation-class>org.intellij.sonar.console.SonarConsole</implementation-class>
         </component>
@@ -59,61 +60,60 @@
             <implementation-class>
                 org.intellij.sonar.persistence.ChangedFilesComponent
             </implementation-class>
-        </component>
+        </component>-->
         <component>
             <implementation-class>
                 org.intellij.sonar.DocumentChangeListener
             </implementation-class>
         </component>
-        <component>
+        <!--<component>
             <implementation-class>
                 org.intellij.sonar.analysis.NotificationManager
             </implementation-class>
-        </component>
+        </component>-->
+        <!--
         <component>
             <implementation-class>
                 org.intellij.sonar.persistence.IndexComponent
             </implementation-class>
-        </component>
+        </component>-->
     </project-components>
 
     <module-components>
         <component>
-            <implementation-class>org.intellij.sonar.persistence.ModuleSettingsComponent</implementation-class>
+            <implementation-class>org.intellij.sonar.persistence.ModuleSettings</implementation-class>
         </component>
     </module-components>
-
-    <actions>
-        <group id="Sonar" text="Sonar" popup="true">
-            <action text="Download quality profile" class="org.intellij.sonar.action.DownloadQualityProfileAction" id="Sonar.DownloadQualityProfile" />
-            <action text="Create index for current module" class="org.intellij.sonar.action.CreateIndexForModuleAction" id="Sonar.CreateIndexForModule" />
-            <action text="Create index for the project" class="org.intellij.sonar.action.CreateIndexForProjectAction" id="Sonar.CreateIndexForProject" />
-            <add-to-group group-id="EditorPopupMenu" />
-        </group>
-    </actions>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="projectSettingsConfigurable"
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"/>
-        <moduleConfigurable id="SonarModuleSettingsConfigurable"
+        <moduleConfigurable id="moduleSettingsConfigurable"
                             instance="org.intellij.sonar.configuration.module.ModuleSettingsConfigurable"/>
+        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServers" />
+        <applicationService serviceImplementation="org.intellij.sonar.persistence.LocalAnalysisScripts" />
+        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent" />
+       <!--
         <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRulesComponent"/>
         <projectService serviceImplementation="org.intellij.sonar.persistence.IndexComponent"/>
-        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServersComponent" />
-        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent" />
+
         <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
-        <!--<globalInspection
+      -->  <!--<globalInspection
                 implementationClass="org.intellij.sonar.analysis.SonarGlobalInspectionTool"/>-->
+        <codeInspection.InspectionExtension id="sonarqubeInspection"
+                                            implementation="org.intellij.sonar.analysis.SonarQubeInspectionExtensionsFactory"/>
+
+        <inspectionToolProvider
+                implementation="org.intellij.sonar.InspectionToolProviderOne" />
+        <codeInsight.linkHandler id="issueDescriptionLinkHandler" prefix="#sonarissue/" handlerClass="org.intellij.sonar.analysis.IssueDescriptionLinkHandler" />
     </extensions>
-
-
 
     <application-components>
         <component>
             <implementation-class>
-                org.intellij.sonar.FileSaveListener
+                org.intellij.sonar.ApplicationComponent
             </implementation-class>
         </component>
     </application-components>

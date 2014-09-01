@@ -16,7 +16,7 @@ import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.persistence.SonarResource;
 import org.intellij.sonar.persistence.SonarResourcesComponent;
 import org.intellij.sonar.persistence.SonarServerConfigurationBean;
-import org.intellij.sonar.persistence.SonarServersComponent;
+import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,7 +107,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
 
     @Override
     public void run() {
-      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServersComponent.get(mySonarServerName);
+      final Optional<SonarServerConfigurationBean> sonarServerConfiguration = SonarServers.get(mySonarServerName);
       if (sonarServerConfiguration.isPresent()) {
         final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
         try {

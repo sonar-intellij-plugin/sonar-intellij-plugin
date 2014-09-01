@@ -1,7 +1,6 @@
 package org.intellij.sonar.persistence;
 
 import com.google.common.base.Optional;
-import org.intellij.sonar.configuration.project.ProjectSettingsConfigurable;
 import org.sonar.wsclient.services.Resource;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public class ProjectSettingsBean {
   public Optional<String> getProperSonarServerName() {
     Optional<String> properSonarServerName = Optional.absent();
     final String name = getSonarServerName();
-    if (!ProjectSettingsConfigurable.NO_SONAR.equals(name)) properSonarServerName = Optional.of(name);
+    if (!SonarServers.NO_SONAR.equals(name)) properSonarServerName = Optional.of(name);
     return properSonarServerName;
   }
 

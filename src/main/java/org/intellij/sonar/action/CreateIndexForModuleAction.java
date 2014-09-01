@@ -36,7 +36,6 @@ import org.sonar.wsclient.services.Resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -109,22 +108,26 @@ public class CreateIndexForModuleAction extends AnAction {
       DownloadSonarIssuesForModule downloadSonarIssuesForModule = new DownloadSonarIssuesForModule().invoke();
       ImmutableList<Resource> moduleSonarResources = downloadSonarIssuesForModule.getModuleSonarResources();
       ImmutableList<Issue> issuesFromSonarServer = downloadSonarIssuesForModule.getIssuesFromSonarServer();
-      Optional<ModuleSettingsBean> moduleSettingsBean = downloadSonarIssuesForModule.getModuleSettingsBean();
+      Optional<Settings> moduleSettingsBean = downloadSonarIssuesForModule.getModuleSettingsBean();
 
       final IndexComponent indexComponent = createIndexForModule(moduleFiles, moduleSonarResources, issuesFromSonarServer);
+      SonarLocalInspectionTool.refreshInspectionsInEditor(myProject);
 
       if (moduleSettingsBean.isPresent()) {
-        final Collection<IncrementalScriptBean> incrementalScriptBeans = moduleSettingsBean.get().getScripts();
+        final String localAnalysisScripName = moduleSettingsBean.get().getLocalAnalysisScripName();
         final String workingDirectory = module.getProject().getBaseDir().getPath();
-        for (IncrementalScriptBean incrementalScriptBean : incrementalScriptBeans) {
-          final String sourceCodeOfScript = incrementalScriptBean.getSourceCodeOfScript();
+        final Optional<LocalAnalysisScript> localAnalysisScript = LocalAnalysisScripts.get(localAnalysisScripName);
+        if (localAnalysisScript.isPresent()) {
+          final String sourceCodeOfScript = localAnalysisScript.get().getSourceCode();
           try {
-            indicator.setText(String.format("Executing %s in %s", incrementalScriptBean.getSourceCodeOfScript(), workingDirectory));
-            final int exitCode = IncrementalScriptProcess.of(incrementalScriptBean, workingDirectory, getProject())
+            indicator.setText(String.format("Executing %s in %s", localAnalysisScript.get().getSourceCode(), workingDirectory));
+            // TODO: pass proper local analysis script
+            final int exitCode = IncrementalScriptProcess.of(null, workingDirectory, getProject())
                 .exec()
                 .waitFor();
             if (0 == exitCode) {
-              createIndexFromSonarReport(moduleFiles, moduleSonarResources, indexComponent, incrementalScriptBean);
+              // TODO: pass proper local analysis script
+              createIndexFromSonarReport(moduleFiles, moduleSonarResources, indexComponent, null);
               SonarLocalInspectionTool.refreshInspectionsInEditor(myProject);
               // we have just freshly updated the index, clear all changed files
               myProject.getComponent(ChangedFilesComponent.class).changedFiles.clear();
@@ -136,10 +139,8 @@ public class CreateIndexForModuleAction extends AnAction {
           } catch (FileNotInSourcePathException ignore) {
             // script execution is not based on a changed file, skip
           }
-
         }
       }
-
     }
 
     private void createIndexFromSonarReport(ImmutableList<VirtualFile> moduleFiles, ImmutableList<Resource> moduleSonarResources, IndexComponent indexComponent, IncrementalScriptBean incrementalScriptBean) throws IOException {
@@ -211,7 +212,7 @@ public class CreateIndexForModuleAction extends AnAction {
     private class DownloadSonarIssuesForModule {
       private ImmutableList<Issue> issuesFromSonarServer;
       private ImmutableList<Resource> moduleSonarResources;
-      private Optional<ModuleSettingsBean> moduleSettingsBean;
+      private Optional<Settings> moduleSettingsBean;
 
       public ImmutableList<Issue> getIssuesFromSonarServer() {
         return issuesFromSonarServer;
@@ -221,7 +222,7 @@ public class CreateIndexForModuleAction extends AnAction {
         return moduleSonarResources;
       }
 
-      public Optional<ModuleSettingsBean> getModuleSettingsBean() {
+      public Optional<Settings> getModuleSettingsBean() {
         return moduleSettingsBean;
       }
 
@@ -233,13 +234,14 @@ public class CreateIndexForModuleAction extends AnAction {
         // downloadSonarIssuesForModule
         issuesFromSonarServer = ImmutableList.of();
         moduleSonarResources = ImmutableList.of();
-        final ModuleSettingsComponent moduleSettingsComponent = module.getComponent(ModuleSettingsComponent.class);
+        final ModuleSettings moduleSettingsComponent = module.getComponent(ModuleSettings.class);
         moduleSettingsBean = fromNullable(moduleSettingsComponent.getState());
         if (moduleSettingsBean.isPresent()) {
           moduleSonarResources = ImmutableList.copyOf(moduleSettingsBean.get().getResources());
-          final Optional<String> properServerName = moduleSettingsBean.get().getProperServerName(module.getProject());
+          // TODO: server name could be NO_SONAR, get proper server name instead
+          final Optional<String> properServerName = Optional.of(moduleSettingsBean.get().getServerName());
           if (properServerName.isPresent()) {
-            final Optional<SonarServerConfigurationBean> sonarServerConfigurationBeanOptional = SonarServersComponent.get(properServerName.get());
+            final Optional<SonarServerConfigurationBean> sonarServerConfigurationBeanOptional = SonarServers.get(properServerName.get());
             if (sonarServerConfigurationBeanOptional.isPresent()) {
               Stopwatch stopwatch = new Stopwatch().start();
               final SonarServer sonarServer = SonarServer.create(sonarServerConfigurationBeanOptional.get());

@@ -9,12 +9,12 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import org.intellij.sonar.configuration.check.ConfigurationCheckActionListener;
-import org.intellij.sonar.configuration.partials.IncrementalAnalysisScriptsTableView;
-import org.intellij.sonar.configuration.partials.ModuleSonarServersView;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
-import org.intellij.sonar.persistence.IncrementalScriptBean;
-import org.intellij.sonar.persistence.ModuleSettingsBean;
-import org.intellij.sonar.persistence.ModuleSettingsComponent;
+import org.intellij.sonar.persistence.ModuleSettings;
+import org.intellij.sonar.persistence.Settings;
+import org.intellij.sonar.util.LocalAnalysisScriptsUtil;
+import org.intellij.sonar.util.SonarServersUtil;
+import org.intellij.sonar.util.UIUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +28,7 @@ import java.util.ArrayList;
 public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
 
   private static final Logger LOG = Logger.getInstance(ModuleSettingsConfigurable.class);
-  public static final String PROJECT_SONAR = "<PROJECT>";
-  private final IncrementalAnalysisScriptsTableView myIncrementalAnalysisScriptsTableView;
+  private final ModuleLocalAnalysisScriptView myLocalAnalysisScriptView;
   private final SonarResourcesTableView mySonarResourcesTableView;
   private final Module myModule;
   private final Project myProject;
@@ -37,16 +36,19 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   private JButton myCheckConfigurationButton;
   private JPanel myRootJPanel;
   private JPanel myPanelForSonarResources;
-  private JPanel myPanelForIncrementalAnalysisScripts;
   private JComboBox mySonarServersComboBox;
   private JButton myAddSonarServerButton;
   private JButton myEditSonarServerButton;
   private JButton myRemoveSonarServerButton;
+  private JComboBox myLocalAnalysisScriptComboBox;
+  private JButton myAddLocalAnalysisScriptButton;
+  private JButton myEditLocalAnalysisScriptButton;
+  private JButton myRemoveLocalAnalysisScriptButton;
 
   public ModuleSettingsConfigurable(Module module) {
     this.myModule = module;
     this.myProject = module.getProject();
-    this.myIncrementalAnalysisScriptsTableView = new IncrementalAnalysisScriptsTableView(myProject);
+    this.myLocalAnalysisScriptView = new ModuleLocalAnalysisScriptView(myLocalAnalysisScriptComboBox, myAddLocalAnalysisScriptButton, myEditLocalAnalysisScriptButton, myRemoveLocalAnalysisScriptButton, myProject);
     this.mySonarServersView = new ModuleSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton,myProject);
     this.mySonarResourcesTableView = new SonarResourcesTableView(myProject, mySonarServersView);
 
@@ -70,9 +72,8 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
     myPanelForSonarResources.setLayout(new BorderLayout());
     myPanelForSonarResources.add(mySonarResourcesTableView.getComponent(), BorderLayout.CENTER);
-    myPanelForIncrementalAnalysisScripts.setLayout(new BorderLayout());
-    myPanelForIncrementalAnalysisScripts.add(myIncrementalAnalysisScriptsTableView.getComponent(), BorderLayout.CENTER);
     mySonarServersView.init();
+    myLocalAnalysisScriptView.init();
 
     addActionListenerForCheckConfigurationButton();
     return myRootJPanel;
@@ -80,25 +81,25 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
   @Override
   public boolean isModified() {
-    final ModuleSettingsComponent component = myModule.getComponent(ModuleSettingsComponent.class);
+    final ModuleSettings component = ModuleSettings.getInstance(myModule);
     if (null == component) return false;
-    ModuleSettingsBean state = component.getState();
-    return null == state || !state.equals(this.toModuleSettingsBean());
+    Settings state = component.getState();
+    return null == state || !state.equals(this.toSettings());
   }
 
   @Override
   public void apply() throws ConfigurationException {
-    ModuleSettingsBean moduleSettingsBean = this.toModuleSettingsBean();
-    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
-    projectSettingsComponent.loadState(moduleSettingsBean);
+    Settings settings = this.toSettings();
+    ModuleSettings projectSettingsComponent = ModuleSettings.getInstance(myModule);
+    projectSettingsComponent.loadState(settings);
   }
 
   @Override
   public void reset() {
-    ModuleSettingsComponent projectSettingsComponent = myModule.getComponent(ModuleSettingsComponent.class);
-    if (projectSettingsComponent != null && projectSettingsComponent.getState() != null) {
-      ModuleSettingsBean persistedState = projectSettingsComponent.getState();
-      this.setValuesFromModuleSettingsBean(persistedState);
+    ModuleSettings moduleSettings = myModule.getComponent(ModuleSettings.class);
+    if (moduleSettings != null && moduleSettings.getState() != null) {
+      Settings persistedSettings = moduleSettings.getState();
+      this.setValuesFromSettings(persistedSettings);
     }
   }
 
@@ -138,26 +139,25 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     return "SonarQube";
   }
 
-  public ModuleSettingsBean toModuleSettingsBean() {
-
-    ModuleSettingsBean moduleSettingsBean = new ModuleSettingsBean();
-    moduleSettingsBean.setSonarServerName(mySonarServersView.getSelectedItemFromComboBox());
-    moduleSettingsBean.setResources(ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()));
-    moduleSettingsBean.setScripts(ImmutableList.copyOf(myIncrementalAnalysisScriptsTableView.getTable().getItems()));
-
-    return moduleSettingsBean;
+  public Settings toSettings() {
+    return Settings.of(
+        mySonarServersComboBox.getSelectedItem().toString(),
+        ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()),
+        myLocalAnalysisScriptComboBox.getSelectedItem().toString()
+    );
   }
 
-  public void setValuesFromModuleSettingsBean(ModuleSettingsBean moduleSettingsBean) {
+  public void setValuesFromSettings(Settings settings) {
 
-    if (null == moduleSettingsBean) return;
-    mySonarServersView.selectItemForSonarServersComboBoxByName(moduleSettingsBean.getSonarServerName());
+    if (null == settings) return;
+    final String serverName = SonarServersUtil.withDefaultForModule(settings.getServerName());
+    UIUtil.selectComboBoxItem(mySonarServersComboBox, serverName);
 
-    final ArrayList<Resource> resources = Lists.newArrayList(moduleSettingsBean.getResources());
+    final ArrayList<Resource> resources = Lists.newArrayList(settings.getResources());
     mySonarResourcesTableView.setModel(resources);
 
-    final ArrayList<IncrementalScriptBean> scripts = Lists.newArrayList(moduleSettingsBean.getScripts());
-    myIncrementalAnalysisScriptsTableView.setModel(scripts);
+    final String localAnalysisScripName = LocalAnalysisScriptsUtil.withDefaultForModule(settings.getLocalAnalysisScripName());
+    UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, localAnalysisScripName);
   }
 
   private void addActionListenerForCheckConfigurationButton() {
@@ -166,7 +166,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
             mySonarServersView,
             myModule.getProject(),
             mySonarResourcesTableView,
-            myIncrementalAnalysisScriptsTableView
+            myLocalAnalysisScriptView
         )
     );
   }

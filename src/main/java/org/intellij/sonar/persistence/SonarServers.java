@@ -10,30 +10,30 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
 @State(
-    name = "sonar-servers-application-component",
+    name = "sonarServers",
     storages = {
-        @Storage(id = "sonar-servers", file = StoragePathMacros.APP_CONFIG + "/sonar-servers.xml")
+        @Storage(id = "sonarServers", file = StoragePathMacros.APP_CONFIG + "/sonarSettings.xml")
     }
 )
 
-public class SonarServersComponent implements PersistentStateComponent<SonarServersComponent>, Serializable {
+public class SonarServers implements PersistentStateComponent<SonarServers> {
 
-  // generated
-  private static final long serialVersionUID = 6992816913889884502L;
-  public Collection<SonarServerConfigurationBean> beans = new LinkedList<SonarServerConfigurationBean>();
+  public static final String NO_SONAR = "<NO SONAR>";
+  public static final String PROJECT = "<PROJECT>";
+  public Collection<SonarServerConfigurationBean> beans = new ArrayList<SonarServerConfigurationBean>();
 
   @NotNull
-  public static SonarServersComponent getInstance() {
-    return ServiceManager.getService(SonarServersComponent.class);
+  public static SonarServers getInstance() {
+    return ServiceManager.getService(SonarServers.class);
   }
 
   public static void add(final SonarServerConfigurationBean newSonarServerConfigurationBean) {
-    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServersComponent.getInstance().getState().beans;
+    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServers.getInstance().getState().beans;
     final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfigurationBean>() {
       @Override
       public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
@@ -78,17 +78,17 @@ public class SonarServersComponent implements PersistentStateComponent<SonarServ
   }
 
   public static Optional<Collection<SonarServerConfigurationBean>> getAll() {
-    return Optional.fromNullable(SonarServersComponent.getInstance().getState().beans);
+    return Optional.fromNullable(SonarServers.getInstance().getState().beans);
   }
 
   @NotNull
   @Override
-  public SonarServersComponent getState() {
+  public SonarServers getState() {
     return this;
   }
 
   @Override
-  public void loadState(SonarServersComponent state) {
+  public void loadState(SonarServers state) {
     XmlSerializerUtil.copyBean(state, this);
   }
 
@@ -97,7 +97,7 @@ public class SonarServersComponent implements PersistentStateComponent<SonarServ
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    SonarServersComponent that = (SonarServersComponent) o;
+    SonarServers that = (SonarServers) o;
 
     if (beans != null ? !beans.equals(that.beans) : that.beans != null) return false;
 
