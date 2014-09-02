@@ -29,7 +29,6 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
   @Override
   public void checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, @NotNull final ProblemsHolder problemsHolder, @NotNull final GlobalInspectionContext globalContext, @NotNull final ProblemDescriptionsProcessor problemDescriptionsProcessor) {
     String path = psiFile.getVirtualFile().getPath();
-    System.out.println("path one: " + path);
 
     final SonarQubeInspectionContext sonarQubeInspectionContext = globalContext.getExtension(SonarQubeInspectionContext.KEY);
     if (sonarQubeInspectionContext != null) {

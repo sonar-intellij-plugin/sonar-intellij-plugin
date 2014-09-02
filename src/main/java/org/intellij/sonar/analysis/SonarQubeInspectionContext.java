@@ -19,6 +19,8 @@
  */
 package org.intellij.sonar.analysis;
 
+import com.google.common.base.Optional;
+import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
@@ -30,6 +32,8 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import org.intellij.sonar.DocumentChangeListener;
+import org.intellij.sonar.persistence.*;
+import org.intellij.sonar.util.SourceCodePlaceHolders;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -46,10 +50,64 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
   @Override
   public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull GlobalInspectionContext context) {
-    // download issues
-    // local analysis
-    System.out.println("performPreRunActivities");
-//    context.getRefManager().getScope() can be file, module or project
+    // context.getRefManager().getScope() can be file, module or project
+    // files -> modules settings of the files or project if no modules found
+    // modules -> modules settings of the modules or project if no modules found
+    // project -> project settings, but module settings for modules with different then project
+    // ... start with project settings, the simplest use case
+
+    // get settings based on context
+    // download issues for all sonar resources from settings
+    // run all local analysis scripts from settings (e.g. two modules with different scripts)
+    //    AnalysisScope.MODULES
+    //    context.getRefManager().getScope().getScopeType()
+    //    context.getRefManager().getScope().toSearchScope() instanceof LocalSearchScope -> file
+    //    context.getRefManager().getScope().toSearchScope() instanceof ModuleWithDependenciesScope -> module
+    //    context.getRefManager().getScope().toSearchScope() instanceof ProjectScopeImpl -> project
+
+    final int scopeType = context.getRefManager().getScope().getScopeType();
+    if (AnalysisScope.PROJECT == scopeType) {
+
+      // gather task settings
+      // tasks can be:
+      //                1) download issues from remote server
+      //                   needs
+      //                          SonarServerConfiguration
+      //                                hostName
+      //                                user
+      //                                password
+      //                          settings.getResources()
+      //                                resources.getKey()
+      //                   -> loadIssues(...)
+      //                2) run local analysis script
+      //                   needs
+      //                          LocalAnalysisScript
+      //                          SourceCodePlaceHolders
+      //                   -> runScript(sourceCodeWithReplacedPlaceHolders)
+      final Project project = context.getProject();
+      final Settings settings = ProjectSettings.getInstance(project).getState();
+      final Optional<SonarServerConfiguration> sonarServerConfiguration = SonarServers.get(settings.getServerName());
+
+      final String localAnalysisScripName = settings.getLocalAnalysisScripName();
+      final Optional<LocalAnalysisScript> script = LocalAnalysisScripts.get(localAnalysisScripName);
+      final SourceCodePlaceHolders sourceCodePlaceHoldersBuilder = SourceCodePlaceHolders.builder();
+      // replace place holders
+      // start with PROJECT
+      if (script.isPresent()) {
+        final String rawSourceCode = script.get().getSourceCode();
+        sourceCodePlaceHoldersBuilder
+            .withSourceCode(rawSourceCode)
+            .withProject(project);
+
+        if (sonarServerConfiguration.isPresent()) {
+          sourceCodePlaceHoldersBuilder.withSonarServerConfiguration(sonarServerConfiguration.get());
+        }
+
+        final String sourceCode = sourceCodePlaceHoldersBuilder.build();
+        System.out.println(sourceCode);
+        // execute script
+      }
+    }
   }
 
   @Override

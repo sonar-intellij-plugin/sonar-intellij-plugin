@@ -25,18 +25,18 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
 
   public static final String NO_SONAR = "<NO SONAR>";
   public static final String PROJECT = "<PROJECT>";
-  public Collection<SonarServerConfigurationBean> beans = new ArrayList<SonarServerConfigurationBean>();
+  public Collection<SonarServerConfiguration> beans = new ArrayList<SonarServerConfiguration>();
 
   @NotNull
   public static SonarServers getInstance() {
     return ServiceManager.getService(SonarServers.class);
   }
 
-  public static void add(final SonarServerConfigurationBean newSonarServerConfigurationBean) {
-    final Collection<SonarServerConfigurationBean> sonarServerConfigurationBeans = SonarServers.getInstance().getState().beans;
-    final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfigurationBean>() {
+  public static void add(final SonarServerConfiguration newSonarServerConfigurationBean) {
+    final Collection<SonarServerConfiguration> sonarServerConfigurationBeans = SonarServers.getInstance().getState().beans;
+    final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfiguration>() {
       @Override
-      public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
+      public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
         return sonarServerConfigurationBean.equals(newSonarServerConfigurationBean);
       }
     });
@@ -52,24 +52,24 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
   }
 
   public static void remove(@NotNull final String sonarServerName) {
-    final Optional<SonarServerConfigurationBean> bean = get(sonarServerName);
+    final Optional<SonarServerConfiguration> bean = get(sonarServerName);
     Preconditions.checkArgument(bean.isPresent());
-    final ImmutableList<SonarServerConfigurationBean> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfigurationBean>() {
+    final ImmutableList<SonarServerConfiguration> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfiguration>() {
       @Override
-      public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
+      public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
         return !bean.get().equals(sonarServerConfigurationBean);
       }
     }).toList();
-    getInstance().beans = new LinkedList<SonarServerConfigurationBean>(newBeans);
+    getInstance().beans = new LinkedList<SonarServerConfiguration>(newBeans);
   }
 
-  public static Optional<SonarServerConfigurationBean> get(@NotNull final String sonarServerName) {
-    Optional<SonarServerConfigurationBean> bean = Optional.absent();
-    final Optional<Collection<SonarServerConfigurationBean>> allBeans = getAll();
+  public static Optional<SonarServerConfiguration> get(@NotNull final String sonarServerName) {
+    Optional<SonarServerConfiguration> bean = Optional.absent();
+    final Optional<Collection<SonarServerConfiguration>> allBeans = getAll();
     if (allBeans.isPresent()) {
-      bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfigurationBean>() {
+      bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfiguration>() {
         @Override
-        public boolean apply(SonarServerConfigurationBean sonarServerConfigurationBean) {
+        public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
           return sonarServerName.equals(sonarServerConfigurationBean.getName());
         }
       });
@@ -77,7 +77,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
     return bean;
   }
 
-  public static Optional<Collection<SonarServerConfigurationBean>> getAll() {
+  public static Optional<Collection<SonarServerConfiguration>> getAll() {
     return Optional.fromNullable(SonarServers.getInstance().getState().beans);
   }
 

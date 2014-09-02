@@ -3,7 +3,7 @@ package org.intellij.sonar.configuration.project;
 import com.google.common.base.Optional;
 import com.intellij.openapi.project.Project;
 import org.intellij.sonar.configuration.partials.SonarServersView;
-import org.intellij.sonar.persistence.SonarServerConfigurationBean;
+import org.intellij.sonar.persistence.SonarServerConfiguration;
 import org.intellij.sonar.persistence.SonarServers;
 
 import javax.swing.*;
@@ -24,11 +24,11 @@ public class ProjectSonarServersView extends SonarServersView {
 
   @Override
   protected void initSonarServersComboBox() {
-    Optional<Collection<SonarServerConfigurationBean>> sonarServerConfigurationBeans = SonarServers.getAll();
+    Optional<Collection<SonarServerConfiguration>> sonarServerConfigurationBeans = SonarServers.getAll();
     if (sonarServerConfigurationBeans.isPresent()) {
       mySonarServersComboBox.removeAllItems();
       mySonarServersComboBox.addItem(makeObj(NO_SONAR));
-      for (SonarServerConfigurationBean sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
+      for (SonarServerConfiguration sonarServerConfigurationBean : sonarServerConfigurationBeans.get()) {
         mySonarServersComboBox.addItem(makeObj(sonarServerConfigurationBean.getName()));
       }
     }

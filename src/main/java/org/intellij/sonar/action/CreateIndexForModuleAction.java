@@ -241,7 +241,7 @@ public class CreateIndexForModuleAction extends AnAction {
           // TODO: server name could be NO_SONAR, get proper server name instead
           final Optional<String> properServerName = Optional.of(moduleSettingsBean.get().getServerName());
           if (properServerName.isPresent()) {
-            final Optional<SonarServerConfigurationBean> sonarServerConfigurationBeanOptional = SonarServers.get(properServerName.get());
+            final Optional<SonarServerConfiguration> sonarServerConfigurationBeanOptional = SonarServers.get(properServerName.get());
             if (sonarServerConfigurationBeanOptional.isPresent()) {
               Stopwatch stopwatch = new Stopwatch().start();
               final SonarServer sonarServer = SonarServer.create(sonarServerConfigurationBeanOptional.get());

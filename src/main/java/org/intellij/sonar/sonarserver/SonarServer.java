@@ -6,7 +6,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.persistence.SonarServerConfigurationBean;
+import org.intellij.sonar.persistence.SonarServerConfiguration;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.sonar.wsclient.Host;
@@ -32,21 +32,21 @@ public class SonarServer {
   private static final String USER_AGENT = "SonarQube Community Plugin";
   public static final int READ_TIMEOUT = 5000;
 
-  private final SonarServerConfigurationBean mySonarServerConfigurationBean;
+  private final SonarServerConfiguration mySonarServerConfigurationBean;
   private final Sonar sonar;
   private final SonarClient sonarClient;
 
-  private SonarServer(SonarServerConfigurationBean sonarServerConfigurationBean) {
+  private SonarServer(SonarServerConfiguration sonarServerConfigurationBean) {
     this.mySonarServerConfigurationBean = sonarServerConfigurationBean;
     this.sonar = createSonar();
     this.sonarClient = createSonarClient(createHost());
   }
 
   public static SonarServer create(String hostUrl) {
-    return create(SonarServerConfigurationBean.of(hostUrl));
+    return create(SonarServerConfiguration.of(hostUrl));
   }
 
-  public static SonarServer create(SonarServerConfigurationBean sonarServerConfigurationBean) {
+  public static SonarServer create(SonarServerConfiguration sonarServerConfigurationBean) {
     return new SonarServer(sonarServerConfigurationBean);
   }
 
@@ -118,7 +118,7 @@ public class SonarServer {
     return StringUtils.removeEnd(hostName, "/");
   }
 
-  public SonarServerConfigurationBean getSonarServerConfigurationBean() {
+  public SonarServerConfiguration getSonarServerConfigurationBean() {
     return mySonarServerConfigurationBean;
   }
 
