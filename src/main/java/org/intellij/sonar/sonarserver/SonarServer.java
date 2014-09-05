@@ -6,7 +6,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.persistence.SonarServerConfiguration;
+import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.sonar.wsclient.Host;
@@ -32,22 +32,22 @@ public class SonarServer {
   private static final String USER_AGENT = "SonarQube Community Plugin";
   public static final int READ_TIMEOUT = 5000;
 
-  private final SonarServerConfiguration mySonarServerConfigurationBean;
+  private final SonarServerConfig mySonarServerConfigBean;
   private final Sonar sonar;
   private final SonarClient sonarClient;
 
-  private SonarServer(SonarServerConfiguration sonarServerConfigurationBean) {
-    this.mySonarServerConfigurationBean = sonarServerConfigurationBean;
+  private SonarServer(SonarServerConfig sonarServerConfigBean) {
+    this.mySonarServerConfigBean = sonarServerConfigBean;
     this.sonar = createSonar();
     this.sonarClient = createSonarClient(createHost());
   }
 
   public static SonarServer create(String hostUrl) {
-    return create(SonarServerConfiguration.of(hostUrl));
+    return create(SonarServerConfig.of(hostUrl));
   }
 
-  public static SonarServer create(SonarServerConfiguration sonarServerConfigurationBean) {
-    return new SonarServer(sonarServerConfigurationBean);
+  public static SonarServer create(SonarServerConfig sonarServerConfigBean) {
+    return new SonarServer(sonarServerConfigBean);
   }
 
   private SonarClient createSonarClient(Host host) {
@@ -86,25 +86,25 @@ public class SonarServer {
 
   private Sonar createSonar() {
     Sonar sonar;
-    if (mySonarServerConfigurationBean.isAnonymous()) {
-      sonar = createSonar(mySonarServerConfigurationBean.getHostUrl(), null, null);
+    if (mySonarServerConfigBean.isAnonymous()) {
+      sonar = createSonar(mySonarServerConfigBean.getHostUrl(), null, null);
     } else {
-      mySonarServerConfigurationBean.loadPassword();
-      sonar = createSonar(mySonarServerConfigurationBean.getHostUrl(), mySonarServerConfigurationBean.getUser(), mySonarServerConfigurationBean.getPassword());
-      mySonarServerConfigurationBean.clearPassword();
+      mySonarServerConfigBean.loadPassword();
+      sonar = createSonar(mySonarServerConfigBean.getHostUrl(), mySonarServerConfigBean.getUser(), mySonarServerConfigBean.getPassword());
+      mySonarServerConfigBean.clearPassword();
     }
     return sonar;
   }
 
   private Host createHost() {
     Host host;
-    final String safeHostUrl = getHostSafe(mySonarServerConfigurationBean.getHostUrl());
-    if (mySonarServerConfigurationBean.isAnonymous()) {
+    final String safeHostUrl = getHostSafe(mySonarServerConfigBean.getHostUrl());
+    if (mySonarServerConfigBean.isAnonymous()) {
       host = new Host(safeHostUrl);
     } else {
-      mySonarServerConfigurationBean.loadPassword();
-      host = new Host(safeHostUrl, mySonarServerConfigurationBean.getUser(), mySonarServerConfigurationBean.getPassword());
-      mySonarServerConfigurationBean.clearPassword();
+      mySonarServerConfigBean.loadPassword();
+      host = new Host(safeHostUrl, mySonarServerConfigBean.getUser(), mySonarServerConfigBean.getPassword());
+      mySonarServerConfigBean.clearPassword();
     }
     return host;
   }
@@ -118,8 +118,8 @@ public class SonarServer {
     return StringUtils.removeEnd(hostName, "/");
   }
 
-  public SonarServerConfiguration getSonarServerConfigurationBean() {
-    return mySonarServerConfigurationBean;
+  public SonarServerConfig getSonarServerConfigurationBean() {
+    return mySonarServerConfigBean;
   }
 
   public String verifySonarConnection() throws SonarServerConnectionException {
@@ -137,7 +137,7 @@ public class SonarServer {
   }
 
   private HttpURLConnection getHttpConnection() throws SonarServerConnectionException {
-    String hostName = mySonarServerConfigurationBean.getHostUrl();
+    String hostName = mySonarServerConfigBean.getHostUrl();
     URL sonarServerUrl = null;
     try {
       sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);

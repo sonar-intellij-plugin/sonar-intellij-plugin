@@ -29,12 +29,7 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
 
   @Override
   public void checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, @NotNull final ProblemsHolder problemsHolder, @NotNull final GlobalInspectionContext globalContext, @NotNull final ProblemDescriptionsProcessor problemDescriptionsProcessor) {
-    String path = psiFile.getVirtualFile().getPath();
 
-    final SonarQubeInspectionContext sonarQubeInspectionContext = globalContext.getExtension(SonarQubeInspectionContext.KEY);
-    if (sonarQubeInspectionContext != null) {
-      System.out.println("SonarQubeInspectionContext is not null ONE");
-    }
     Set<SonarIssue> issues = IssuesByFileIndex.getIssuesForFile(psiFile);
     for (final SonarIssue issue : issues) {
       if (!processIssue(issue)) continue;
@@ -46,9 +41,7 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
           false
       );
       problemDescriptionsProcessor.addProblemElement(globalContext.getRefManager().getReference(psiFile), problemDescriptor);
-
     }
-
 
   }
 

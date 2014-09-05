@@ -22,6 +22,10 @@ public class Settings {
     this.localAnalysisScripName = localAnalysisScripName;
   }
 
+  public static Settings copyOf(Settings settings) {
+    return Settings.of(settings.getServerName(), settings.getResources(), settings.getLocalAnalysisScripName());
+  }
+
   public static Settings of(String serverName, Collection<Resource> resources, String localAnalysisScripName) {
     return new Settings(serverName, resources, localAnalysisScripName);
   }

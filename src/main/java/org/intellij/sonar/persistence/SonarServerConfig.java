@@ -3,7 +3,7 @@ package org.intellij.sonar.persistence;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.intellij.sonar.configuration.PasswordManager;
 
-public class SonarServerConfiguration {
+public class SonarServerConfig {
   private String name;
   private String hostUrl;
   private boolean anonymous;
@@ -12,12 +12,12 @@ public class SonarServerConfiguration {
   @Transient
   private String password;
 
-  public static SonarServerConfiguration of(String hostUrl) {
-    return SonarServerConfiguration.of(null, hostUrl, true, null);
+  public static SonarServerConfig of(String hostUrl) {
+    return SonarServerConfig.of(null, hostUrl, true, null);
   }
 
-  public static SonarServerConfiguration of(String name, String hostUrl, boolean anonymous, String user) {
-    SonarServerConfiguration bean = new SonarServerConfiguration();
+  public static SonarServerConfig of(String name, String hostUrl, boolean anonymous, String user) {
+    SonarServerConfig bean = new SonarServerConfig();
     bean.name = name;
     bean.hostUrl = hostUrl;
     bean.anonymous = anonymous;
@@ -86,7 +86,7 @@ public class SonarServerConfiguration {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    SonarServerConfiguration that = (SonarServerConfiguration) o;
+    SonarServerConfig that = (SonarServerConfig) o;
 
     if (name != null ? !name.equals(that.name) : that.name != null)
       return false;

@@ -8,7 +8,7 @@ import org.intellij.sonar.configuration.partials.LocalAnalysisScriptView;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.configuration.partials.SonarServersView;
 import org.intellij.sonar.persistence.IncrementalScriptBean;
-import org.intellij.sonar.persistence.SonarServerConfiguration;
+import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.sonar.wsclient.services.Resource;
@@ -61,7 +61,7 @@ public class ConfigurationCheckActionListener implements ActionListener {
     if (SonarServers.NO_SONAR.equals(getSelectedSonarServerName())) {
       testResultMessageBuilder.append(warnMessage("No sonar server selected\n"));
     } else {
-      final Optional<SonarServerConfiguration> sonarServerConfiguration = SonarServers.get(getSelectedSonarServerName());
+      final Optional<SonarServerConfig> sonarServerConfiguration = SonarServers.get(getSelectedSonarServerName());
 
       if (!sonarServerConfiguration.isPresent()) {
         testResultMessageBuilder.append(String.format("Cannot find configuration for %s\n", getSelectedSonarServerName()));

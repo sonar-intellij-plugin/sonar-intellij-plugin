@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
-import org.intellij.sonar.persistence.SonarServerConfiguration;
+import org.intellij.sonar.persistence.SonarServerConfig;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -100,8 +100,8 @@ public class SonarServerConfigurable extends DialogWrapper {
     myPasswordField.setEchoChar('\u0000');
   }
 
-  public SonarServerConfiguration toSonarServerConfigurationBean() {
-    SonarServerConfiguration bean = SonarServerConfiguration.of(
+  public SonarServerConfig toSonarServerConfigurationBean() {
+    SonarServerConfig bean = SonarServerConfig.of(
         myNameTestField.getText(),
         myHostUrlTextField.getText(),
         myAnonymousCheckBox.isSelected(),
@@ -111,7 +111,7 @@ public class SonarServerConfigurable extends DialogWrapper {
     return bean;
   }
 
-  public void setValuesFrom(SonarServerConfiguration bean) {
+  public void setValuesFrom(SonarServerConfig bean) {
     this.myNameTestField.setText(bean.getName());
     this.myHostUrlTextField.setText(bean.getHostUrl());
     if (!bean.isAnonymous()) {

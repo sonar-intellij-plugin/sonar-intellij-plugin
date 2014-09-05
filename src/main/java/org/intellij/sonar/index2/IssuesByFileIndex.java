@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,9 +51,14 @@ public class IssuesByFileIndex {
     final Map<String, Set<SonarIssue>> index = getIndex(project);
     Set<SonarIssue> issues = index.get(fullPath);
     if (issues == null) {
-      index.put(fullPath, Sets.<SonarIssue>newLinkedHashSet());
-      return index.get(fullPath);
+      issues = Sets.newLinkedHashSet();
     }
     return issues;
+  }
+
+  public static void clearIndexFor(Collection<PsiFile> psiFiles) {
+    for (PsiFile psiFile : psiFiles) {
+      index.remove(psiFile.getVirtualFile().getPath());
+    }
   }
 }

@@ -20,64 +20,63 @@ import java.util.LinkedList;
         @Storage(id = "sonarServers", file = StoragePathMacros.APP_CONFIG + "/sonarSettings.xml")
     }
 )
-
 public class SonarServers implements PersistentStateComponent<SonarServers> {
 
   public static final String NO_SONAR = "<NO SONAR>";
   public static final String PROJECT = "<PROJECT>";
-  public Collection<SonarServerConfiguration> beans = new ArrayList<SonarServerConfiguration>();
+  public Collection<SonarServerConfig> beans = new ArrayList<SonarServerConfig>();
 
   @NotNull
   public static SonarServers getInstance() {
     return ServiceManager.getService(SonarServers.class);
   }
 
-  public static void add(final SonarServerConfiguration newSonarServerConfigurationBean) {
-    final Collection<SonarServerConfiguration> sonarServerConfigurationBeans = SonarServers.getInstance().getState().beans;
-    final boolean alreadyExists = FluentIterable.from(sonarServerConfigurationBeans).anyMatch(new Predicate<SonarServerConfiguration>() {
+  public static void add(final SonarServerConfig newSonarServerConfigBean) {
+    final Collection<SonarServerConfig> sonarServerConfigBeans = SonarServers.getInstance().getState().beans;
+    final boolean alreadyExists = FluentIterable.from(sonarServerConfigBeans).anyMatch(new Predicate<SonarServerConfig>() {
       @Override
-      public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
-        return sonarServerConfigurationBean.equals(newSonarServerConfigurationBean);
+      public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
+        return sonarServerConfigurationBean.equals(newSonarServerConfigBean);
       }
     });
     if (alreadyExists) {
       throw new IllegalArgumentException("already exists");
     } else {
-      sonarServerConfigurationBeans.add(newSonarServerConfigurationBean);
-      if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigurationBean.getPassword())) {
-        newSonarServerConfigurationBean.storePassword();
-        newSonarServerConfigurationBean.clearPassword();
+      sonarServerConfigBeans.add(newSonarServerConfigBean);
+      if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigBean.getPassword())) {
+        newSonarServerConfigBean.storePassword();
+        newSonarServerConfigBean.clearPassword();
       }
     }
   }
 
   public static void remove(@NotNull final String sonarServerName) {
-    final Optional<SonarServerConfiguration> bean = get(sonarServerName);
+    final Optional<SonarServerConfig> bean = get(sonarServerName);
     Preconditions.checkArgument(bean.isPresent());
-    final ImmutableList<SonarServerConfiguration> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfiguration>() {
+    final ImmutableList<SonarServerConfig> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfig>() {
       @Override
-      public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
+      public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
         return !bean.get().equals(sonarServerConfigurationBean);
       }
     }).toList();
-    getInstance().beans = new LinkedList<SonarServerConfiguration>(newBeans);
+    getInstance().beans = new LinkedList<SonarServerConfig>(newBeans);
   }
 
-  public static Optional<SonarServerConfiguration> get(@NotNull final String sonarServerName) {
-    Optional<SonarServerConfiguration> bean = Optional.absent();
-    final Optional<Collection<SonarServerConfiguration>> allBeans = getAll();
+  public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {
+    Optional<SonarServerConfig> bean = Optional.absent();
+    final Optional<Collection<SonarServerConfig>> allBeans = getAll();
     if (allBeans.isPresent()) {
-      bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfiguration>() {
+      bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfig>() {
         @Override
-        public boolean apply(SonarServerConfiguration sonarServerConfigurationBean) {
-          return sonarServerName.equals(sonarServerConfigurationBean.getName());
+        public boolean apply(SonarServerConfig sonarServerConfigBean) {
+          return sonarServerName.equals(sonarServerConfigBean.getName());
         }
       });
     }
     return bean;
   }
 
-  public static Optional<Collection<SonarServerConfiguration>> getAll() {
+  public static Optional<Collection<SonarServerConfig>> getAll() {
     return Optional.fromNullable(SonarServers.getInstance().getState().beans);
   }
 

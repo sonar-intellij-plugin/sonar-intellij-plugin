@@ -1,13 +1,13 @@
 package org.intellij.sonar.util;
 
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.persistence.SonarServerConfiguration;
+import org.intellij.sonar.persistence.SonarServerConfig;
 
 public class SourceCodePlaceHolders {
 
   private String mySourceCode;
   private Project myProject;
-  private SonarServerConfiguration mySonarServerConfiguration;
+  private SonarServerConfig mySonarServerConfig;
 
   public static SourceCodePlaceHolders builder() {
     return new SourceCodePlaceHolders();
@@ -23,8 +23,8 @@ public class SourceCodePlaceHolders {
     return this;
   }
 
-  public SourceCodePlaceHolders withSonarServerConfiguration(SonarServerConfiguration sonarServerConfiguration) {
-    this.mySonarServerConfiguration = sonarServerConfiguration;
+  public SourceCodePlaceHolders withSonarServerConfiguration(SonarServerConfig sonarServerConfig) {
+    this.mySonarServerConfig = sonarServerConfig;
     return this;
   }
 
@@ -34,8 +34,8 @@ public class SourceCodePlaceHolders {
     if (myProject != null) {
       sourceCode = replacePlaceHolders(sourceCode, myProject);
     }
-    if (mySonarServerConfiguration != null) {
-      sourceCode = replacePlaceHolders(sourceCode, mySonarServerConfiguration);
+    if (mySonarServerConfig != null) {
+      sourceCode = replacePlaceHolders(sourceCode, mySonarServerConfig);
     }
     return sourceCode;
   }
@@ -48,11 +48,11 @@ public class SourceCodePlaceHolders {
     return processedSourceCode;
   }
 
-  public static String replacePlaceHolders(String rawSourceCode, SonarServerConfiguration sonarServerConfiguration) {
+  public static String replacePlaceHolders(String rawSourceCode, SonarServerConfig sonarServerConfig) {
     String processedSourceCode = rawSourceCode;
-    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_HOST_URL\\$", sonarServerConfiguration.getHostUrl());
-    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_SERVER_NAME\\$", sonarServerConfiguration.getName());
-    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_USER_NAME\\$", sonarServerConfiguration.getUser());
+    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_HOST_URL\\$", sonarServerConfig.getHostUrl());
+    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_SERVER_NAME\\$", sonarServerConfig.getName());
+    processedSourceCode = processedSourceCode.replaceAll("\\$SONAR_USER_NAME\\$", sonarServerConfig.getUser());
     return processedSourceCode;
   }
 }

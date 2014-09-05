@@ -9,14 +9,14 @@ public class SonarServerConfigurationBeanTests {
   @Test
   public void shouldBeEqualByName() {
 
-    SonarServerConfiguration bean1 = SonarServerConfiguration.of(
+    SonarServerConfig bean1 = SonarServerConfig.of(
         "my name",
         "http://site.my",
         true,
         "user"
     );
 
-    SonarServerConfiguration bean2 = SonarServerConfiguration.of(
+    SonarServerConfig bean2 = SonarServerConfig.of(
         "my name",
         "http://other.site",
         false,

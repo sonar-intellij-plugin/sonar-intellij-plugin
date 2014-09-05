@@ -5,7 +5,7 @@ import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
-import org.intellij.sonar.persistence.SonarServerConfiguration;
+import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.util.UIUtil;
 
@@ -61,9 +61,9 @@ public abstract class SonarServersView {
     return showSonarServerConfigurableDialog(null);
   }
 
-  protected SonarServerConfigurable showSonarServerConfigurableDialog(SonarServerConfiguration oldSonarServerConfigurationBean) {
+  protected SonarServerConfigurable showSonarServerConfigurableDialog(SonarServerConfig oldSonarServerConfigBean) {
     final SonarServerConfigurable dlg = new SonarServerConfigurable(myProject);
-    if (null != oldSonarServerConfigurationBean) dlg.setValuesFrom(oldSonarServerConfigurationBean);
+    if (null != oldSonarServerConfigBean) dlg.setValuesFrom(oldSonarServerConfigBean);
     dlg.show();
     return dlg;
   }
@@ -85,7 +85,7 @@ public abstract class SonarServersView {
 
         final SonarServerConfigurable dlg = showSonarServerConfigurableDialog();
         if (dlg.isOK()) {
-          SonarServerConfiguration newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+          SonarServerConfig newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
           try {
             SonarServers.add(newSonarConfigurationBean);
             mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
@@ -102,13 +102,13 @@ public abstract class SonarServersView {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
-        final Optional<SonarServerConfiguration> oldBean = SonarServers.get(selectedSonarServer.toString());
+        final Optional<SonarServerConfig> oldBean = SonarServers.get(selectedSonarServer.toString());
         if (!oldBean.isPresent()) {
           Messages.showErrorDialog(selectedSonarServer.toString() + " is not more preset", "Cannot Perform Edit");
         } else {
           final SonarServerConfigurable dlg = showSonarServerConfigurableDialog(oldBean.get());
           if (dlg.isOK()) {
-            SonarServerConfiguration newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+            SonarServerConfig newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
             try {
               SonarServers.remove(oldBean.get().getName());
               SonarServers.add(newSonarConfigurationBean);
