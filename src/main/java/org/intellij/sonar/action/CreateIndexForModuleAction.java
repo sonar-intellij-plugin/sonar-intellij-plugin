@@ -80,8 +80,6 @@ public class CreateIndexForModuleAction extends AnAction {
     backgroundTask.withModule(module).queue();
   }
 
-
-
   private class BackgroundTask extends Task.Backgroundable {
     private Module module;
     private ProgressIndicator indicator;

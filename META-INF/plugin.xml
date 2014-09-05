@@ -77,6 +77,11 @@
                 org.intellij.sonar.persistence.IndexComponent
             </implementation-class>
         </component>-->
+        <component>
+            <implementation-class>
+                org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
+            </implementation-class>
+        </component>
     </project-components>
 
     <module-components>

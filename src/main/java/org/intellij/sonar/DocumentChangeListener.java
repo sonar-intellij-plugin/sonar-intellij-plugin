@@ -18,6 +18,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.index2.SonarIssue;
 import org.intellij.sonar.util.Finders;
 
 import java.util.List;
@@ -57,11 +58,11 @@ public class DocumentChangeListener extends AbstractProjectComponent {
           // update issue line
           Set<RangeHighlighter> allHighlighters = Finders.findAllRangeHighlightersFrom(document.get());
           for (RangeHighlighter highlighter : allHighlighters) {
-            Optional<Set<IssuesByFileIndex.MyIssue>> issues = fromNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+            Optional<Set<SonarIssue>> issues = fromNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
             if (!issues.isPresent()) continue;
             int ijLine = Finders.findLineOfRangeHighlighter(highlighter, editor);
             int rhLine = ijLine + 1;
-            for (IssuesByFileIndex.MyIssue issue : issues.get()) {
+            for (SonarIssue issue : issues.get()) {
               if (issue.line == null) continue;
               if (issue.line != rhLine) {
                 issue.line = rhLine;
@@ -72,10 +73,10 @@ public class DocumentChangeListener extends AbstractProjectComponent {
           // remove issues without highlighter (highlighter was removed in editor)
           final Optional<VirtualFile> file = Optional.fromNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
           if (file.isPresent()) {
-            Set<IssuesByFileIndex.MyIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+            Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
             Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(e.getDocument());
             for (RangeHighlighter highlighter : highlighters) {
-              Optional<Set<IssuesByFileIndex.MyIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+              Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
               if (issuesFromHighlighter.isPresent()) {
                 issuesFromHighlighters.addAll(issuesFromHighlighter.get());
               }

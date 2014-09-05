@@ -28,6 +28,7 @@ import com.intellij.util.ui.UIUtil;
 import com.intellij.xml.util.XmlStringUtil;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.index2.SonarIssue;
 import org.intellij.sonar.util.Finders;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,7 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnotator.State, SonarExternalAnnotator.State> {
 
-  public static final Key<Set<IssuesByFileIndex.MyIssue>> KEY = new Key<Set<IssuesByFileIndex.MyIssue>>("issues");
+  public static final Key<Set<SonarIssue>> KEY = new Key<Set<SonarIssue>>("issues");
 
   public static class State {
     private VirtualFile vfile;
@@ -70,24 +71,24 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
     });
   }
 
-  private void createAnnotations(@NotNull final PsiFile file, State annotationResult, @NotNull AnnotationHolder holder) {
-    String path = file.getVirtualFile().getPath();
-    final Set<IssuesByFileIndex.MyIssue> issues;
+  private void createAnnotations(@NotNull final PsiFile psiFile, State annotationResult, @NotNull AnnotationHolder holder) {
+    String path = psiFile.getVirtualFile().getPath();
+    final Set<SonarIssue> issues;
 
-    if (!DocumentChangeListener.CHANGED_FILES.contains(file.getVirtualFile())) {
-      issues = IssuesByFileIndex.getIssuesForFile(path);
-      for (IssuesByFileIndex.MyIssue issue : issues) {
-        final TextRange textRange = Finders.getLineRange(file, issue.line);
-        createInvisibleHighlighter(file, issue, textRange);
+    if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
+      issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+      for (SonarIssue issue : issues) {
+        final TextRange textRange = Finders.getLineRange(psiFile, issue.line);
+        createInvisibleHighlighter(psiFile, issue, textRange);
       }
     } else {
-      final Set<IssuesByFileIndex.MyIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+      final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
 
-      Optional<Document> document = Finders.findDocumentFromPsiFile(file);
+      Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
       if (document.isPresent()) {
         Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
         for (RangeHighlighter highlighter : highlighters) {
-          Optional<Set<IssuesByFileIndex.MyIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(KEY));
+          Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(KEY));
           if (issuesFromHighlighter.isPresent()) {
             issuesFromHighlighters.addAll(issuesFromHighlighter.get());
           }
@@ -96,8 +97,8 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
 
       issues = issuesFromHighlighters;
     }
-    for (IssuesByFileIndex.MyIssue issue : issues) {
-      Optional<Annotation> annotation = createAnnotation(holder, file, issue);
+    for (SonarIssue issue : issues) {
+      Optional<Annotation> annotation = createAnnotation(holder, psiFile, issue);
       if (annotation.isPresent()) {
         String tooltip = createTooltip(issue);
         annotation.get().setTooltip(tooltip);
@@ -105,7 +106,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
     }
   }
 
-  private void createInvisibleHighlighter(PsiFile psiFile, final IssuesByFileIndex.MyIssue issue, final TextRange textRange) {
+  private void createInvisibleHighlighter(PsiFile psiFile, final SonarIssue issue, final TextRange textRange) {
     final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
     final List<Editor> editors = Finders.findEditorsFrom(document.get());
     for (final Editor editor : editors) {
@@ -117,7 +118,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
         public void run() {
           final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(editor, issue.line);
           if (rangeHighlighterAtLine.isPresent()) {
-            final Set<IssuesByFileIndex.MyIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
+            final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
             if (null != issuesOfHighlighter) {
               issuesOfHighlighter.add(issue);
             }
@@ -130,7 +131,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
                 0,
                 attrs,
                 HighlighterTargetArea.EXACT_RANGE);
-            Set<IssuesByFileIndex.MyIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
+            Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
             issuesOfHighlighter.add(issue);
             rangeHighlighter.putUserData(KEY, issuesOfHighlighter);
           }
@@ -139,7 +140,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
     }
   }
 
-  public static Optional<Annotation> createAnnotation(AnnotationHolder holder, PsiFile psiFile, IssuesByFileIndex.MyIssue issue) {
+  public static Optional<Annotation> createAnnotation(AnnotationHolder holder, PsiFile psiFile, SonarIssue issue) {
     HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.severity);
     Annotation annotation;
     if (issue.line == null) {
@@ -161,7 +162,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
 
   }
 
-  private static String createTooltip(IssuesByFileIndex.MyIssue issue) {
+  private static String createTooltip(SonarIssue issue) {
     String myShortcutText;
     final KeymapManager keymapManager = KeymapManager.getInstance();
     if (keymapManager != null) {

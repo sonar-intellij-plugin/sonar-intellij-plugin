@@ -20,6 +20,7 @@
 package org.intellij.sonar.analysis;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
@@ -29,14 +30,20 @@ import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.util.SourceCodePlaceHolders;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class SonarQubeInspectionContext implements GlobalInspectionContextExtension<SonarQubeInspectionContext> {
 
@@ -49,7 +56,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   }
 
   @Override
-  public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull GlobalInspectionContext context) {
+  public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
     // context.getRefManager().getScope() can be file, module or project
     // files -> modules settings of the files or project if no modules found
     // modules -> modules settings of the modules or project if no modules found
@@ -65,6 +72,35 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     //    context.getRefManager().getScope().toSearchScope() instanceof ModuleWithDependenciesScope -> module
     //    context.getRefManager().getScope().toSearchScope() instanceof ProjectScopeImpl -> project
 
+    final Project project = context.getProject();
+    final Collection<Module> modules = Sets.newHashSet();
+    context.getRefManager().getScope().accept(new PsiElementVisitor() {
+      @Override
+      public void visitFile(PsiFile file) {
+        final Module module = ModuleUtil.findModuleForPsiElement(file);
+        modules.add(module);
+      }
+    });
+
+    Set<Settings> settingsFromScope = Sets.newHashSet();
+    if (modules.isEmpty()) {
+      final Settings settings = ProjectSettings.getInstance(project).getState();
+      settingsFromScope.add(settings);
+    } else {
+      for (Module module : modules) {
+        final Settings settings = ModuleSettings.getInstance(module).getState();
+        settingsFromScope.add(settings);
+      }
+    }
+
+    for (Settings settings : settingsFromScope) {
+      // download issues
+    }
+
+    for (Settings settings : settingsFromScope) {
+      // run scripts
+    }
+
     final int scopeType = context.getRefManager().getScope().getScopeType();
     if (AnalysisScope.PROJECT == scopeType) {
 
@@ -72,6 +108,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       // tasks can be:
       //                1) download issues from remote server
       //                   needs
+      //                          SonarServers.get(settings.getServerName());
       //                          SonarServerConfiguration
       //                                hostName
       //                                user
@@ -81,10 +118,10 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       //                   -> loadIssues(...)
       //                2) run local analysis script
       //                   needs
-      //                          LocalAnalysisScript
+      //                          LocalAnalysisScripts.get(settings.getLocalAnalysisScripName())
       //                          SourceCodePlaceHolders
       //                   -> runScript(sourceCodeWithReplacedPlaceHolders)
-      final Project project = context.getProject();
+
       final Settings settings = ProjectSettings.getInstance(project).getState();
       final Optional<SonarServerConfiguration> sonarServerConfiguration = SonarServers.get(settings.getServerName());
 

@@ -1,6 +1,6 @@
 package org.intellij.sonar.analysis;
 
-import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.index2.SonarIssue;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ public class OldIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
   }
 
   @Override
-  public Boolean processIssue(IssuesByFileIndex.MyIssue issue) {
+  public Boolean processIssue(SonarIssue issue) {
     return !issue.isNew;
   }
 }

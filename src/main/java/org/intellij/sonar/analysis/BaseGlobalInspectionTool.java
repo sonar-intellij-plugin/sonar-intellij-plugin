@@ -4,6 +4,7 @@ import com.intellij.codeInspection.*;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.index2.SonarIssue;
 import org.intellij.sonar.util.Finders;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,7 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
     return "SonarQube Issue";
   }
 
-  public abstract Boolean processIssue(IssuesByFileIndex.MyIssue issue);
+  public abstract Boolean processIssue(SonarIssue issue);
 
   @Override
   public void checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, @NotNull final ProblemsHolder problemsHolder, @NotNull final GlobalInspectionContext globalContext, @NotNull final ProblemDescriptionsProcessor problemDescriptionsProcessor) {
@@ -34,8 +35,8 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
     if (sonarQubeInspectionContext != null) {
       System.out.println("SonarQubeInspectionContext is not null ONE");
     }
-    Set<IssuesByFileIndex.MyIssue> issues = IssuesByFileIndex.getIssuesForFile(path);
-    for (final IssuesByFileIndex.MyIssue issue : issues) {
+    Set<SonarIssue> issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+    for (final SonarIssue issue : issues) {
       if (!processIssue(issue)) continue;
       final ProblemHighlightType severity = SonarToIjSeverityMapping.toProblemHighlightType(issue.severity);
       final TextRange textRange = Finders.getLineRange(psiFile, issue.line);
