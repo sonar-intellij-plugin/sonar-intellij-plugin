@@ -33,8 +33,8 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
     Set<SonarIssue> issues = IssuesByFileIndex.getIssuesForFile(psiFile);
     for (final SonarIssue issue : issues) {
       if (!processIssue(issue)) continue;
-      final ProblemHighlightType severity = SonarToIjSeverityMapping.toProblemHighlightType(issue.severity);
-      final TextRange textRange = Finders.getLineRange(psiFile, issue.line);
+      final ProblemHighlightType severity = SonarToIjSeverityMapping.toProblemHighlightType(issue.getSeverity());
+      final TextRange textRange = Finders.getLineRange(psiFile, issue.getLine());
       final ProblemDescriptor problemDescriptor = problemsHolder.getManager().createProblemDescriptor(psiFile, textRange,
           issue.formattedMessage(),
           severity,

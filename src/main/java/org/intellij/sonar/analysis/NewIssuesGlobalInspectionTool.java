@@ -32,6 +32,6 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
 
   @Override
   public Boolean processIssue(SonarIssue issue) {
-    return issue.isNew;
+    return issue.getIsNew();
   }
 }

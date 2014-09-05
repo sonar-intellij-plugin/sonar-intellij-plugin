@@ -72,13 +72,12 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
   }
 
   private void createAnnotations(@NotNull final PsiFile psiFile, State annotationResult, @NotNull AnnotationHolder holder) {
-    String path = psiFile.getVirtualFile().getPath();
     final Set<SonarIssue> issues;
 
     if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
       issues = IssuesByFileIndex.getIssuesForFile(psiFile);
       for (SonarIssue issue : issues) {
-        final TextRange textRange = Finders.getLineRange(psiFile, issue.line);
+        final TextRange textRange = Finders.getLineRange(psiFile, issue.getLine());
         createInvisibleHighlighter(psiFile, issue, textRange);
       }
     } else {
@@ -116,7 +115,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
       ApplicationManager.getApplication().invokeLater(new Runnable() {
         @Override
         public void run() {
-          final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(editor, issue.line);
+          final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(editor, issue.getLine());
           if (rangeHighlighterAtLine.isPresent()) {
             final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
             if (null != issuesOfHighlighter) {
@@ -141,16 +140,16 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
   }
 
   public static Optional<Annotation> createAnnotation(AnnotationHolder holder, PsiFile psiFile, SonarIssue issue) {
-    HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.severity);
+    HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.getSeverity());
     Annotation annotation;
-    if (issue.line == null) {
+    if (issue.getLine() == null) {
       annotation = createAnnotation(holder, issue.formattedMessage(), psiFile, severity);
       annotation.setFileLevelAnnotation(true);
     } else {
-      Optional<PsiElement> startElement = Finders.findFirstElementAtLine(psiFile, issue.line);
+      Optional<PsiElement> startElement = Finders.findFirstElementAtLine(psiFile, issue.getLine());
       if (!startElement.isPresent()) {
         // There is no AST element on this line. Maybe a tabulation issue on a blank line?
-        annotation = createAnnotation(holder, issue.formattedMessage(), Finders.getLineRange(psiFile, issue.line), severity);
+        annotation = createAnnotation(holder, issue.formattedMessage(), Finders.getLineRange(psiFile, issue.getLine()), severity);
       } else if (startElement.get().isValid()) {
         TextRange lineRange = Finders.getLineRange(startElement.get());
         annotation = createAnnotation(holder, issue.formattedMessage(), lineRange, severity);

@@ -77,7 +77,7 @@ public class DownloadIssuesTask extends Task.Backgroundable {
       final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resourceKey).withSonarServerIssues(issues).create();
       final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(getProject());
       if (indexComponent.isPresent()) {
-        indexComponent.get().loadState(index);
+        indexComponent.get().setIndex(index);
       }
     }
   }

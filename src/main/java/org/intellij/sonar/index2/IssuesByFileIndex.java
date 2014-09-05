@@ -5,7 +5,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.SonarSeverity;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 
 import java.util.Collection;
@@ -14,7 +13,20 @@ import java.util.Set;
 
 public class IssuesByFileIndex {
   public static final Map<String, Set<SonarIssue>> index = Maps.newLinkedHashMap();
-  static {
+
+  public static Map<String, Set<SonarIssue>> getIndex(Project project) {
+//     return getFakeIndex();
+
+    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+    if (!indexComponent.isPresent()) {
+      return Maps.newConcurrentMap();
+    } else {
+      return indexComponent.get().getState().getIndex();
+    }
+  }
+
+  /*// TODO: remove after real index is done
+  public static Map<String, Set<SonarIssue>> getFakeIndex() {
     Set<SonarIssue> issues = Sets.newLinkedHashSet();
     issues.add(new SonarIssue(11, "blocker issue", SonarSeverity.BLOCKER.toString(), true));
     issues.add(new SonarIssue(12, "info issue", SonarSeverity.INFO.toString(), false));
@@ -26,24 +38,9 @@ public class IssuesByFileIndex {
     index.put(
         "/Users/omayevskiy/workspace/SonarSource-sonar-examples-4a4a681/projects/languages/java/maven/java-maven-simple/src/main/java/example/One.java",
         issues
-        );
-  }
-
-  public static Map<String, Set<SonarIssue>> getIndex(Project project) {
-//     return getFakeIndex();
-
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
-    if (!indexComponent.isPresent()) {
-      return Maps.newConcurrentMap();
-    } else {
-      return indexComponent.get().getState();
-    }
-  }
-
-  // TODO: remove after real index is done
-  public static Map<String, Set<SonarIssue>> getFakeIndex() {
+    );
     return index;
-  }
+  }*/
 
   public static Set<SonarIssue> getIssuesForFile(PsiFile psiFile) {
     String fullPath = psiFile.getVirtualFile().getPath();

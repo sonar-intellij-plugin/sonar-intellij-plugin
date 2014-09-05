@@ -1,32 +1,31 @@
 package org.intellij.sonar.persistence;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
+import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.intellij.sonar.index2.SonarIssue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 
 @State(
-    name = "issuesByFileIndex",
+    name = "issues",
     storages = {
-        @Storage(id = "default", file = StoragePathMacros.PROJECT_FILE),
-        @Storage(id = "dir", file = StoragePathMacros.PROJECT_CONFIG_DIR + "/sonarSettings.xml", scheme = StorageScheme.DIRECTORY_BASED)
+        @Storage(id = "issues", file = StoragePathMacros.PROJECT_FILE),
+        @Storage(id = "issuesDir", file = StoragePathMacros.PROJECT_CONFIG_DIR + "/sonarIssues.xml", scheme = StorageScheme.DIRECTORY_BASED)
     }
 )
-public class IssuesByFileIndexProjectComponent extends AbstractProjectComponent implements PersistentStateComponent<Map<String, Set<SonarIssue>>> {
+public class IssuesByFileIndexProjectComponent implements ProjectComponent, PersistentStateComponent<IssuesByFileIndexProjectComponent> {
 
-  private Map<String, Set<SonarIssue>> index = Maps.newConcurrentMap();
+  private Map<String, Set<SonarIssue>> index = new HashMap<String, Set<SonarIssue>>();
 
-  protected IssuesByFileIndexProjectComponent(Project project) {
-    super(project);
-  }
+  public IssuesByFileIndexProjectComponent() {}
 
   public static Optional<IssuesByFileIndexProjectComponent> getInstance(@NotNull Project project) {
     if (project.isDisposed()) return Optional.absent();
@@ -36,12 +35,46 @@ public class IssuesByFileIndexProjectComponent extends AbstractProjectComponent 
 
   @Nullable
   @Override
-  public Map<String, Set<SonarIssue>> getState() {
-    return index;
+  public IssuesByFileIndexProjectComponent getState() {
+    return this;
   }
 
   @Override
-  public void loadState(Map<String, Set<SonarIssue>> index) {
+  public void loadState(IssuesByFileIndexProjectComponent state) {
+    XmlSerializerUtil.copyBean(state, this);
+  }
+
+  public Map<String, Set<SonarIssue>> getIndex() {
+    return index;
+  }
+
+  public void setIndex(Map<String, Set<SonarIssue>> index) {
     this.index = index;
+  }
+
+  @Override
+  public void projectOpened() {
+
+  }
+
+  @Override
+  public void projectClosed() {
+
+  }
+
+  @Override
+  public void initComponent() {
+
+  }
+
+  @Override
+  public void disposeComponent() {
+
+  }
+
+  @NotNull
+  @Override
+  public String getComponentName() {
+    return "IssuesByFileIndexProjectComponent";
   }
 }

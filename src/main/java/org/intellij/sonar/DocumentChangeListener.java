@@ -17,11 +17,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
-import org.intellij.sonar.index2.IssuesByFileIndex;
 import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.util.Finders;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -47,6 +48,18 @@ public class DocumentChangeListener extends AbstractProjectComponent {
 
   }
 
+  @Override
+  public void projectOpened() {
+    super.projectOpened();
+    CHANGED_FILES.clear();
+  }
+
+  @Override
+  public void projectClosed() {
+    super.projectClosed();
+    CHANGED_FILES.clear();
+  }
+
   private void updateIssuesPositions(final DocumentEvent e, final Project project) {
     final Optional<Document> document = fromNullable(e.getDocument());
     final List<Editor> editors = Finders.findEditorsFrom(document.get());
@@ -63,9 +76,9 @@ public class DocumentChangeListener extends AbstractProjectComponent {
             int ijLine = Finders.findLineOfRangeHighlighter(highlighter, editor);
             int rhLine = ijLine + 1;
             for (SonarIssue issue : issues.get()) {
-              if (issue.line == null) continue;
-              if (issue.line != rhLine) {
-                issue.line = rhLine;
+              if (issue.getLine() == null) continue;
+              if (issue.getLine() != rhLine) {
+                issue.setLine(rhLine);
               }
             }
           }
@@ -81,11 +94,14 @@ public class DocumentChangeListener extends AbstractProjectComponent {
                 issuesFromHighlighters.addAll(issuesFromHighlighter.get());
               }
             }
-            IssuesByFileIndex.index.put(file.get().getPath(), issuesFromHighlighters);
-
+            final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+            if (indexComponent.isPresent()) {
+              final Map<String, Set<SonarIssue>> index = indexComponent.get().getState().getIndex();
+              index.put(file.get().getPath(), issuesFromHighlighters);
+            }
           }
 
-          if (file.isPresent()) {
+          if (file.isPresent() && !project.isDisposed()) {
             Optional<PsiFile> psiFile = fromNullable(PsiManager.getInstance(project).findFile(file.get()));
             if (psiFile.isPresent()) {
               DaemonCodeAnalyzer.getInstance(project).restart(psiFile.get());
