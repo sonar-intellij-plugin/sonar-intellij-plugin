@@ -16,6 +16,9 @@ import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
 import org.sonar.wsclient.services.*;
+import retrofit.RestAdapter;
+import retrofit.http.GET;
+import retrofit.http.Query;
 
 import java.io.IOException;
 import java.net.*;
@@ -26,18 +29,30 @@ public class SonarServer {
 
   private static final Logger LOG = Logger.getInstance(SonarServer.class);
 
+  public static class RuleWrapper {
+    public Rule rule; // { "rule": {...} }
+  }
+
+  interface Rules {
+    @GET("/api/rules/show")
+    RuleWrapper show(
+      @Query("key") String key,
+      @Query("actives") Boolean actives
+    );
+  }
+
   private static final String VERSION_URL = "/api/server/version";
   private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
   private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
   private static final String USER_AGENT = "SonarQube Community Plugin";
   public static final int READ_TIMEOUT = 5000;
 
-  private final SonarServerConfig mySonarServerConfigBean;
+  private final SonarServerConfig mySonarServerConfig;
   private final Sonar sonar;
   private final SonarClient sonarClient;
 
   private SonarServer(SonarServerConfig sonarServerConfigBean) {
-    this.mySonarServerConfigBean = sonarServerConfigBean;
+    this.mySonarServerConfig = sonarServerConfigBean;
     this.sonar = createSonar();
     this.sonarClient = createSonarClient(createHost());
   }
@@ -86,25 +101,25 @@ public class SonarServer {
 
   private Sonar createSonar() {
     Sonar sonar;
-    if (mySonarServerConfigBean.isAnonymous()) {
-      sonar = createSonar(mySonarServerConfigBean.getHostUrl(), null, null);
+    if (mySonarServerConfig.isAnonymous()) {
+      sonar = createSonar(mySonarServerConfig.getHostUrl(), null, null);
     } else {
-      mySonarServerConfigBean.loadPassword();
-      sonar = createSonar(mySonarServerConfigBean.getHostUrl(), mySonarServerConfigBean.getUser(), mySonarServerConfigBean.getPassword());
-      mySonarServerConfigBean.clearPassword();
+      mySonarServerConfig.loadPassword();
+      sonar = createSonar(mySonarServerConfig.getHostUrl(), mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
+      mySonarServerConfig.clearPassword();
     }
     return sonar;
   }
 
   private Host createHost() {
     Host host;
-    final String safeHostUrl = getHostSafe(mySonarServerConfigBean.getHostUrl());
-    if (mySonarServerConfigBean.isAnonymous()) {
+    final String safeHostUrl = getHostSafe(mySonarServerConfig.getHostUrl());
+    if (mySonarServerConfig.isAnonymous()) {
       host = new Host(safeHostUrl);
     } else {
-      mySonarServerConfigBean.loadPassword();
-      host = new Host(safeHostUrl, mySonarServerConfigBean.getUser(), mySonarServerConfigBean.getPassword());
-      mySonarServerConfigBean.clearPassword();
+      mySonarServerConfig.loadPassword();
+      host = new Host(safeHostUrl, mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
+      mySonarServerConfig.clearPassword();
     }
     return host;
   }
@@ -119,7 +134,7 @@ public class SonarServer {
   }
 
   public SonarServerConfig getSonarServerConfigurationBean() {
-    return mySonarServerConfigBean;
+    return mySonarServerConfig;
   }
 
   public String verifySonarConnection() throws SonarServerConnectionException {
@@ -137,7 +152,7 @@ public class SonarServer {
   }
 
   private HttpURLConnection getHttpConnection() throws SonarServerConnectionException {
-    String hostName = mySonarServerConfigBean.getHostUrl();
+    String hostName = mySonarServerConfig.getHostUrl();
     URL sonarServerUrl = null;
     try {
       sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);
@@ -231,11 +246,24 @@ public class SonarServer {
    * @param language like java
    * @return list of all rules for a language
    */
-  public List<Rule> getRules(String language) {
+  public List<org.sonar.wsclient.services.Rule> getRules(String language) {
     RuleQuery query = new RuleQuery(language);
     query.setTimeoutMilliseconds(READ_TIMEOUT);
     return sonar.findAll(query);
   }
+
+  public Rule getRule(String key) {
+    RestAdapter restAdapter = new RestAdapter.Builder()
+        .setEndpoint(mySonarServerConfig.getHostUrl())
+        .setLogLevel(RestAdapter.LogLevel.FULL)
+        .build();
+
+    final Rules rules = restAdapter.create(Rules.class);
+    final Rule rule = rules.show(key, null).rule;
+    return rule;
+  }
+
+
 
  /* public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
     List<Rule> rulesResult = new LinkedList<Rule>();

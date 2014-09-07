@@ -2,16 +2,15 @@ package org.intellij.sonar.analysis;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.SourceCodePlaceHolders;
 
-public class RunLocalAnalysisScriptTask extends Task.Backgroundable {
+public class RunLocalAnalysisScriptTask implements Runnable {
   private final String sourceCode;
   private final String pathToSonarReport;
+  private final Project project;
 
   public static Optional<RunLocalAnalysisScriptTask> from(Project project, Settings originSettings) {
     final Settings settings = SettingsUtil.process(project, originSettings);
@@ -40,27 +39,14 @@ public class RunLocalAnalysisScriptTask extends Task.Backgroundable {
   }
 
   public RunLocalAnalysisScriptTask(Project project, String sourceCode, String pathToSonarReport) {
-    super(project, "Run Local Analysis");
+    this.project = project;
     this.sourceCode = sourceCode;
     this.pathToSonarReport = pathToSonarReport;
   }
 
-  @Override
-  public void run(ProgressIndicator indicator) {
+  public void run() {
     // execute local analysis script
     System.out.println("run script: " + this.toString());
-  }
-
-  @Override
-  public void onCancel() {
-    super.onCancel();
-    // abort running script
-  }
-
-  @Override
-  public void onSuccess() {
-    super.onSuccess();
-    // write results from pathToSonarReport to issues index
   }
 
   @Override

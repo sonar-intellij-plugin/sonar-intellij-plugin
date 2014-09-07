@@ -23,7 +23,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.ui.JBColor;
 import com.intellij.util.ui.UIUtil;
 import com.intellij.xml.util.XmlStringUtil;
 import org.intellij.sonar.DocumentChangeListener;
@@ -123,7 +122,8 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
             }
           } else {
             TextAttributes attrs = new TextAttributes();
-            attrs.setForegroundColor(JBColor.BLUE);
+//            uncomment to make visible
+//            attrs.setForegroundColor(JBColor.BLUE);
             final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
                 textRange.getStartOffset(),
                 textRange.getEndOffset(),
@@ -172,7 +172,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
       myShortcutText = "";
     }
     @NonNls final String link = " <a "
-        +"href=\"#sonarissue/123\""
+        +"href=\"#sonarissue/"+issue.getKey()+"\""
         + (UIUtil.isUnderDarcula() ? " color=\"7AB4C9\" " : "")
         +">" + DaemonBundle.message("inspection.extended.description")
         +"</a> " + myShortcutText;

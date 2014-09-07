@@ -1,22 +1,15 @@
 package org.intellij.sonar;
 
-import com.google.common.base.Optional;
 import com.intellij.codeInspection.InspectionToolProvider;
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import org.intellij.sonar.analysis.SonarLocalInspectionTool;
 import org.intellij.sonar.persistence.SonarRuleBean;
-import org.intellij.sonar.persistence.SonarRulesComponent;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedList;
-
-import static com.google.common.base.Optional.fromNullable;
 
 public class SonarInspectionToolProvider implements InspectionToolProvider {
 
@@ -24,9 +17,9 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
 
   @Override
   public Class[] getInspectionClasses() {
-    Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
+    /*Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
     for (Project project : openProjects) {
-      Optional<SonarRulesComponent> sonarRulesComponent = fromNullable(ServiceManager.getService(project, SonarRulesComponent.class));
+      Optional<SonarRules> sonarRulesComponent = fromNullable(ServiceManager.getService(project, SonarRules.class));
       if (sonarRulesComponent.isPresent()) {
         Collection<SonarRuleBean> allRules = sonarRulesComponent.get().getSonarRulesByRuleKey().values();
 
@@ -39,7 +32,7 @@ public class SonarInspectionToolProvider implements InspectionToolProvider {
           }
         }
       }
-    }
+    }*/
 
     return classes.toArray(new Class[classes.size()]);
   }

@@ -71,7 +71,9 @@ public class IssuesByFileIndexer {
           if (SonarComponentToFileMatcher.match(component, resourceKey, fullFilePath)) {
             entriesBuilder.add(
                 new SonarIssue(
-                  issue.getLine(),
+                    issue.getKey(),
+                    issue.getRule(),
+                    issue.getLine(),
                     issue.getMessage(),
                     issue.getSeverity(),
                     issue.getIsNew()

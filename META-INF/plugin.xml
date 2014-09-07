@@ -82,6 +82,11 @@
                 org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
             </implementation-class>
         </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.persistence.SonarRules
+            </implementation-class>
+        </component>
     </project-components>
 
     <module-components>
@@ -103,10 +108,9 @@
         <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
         <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRulesComponent"/>
         <projectService serviceImplementation="org.intellij.sonar.persistence.IndexComponent"/>
-
-        <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
       -->  <!--<globalInspection
                 implementationClass="org.intellij.sonar.analysis.SonarGlobalInspectionTool"/>-->
+        <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
         <codeInspection.InspectionExtension id="sonarqubeInspection"
                                             implementation="org.intellij.sonar.analysis.SonarQubeInspectionExtensionsFactory"/>
 

@@ -4,6 +4,8 @@ import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
 
 public class SonarIssue implements Comparable {
+  private String key;
+  private String ruleKey;
   private Integer line;
   private String message;
   private String severity;
@@ -12,7 +14,9 @@ public class SonarIssue implements Comparable {
   public SonarIssue() {
   }
 
-  public SonarIssue(Integer line, String message, String severity, Boolean isNew) {
+  public SonarIssue(String key, String ruleKey, Integer line, String message, String severity, Boolean isNew) {
+    this.key = key;
+    this.ruleKey = ruleKey;
     this.severity = severity;
     this.message = message;
     this.line = line;
@@ -22,6 +26,22 @@ public class SonarIssue implements Comparable {
   @Transient
   public String formattedMessage() {
     return String.format("[%s] %s", this.severity, this.message);
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
+  }
+
+  public String getRuleKey() {
+    return ruleKey;
+  }
+
+  public void setRuleKey(String ruleKey) {
+    this.ruleKey = ruleKey;
   }
 
   public Integer getLine() {

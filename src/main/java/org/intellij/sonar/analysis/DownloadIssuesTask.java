@@ -7,8 +7,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.index2.IssuesByFileIndexer;
@@ -25,11 +23,12 @@ import org.sonar.wsclient.services.Resource;
 import java.util.Map;
 import java.util.Set;
 
-public class DownloadIssuesTask extends Task.Backgroundable {
+public class DownloadIssuesTask implements Runnable {
   private final SonarServerConfig sonarServerConfig;
   private final Set<String> resourceKeys;
   private final ImmutableList<PsiFile> psiFiles;
   private final Map<String, ImmutableList<Issue>> downloadedIssuesByResourceKey = Maps.newConcurrentMap();
+  private final Project project;
 
   public static Optional<DownloadIssuesTask> from(Project project, Settings originSettings, ImmutableList<PsiFile> psiFiles) {
     final Settings settings = SettingsUtil.process(project, originSettings);
@@ -50,16 +49,14 @@ public class DownloadIssuesTask extends Task.Backgroundable {
   }
 
   public DownloadIssuesTask(Project project, SonarServerConfig sonarServerConfig, Set<String> resourceKeys, ImmutableList<PsiFile> psiFiles) {
-    super(project, "Download Sonar Issues");
+    this.project = project;
     this.sonarServerConfig = sonarServerConfig;
     this.resourceKeys = resourceKeys;
     this.psiFiles = psiFiles;
   }
 
   @Override
-  public void run(ProgressIndicator indicator) {
-    // download issues
-    System.out.println("run download issues " + this.toString());
+  public void run() {
     final SonarServer sonarServer = SonarServer.create(sonarServerConfig);
     for (String resourceKey : resourceKeys) {
       final ImmutableList<Issue> issues = sonarServer.getAllIssuesFor(resourceKey);
@@ -68,24 +65,16 @@ public class DownloadIssuesTask extends Task.Backgroundable {
     onSuccess();
   }
 
-  @Override
   public void onSuccess() {
-    super.onSuccess();
     for (Map.Entry<String, ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
       final String resourceKey = entry.getKey();
       final ImmutableList<Issue> issues = entry.getValue();
       final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resourceKey).withSonarServerIssues(issues).create();
-      final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(getProject());
+      final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
       if (indexComponent.isPresent()) {
         indexComponent.get().setIndex(index);
       }
     }
-  }
-
-  @Override
-  public void onCancel() {
-    super.onCancel();
-    //TODO: abort downloading
   }
 
   @Override

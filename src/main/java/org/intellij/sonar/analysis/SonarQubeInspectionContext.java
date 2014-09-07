@@ -28,6 +28,7 @@ import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.module.Module;
@@ -86,17 +87,17 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       }
     }
 
-    for (Settings settings : settingsFromScope) {
+    for (final Settings settings : settingsFromScope) {
       final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(project, settings, files);
       if (downloadTask.isPresent()) {
-        downloadTask.get().run(null);
+        ApplicationManager.getApplication().invokeAndWait(downloadTask.get(), ModalityState.NON_MODAL);
       }
     }
 
     for (Settings settings : settingsFromScope) {
       final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(project, settings);
       if (scriptTask.isPresent()) {
-        scriptTask.get().run(null);
+        ApplicationManager.getApplication().invokeAndWait(scriptTask.get(), ModalityState.NON_MODAL);
       }
     }
 
