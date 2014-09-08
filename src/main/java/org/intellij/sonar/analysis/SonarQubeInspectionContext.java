@@ -33,11 +33,13 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index2.IssuesByFileIndex;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
@@ -76,6 +78,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
 
     final Project project = context.getProject();
+    SonarConsole.get(project).clear();
     final Collection<Module> modules = Sets.newHashSet();
     final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
 
@@ -104,14 +107,28 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
       final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
       if (downloadTask.isPresent()) {
-        ApplicationManager.getApplication().invokeAndWait(downloadTask.get(), ModalityState.NON_MODAL);
+        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+          @Override
+          public void run() {
+            ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                downloadTask.get(), "Downloading Issues", true, project
+            );
+          }
+        }, ModalityState.NON_MODAL);
       }
     }
 
     for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
       final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
       if (scriptTask.isPresent()) {
-        ApplicationManager.getApplication().invokeAndWait(scriptTask.get(), ModalityState.NON_MODAL);
+        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+          @Override
+          public void run() {
+            ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                scriptTask.get(), "Running Local Analysis", true, project
+            );
+          }
+        }, ModalityState.NON_MODAL);
       }
     }
 

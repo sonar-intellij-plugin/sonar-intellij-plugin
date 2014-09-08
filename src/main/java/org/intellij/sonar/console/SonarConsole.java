@@ -67,6 +67,10 @@ public class SonarConsole extends AbstractProjectComponent {
     return DateTimeFormat.forPattern("HH:mm:ss.SSS").print(DateTime.now());
   }
 
+  public void clear() {
+    getConsoleView().clear();
+  }
+
   private synchronized ConsoleView getConsoleView() {
     if (this.consoleView == null) {
       this.consoleView = createConsoleView(myProject);

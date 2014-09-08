@@ -3,6 +3,8 @@ package org.intellij.sonar.analysis;
 import com.google.common.base.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.StreamGobbler;
@@ -32,12 +34,12 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   private final ImmutableList<PsiFile> psiFiles;
 
   public static Optional<RunLocalAnalysisScriptTask> from(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, ImmutableList<PsiFile> psiFiles) {
-    final Settings settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
-    final String scripName = settings.getLocalAnalysisScripName();
+    enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
+    final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
     final Optional<LocalAnalysisScript> localAnalysisScript = LocalAnalysisScripts.get(scripName);
     if (!localAnalysisScript.isPresent()) return Optional.absent();
     final String sourceCodeTemplate = localAnalysisScript.get().getSourceCode();
-    final String serverName = settings.getServerName();
+    final String serverName = enrichedSettings.settings.getServerName();
     final Optional<SonarServerConfig> serverConfiguration = SonarServers.get(serverName);
 
     final TemplateProcessor sourceCodeTemplateProcessor = TemplateProcessor.of(sourceCodeTemplate);
@@ -108,7 +110,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     sonarConsole.info("run: " + this.sourceCode);
     sonarConsole.info("report: " + this.pathToSonarReport);
 
-    Stopwatch stopwatch = new Stopwatch().start();
+    final Stopwatch stopwatch = new Stopwatch().start();
 
     final Process process;
     try {
@@ -117,21 +119,27 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       sonarConsole.error(Throwables.getStackTraceAsString(e));
       return;
     }
-    StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), sonarConsole, ERROR);
-    StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(), sonarConsole, INFO);
+    final StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), sonarConsole, ERROR);
+    final StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(), sonarConsole, INFO);
     errorGobbler.start();
     outputGobbler.start();
 
-    int exitCode = -1;
-    try {
-      exitCode = process.waitFor();
-    } catch (InterruptedException e) {
-      sonarConsole.error(Throwables.getStackTraceAsString(e));
+    final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+    indicator.setIndeterminate(true);
+
+    while (outputGobbler.isAlive()) {
+      if (indicator.isCanceled()) {
+        process.destroy();
+        break;
+      }
     }
+
+    int exitCode = process.exitValue();
 
     sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
 
     readIssuesFromSonarReport();
+
   }
 
   private void readIssuesFromSonarReport() {
