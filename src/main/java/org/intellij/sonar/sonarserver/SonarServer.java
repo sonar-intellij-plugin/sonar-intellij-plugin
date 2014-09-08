@@ -42,10 +42,9 @@ public class SonarServer {
   }
 
   private static final String VERSION_URL = "/api/server/version";
-  private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 3000;
-  private static final int READ_TIMEOUT_IN_MILLISECONDS = 6000;
+  private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 10000;
+  private static final int READ_TIMEOUT_IN_MILLISECONDS = 10000;
   private static final String USER_AGENT = "SonarQube Community Plugin";
-  public static final int READ_TIMEOUT = 5000;
 
   private final SonarServerConfig mySonarServerConfig;
   private final Sonar sonar;
@@ -67,7 +66,8 @@ public class SonarServer {
 
   private SonarClient createSonarClient(Host host) {
     SonarClient.Builder builder = SonarClient.builder()
-        .readTimeoutMilliseconds(READ_TIMEOUT)
+        .readTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS)
+        .connectTimeoutMilliseconds(CONNECT_TIMEOUT_IN_MILLISECONDS)
         .url(host.getHost())
         .login(host.getUsername())
         .password(host.getPassword());
@@ -170,36 +170,6 @@ public class SonarServer {
     }
   }
 
-  /*@NotNull
-  public List<Violation> getViolations(SonarSettingsBean sonarSettingsBean) {
-    if (null == sonarSettingsBean) {
-      return Collections.emptyList();
-    }
-    final Sonar sonar = createSonar(sonarSettingsBean);
-    ViolationQuery violationQuery = ViolationQuery
-        .createForResource(sonarSettingsBean.resource)
-        .setDepth(-1)
-        .setSeverities("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO");
-
-    return sonar.findAll(violationQuery);
-  }*/
-
-
-
-  /*public Sonar createSonar(SonarSettingsBean sonarSettingsBean) {
-    return createSonar(sonarSettingsBean.host, sonarSettingsBean.user, sonarSettingsBean.password);
-  }*/
-
-  /*public ImmutableSet<Rule> getRulesFor(SonarServerConfigurationBean configurationBean, Collection<String> sonarResources) {
-    Sonar sonar = createSonar(configurationBean);
-
-    for (String resource: sonarResources) {
-      final ResourceQuery query = ResourceQuery.createForMetrics(resource, "rule");
-      final Resource result = sonar.find(query);
-      System.out.println(result);
-    }
-  }*/
-
 // GET LANGUAGE AND RULES PROFILE FOR A SONAR RESOURCE
 //  https://sonar.corp.mobile.de/sonar/api/resources?format=json&resource=autoact:autoact-b2b-api_groovy&metrics=profile
 
@@ -223,7 +193,7 @@ public class SonarServer {
    */
   public Resource getResourceWithProfile(String resourceKey) {
     final ResourceQuery query = ResourceQuery.createForMetrics(resourceKey, "profile");
-    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
     return sonar.find(query);
   }
 
@@ -236,7 +206,7 @@ public class SonarServer {
    */
   public Profile getProfile(String language, String profileName) {
     ProfileQuery query = ProfileQuery.create(language, profileName);
-    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
     return sonar.find(query);
   }
 
@@ -248,7 +218,7 @@ public class SonarServer {
    */
   public List<org.sonar.wsclient.services.Rule> getRules(String language) {
     RuleQuery query = new RuleQuery(language);
-    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
     return sonar.findAll(query);
   }
 
@@ -262,51 +232,6 @@ public class SonarServer {
     final Rule rule = rules.show(key, null).rule;
     return rule;
   }
-
-
-
- /* public Collection<Rule> getAllRules(Collection<SonarSettingsBean> sonarSettingsBeans, @NotNull ProgressIndicator indicator) {
-    List<Rule> rulesResult = new LinkedList<Rule>();
-    Set<String> ruleKeys = new LinkedHashSet<String>();
-    for (SonarSettingsBean sonarSettingsBean : sonarSettingsBeans) {
-      indicator.checkCanceled();
-
-      final Sonar sonar = createSonar(sonarSettingsBean);
-
-      // for all SettingsBeans do:  find language
-      String resourceUrl = sonarSettingsBean.resource;
-      if (StringUtils.isNotBlank(resourceUrl)) {
-        ResourceQuery query = ResourceQuery.createForMetrics(resourceUrl, "language");
-        List<Resource> resources = sonar.findAll(query);
-        if (null != resources && !resources.isEmpty()) {
-          for (Resource resource : resources) {
-            indicator.checkCanceled();
-
-            // find rule
-            String language = resource.getLanguage();
-            if (StringUtils.isNotBlank(language)) {
-              RuleQuery ruleQuery = new RuleQuery(language);
-              List<Rule> rules = sonar.findAll(ruleQuery);
-              if (null != rules) {
-                for (Rule rule : rules) {
-                  indicator.checkCanceled();
-
-                  if (!ruleKeys.contains(rule.getKey())) {
-                    ruleKeys.add(rule.getKey());
-                    rulesResult.add(rule);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    // return all collected rules
-    return rulesResult;
-  }
-*/
-
 
   public List<Resource> getAllProjectsAndModules() {
     List<Resource> allResources = new LinkedList<Resource>();
@@ -328,7 +253,7 @@ public class SonarServer {
   public List<Resource> getAllProjects(Sonar sonar) {
     ResourceQuery query = new ResourceQuery();
     query.setQualifiers(Resource.QUALIFIER_PROJECT);
-    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
     return sonar.findAll(query);
   }
 
@@ -336,7 +261,7 @@ public class SonarServer {
     ResourceQuery query = new ResourceQuery(projectResourceId);
     query.setDepth(-1);
     query.setQualifiers(Resource.QUALIFIER_MODULE);
-    query.setTimeoutMilliseconds(READ_TIMEOUT);
+    query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
     return sonar.findAll(query);
   }
 
