@@ -82,29 +82,6 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   public void run() {
-    // execute local analysis script
-
-//    script execution needs
-//        working dir
-//        PROJECT or MODULE dir
-//    $WORKING_DIR$ = $PROJECT_DIR$ or $MODULE_DIR$/..
-//    mvn sonar:sonar
-//        -DskipTests=true
-//        -Dsonar.language=java
-//        -Dsonar.analysis.mode=incremental
-//        -Dsonar.issuesReport.html.enable=true
-//        -Dsonar.host.url=$SONAR_HOST_URL$=https://sonar.corp.mobile.de/sonar -pl $MODULE_DIR_NAME$=dealer-admin
-
-//    /Users/omayevskiy/mobile_workspace/mobile-platform/dealer-admin/target/sonar/sonar-report.json
-//    $MODULE_DIR$/target/sonar/sonar-report.json
-//    $PROJECT_DIR$/target/sonar/sonar-report.json
-//    $WORKING_DIR$/target/sonar/sonar-report.json
-
-//    $WORKING_DIR$ = $MODULE_DIR$
-//    sonar-runner -Dsonar.analysis.mode=incremental -Dsonar.host.url=$SONAR_HOST_URL$=$https://sonar.corp.mobile.de/sonar
-//    /Users/omayevskiy/mobile_workspace/mobile-platform/mobile-static-resources/.sonar/sonar-report.json
-//    $MODULE_DIR$/.sonar-report.json
-//    $WORKING_DIR$/.sonar/sonar-report.json
 
     sonarConsole.info("working dir: " + this.workingDir.getPath());
     sonarConsole.info("run: " + this.sourceCode);
