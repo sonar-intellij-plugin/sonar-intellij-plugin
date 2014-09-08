@@ -12,7 +12,7 @@ public class Settings {
 
   private Collection<Resource> resources = new ArrayList<Resource>();
 
-  private String localAnalysisScripName = LocalAnalysisScripts.NO_LOCAL_ANALYSIS;
+  private String localAnalysisScripName;
 
   public Settings() {}
 

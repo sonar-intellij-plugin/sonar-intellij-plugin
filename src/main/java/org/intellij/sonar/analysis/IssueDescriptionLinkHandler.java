@@ -52,7 +52,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       final SonarRules sonarRulesState = sonarRules.get().getState();
       if (sonarRulesState != null) {
         final Rule rule = sonarRulesState.getSonarRulesByRuleKey().get(issue.get().getRuleKey());
-        if (rule != null && !rule.isEmpty()) return rule.getHtmlDesc();
+        if (rule != null && !rule.isEmpty()) return rule.getDesc();
       }
     }
 
@@ -81,6 +81,6 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       }
     }
 
-    return rule.getHtmlDesc();
+    return rule.getDesc();
   }
 }

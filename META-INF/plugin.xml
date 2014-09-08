@@ -44,9 +44,6 @@
         </component>
         <!--
         <component>
-            <implementation-class>org.intellij.sonar.console.SonarConsole</implementation-class>
-        </component>
-        <component>
             <implementation-class>
                 org.intellij.sonar.FileChangeListener
             </implementation-class>
@@ -85,6 +82,11 @@
         <component>
             <implementation-class>
                 org.intellij.sonar.persistence.SonarRules
+            </implementation-class>
+        </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.console.SonarConsole
             </implementation-class>
         </component>
     </project-components>

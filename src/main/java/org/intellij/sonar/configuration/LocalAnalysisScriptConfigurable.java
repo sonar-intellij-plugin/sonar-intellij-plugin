@@ -107,7 +107,7 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
                 Set<VirtualFile> newFilesSelection = ImmutableSet.<VirtualFile>builder()
                     .addAll(currentFiles)
                     .addAll(selectedFiles)
-                    .build();
+                    .process();
                 mySourcePathsTable.setModelAndUpdateColumns(
                     new ListTableModel<VirtualFile>(
                         new ColumnInfo[]{SOURCE_PATH_COLUMN},

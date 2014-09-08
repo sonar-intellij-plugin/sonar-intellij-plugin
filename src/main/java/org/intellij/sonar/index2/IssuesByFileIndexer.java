@@ -5,7 +5,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.sonarreport.data.Issue;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
@@ -16,8 +15,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class IssuesByFileIndexer {
-  private final static Logger LOG = Logger.getInstance(IssuesByFileIndexer.class);
-
   private ImmutableList<Issue> issues;
   private Map<String, Issue> issuesByKey = new ConcurrentHashMap<String, Issue>();
   private final ImmutableList<PsiFile> files;
@@ -81,7 +78,7 @@ public class IssuesByFileIndexer {
           }
         }
         final ImmutableSet<SonarIssue> sonarIssues = entriesBuilder.build();
-        index.put(fullFilePath, sonarIssues);
+        if (!sonarIssues.isEmpty()) index.put(fullFilePath, sonarIssues);
       }
 
     return index;

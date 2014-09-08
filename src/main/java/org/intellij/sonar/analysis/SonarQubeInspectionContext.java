@@ -57,6 +57,20 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   public Key<SonarQubeInspectionContext> getID() {
     return KEY;
   }
+  //TODO: additional to settings we need the module information for the local script task
+
+  public static class EnrichedSettings {
+    public Settings settings;
+    public Project project;
+    public Module module;
+
+    public EnrichedSettings(Settings settings, Project project, Module module) {
+      this.settings = settings;
+      this.project = project;
+      this.module = module;
+
+    }
+  }
 
   @Override
   public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
@@ -73,29 +87,29 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
         modules.add(module);
       }
     });
-    final ImmutableList<PsiFile> files = filesBuilder.build();
-    IssuesByFileIndex.clearIndexFor(files);
+    final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
+    IssuesByFileIndex.clearIndexFor(psiFiles);
 
-    Set<Settings> settingsFromScope = Sets.newHashSet();
+    Set<EnrichedSettings> enrichedSettingsFromScope = Sets.newHashSet();
     if (modules.isEmpty()) {
       final Settings settings = ProjectSettings.getInstance(project).getState();
-      settingsFromScope.add(settings);
+      enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, null));
     } else {
       for (Module module : modules) {
         final Settings settings = ModuleSettings.getInstance(module).getState();
-        settingsFromScope.add(settings);
+        enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, module));
       }
     }
 
-    for (final Settings settings : settingsFromScope) {
-      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(project, settings, files);
+    for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
       if (downloadTask.isPresent()) {
         ApplicationManager.getApplication().invokeAndWait(downloadTask.get(), ModalityState.NON_MODAL);
       }
     }
 
-    for (Settings settings : settingsFromScope) {
-      final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(project, settings);
+    for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+      final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
       if (scriptTask.isPresent()) {
         ApplicationManager.getApplication().invokeAndWait(scriptTask.get(), ModalityState.NON_MODAL);
       }

@@ -7,7 +7,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.index2.IssuesByFileIndexer;
 import org.intellij.sonar.index2.SonarIssue;
@@ -28,10 +27,10 @@ public class DownloadIssuesTask implements Runnable {
   private final Set<String> resourceKeys;
   private final ImmutableList<PsiFile> psiFiles;
   private final Map<String, ImmutableList<Issue>> downloadedIssuesByResourceKey = Maps.newConcurrentMap();
-  private final Project project;
+  private final SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
 
-  public static Optional<DownloadIssuesTask> from(Project project, Settings originSettings, ImmutableList<PsiFile> psiFiles) {
-    final Settings settings = SettingsUtil.process(project, originSettings);
+  public static Optional<DownloadIssuesTask> from(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, ImmutableList<PsiFile> psiFiles) {
+    final Settings settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
     final Optional<SonarServerConfig> c = SonarServers.get(settings.getServerName());
     if (!c.isPresent()) return Optional.absent();
     final ImmutableSet<String> resourceKeys = FluentIterable.from(settings.getResources()).
@@ -43,13 +42,13 @@ public class DownloadIssuesTask implements Runnable {
         }).toSet();
 
     return Optional.of(new DownloadIssuesTask(
-        project,
+        enrichedSettings,
         c.get(),
         resourceKeys, psiFiles));
   }
 
-  public DownloadIssuesTask(Project project, SonarServerConfig sonarServerConfig, Set<String> resourceKeys, ImmutableList<PsiFile> psiFiles) {
-    this.project = project;
+  public DownloadIssuesTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, SonarServerConfig sonarServerConfig, Set<String> resourceKeys, ImmutableList<PsiFile> psiFiles) {
+    this.enrichedSettings = enrichedSettings;
     this.sonarServerConfig = sonarServerConfig;
     this.resourceKeys = resourceKeys;
     this.psiFiles = psiFiles;
@@ -70,7 +69,7 @@ public class DownloadIssuesTask implements Runnable {
       final String resourceKey = entry.getKey();
       final ImmutableList<Issue> issues = entry.getValue();
       final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resourceKey).withSonarServerIssues(issues).create();
-      final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+      final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
       if (indexComponent.isPresent()) {
         indexComponent.get().setIndex(index);
       }

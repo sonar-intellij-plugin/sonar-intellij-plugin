@@ -5,6 +5,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
+import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +25,10 @@ public class ModuleSettings implements PersistentStateComponent<Settings>, Modul
   @Nullable
   @Override
   public Settings getState() {
+    if (settings != null) {
+      if (StringUtil.isEmpty(settings.getServerName())) settings.setServerName(SonarServers.PROJECT);
+      if (StringUtil.isEmpty(settings.getLocalAnalysisScripName())) settings.setLocalAnalysisScripName(LocalAnalysisScripts.PROJECT);
+    }
     return settings;
   }
 
