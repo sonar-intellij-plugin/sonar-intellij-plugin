@@ -3,6 +3,8 @@ package org.intellij.sonar.sonarserver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
@@ -274,6 +276,7 @@ public class SonarServer {
   }
 
   public ImmutableList<Issue> getAllIssuesFor(String resourceKey) {
+    ProgressManager.getInstance().getProgressIndicator().setFraction(0.01);
     final ImmutableList.Builder<Issue> builder = ImmutableList.builder();
     IssueQuery query = IssueQuery.create()
         .componentRoots(resourceKey)
@@ -281,12 +284,18 @@ public class SonarServer {
         .pageSize(-1);
     Issues issues = sonarClient.issueClient().find(query);
     builder.addAll(issues.list());
-    for (int i=2; i <= issues.paging().pages(); i++) {
-       query = IssueQuery.create()
+    for (int pageIndex = 2; pageIndex <= issues.paging().pages(); pageIndex++) {
+      final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
+      if (progressIndicator.isCanceled())
+        break;
+      progressIndicator.setText2(pageIndex + " / " + issues.paging().pages());
+      progressIndicator.setFraction(pageIndex * 1.0 / issues.paging().pages());
+
+      query = IssueQuery.create()
           .componentRoots(resourceKey)
           .resolved(false)
           .pageSize(-1)
-          .pageIndex(i);
+          .pageIndex(pageIndex);
       issues = sonarClient.issueClient().find(query);
       builder.addAll(issues.list());
     }

@@ -83,6 +83,8 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   public void run() {
 
+    ProgressManager.getInstance().getProgressIndicator().setText(this.workingDir.getName());
+    ProgressManager.getInstance().getProgressIndicator().setText2(this.sourceCode);
     sonarConsole.info("working dir: " + this.workingDir.getPath());
     sonarConsole.info("run: " + this.sourceCode);
     sonarConsole.info("report: " + this.pathToSonarReport);
@@ -111,11 +113,13 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       }
     }
 
-    int exitCode = process.exitValue();
-
-    sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
-
-    readIssuesFromSonarReport();
+    try {
+      int exitCode = process.exitValue();
+      sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
+      readIssuesFromSonarReport();
+    } catch (IllegalThreadStateException ignore) {
+      // do nothing, if the script execution is aborted
+    }
 
   }
 

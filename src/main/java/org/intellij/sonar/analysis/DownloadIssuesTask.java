@@ -7,7 +7,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index2.IssuesByFileIndexer;
 import org.intellij.sonar.index2.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
@@ -28,6 +30,7 @@ public class DownloadIssuesTask implements Runnable {
   private final ImmutableList<PsiFile> psiFiles;
   private final Map<String, ImmutableList<Issue>> downloadedIssuesByResourceKey = Maps.newConcurrentMap();
   private final SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
+  private final SonarConsole sonarConsole;
 
   public static Optional<DownloadIssuesTask> from(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, ImmutableList<PsiFile> psiFiles) {
     final Settings settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
@@ -52,12 +55,16 @@ public class DownloadIssuesTask implements Runnable {
     this.sonarServerConfig = sonarServerConfig;
     this.resourceKeys = resourceKeys;
     this.psiFiles = psiFiles;
+    this.sonarConsole = SonarConsole.get(enrichedSettings.project);
   }
 
   @Override
   public void run() {
+    sonarConsole.info("Downloading issues");
     final SonarServer sonarServer = SonarServer.create(sonarServerConfig);
     for (String resourceKey : resourceKeys) {
+      sonarConsole.info(resourceKey);
+      ProgressManager.getInstance().getProgressIndicator().setText(resourceKey);
       final ImmutableList<Issue> issues = sonarServer.getAllIssuesFor(resourceKey);
       downloadedIssuesByResourceKey.put(resourceKey, issues);
     }
