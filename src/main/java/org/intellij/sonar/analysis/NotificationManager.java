@@ -1,5 +1,7 @@
 package org.intellij.sonar.analysis;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.intellij.notification.Notification;
@@ -7,30 +9,38 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.index.IssuesIndexEntry;
-import org.intellij.sonar.index.IssuesIndexKey;
+import org.intellij.sonar.index2.SonarIssue;
 
 import java.util.Map;
 import java.util.Set;
 
 public class NotificationManager extends AbstractProjectComponent {
 
+  public static NotificationManager getInstance(Project project) {
+    return project.getComponent(NotificationManager.class);
+  }
+
   protected NotificationManager(Project project) {
     super(project);
   }
 
-  public void showNotificationFor(Map<IssuesIndexKey, Set<IssuesIndexEntry>> issuesIndex) {
+  public void showNotificationFor(Map<String, Set<SonarIssue>> issuesIndex) {
 
-    final int newIssuesCount = FluentIterable.from(issuesIndex.keySet())
-        .filter(new Predicate<IssuesIndexKey>() {
+    final Optional<SonarIssue> anyNewIssues = FluentIterable.from(issuesIndex.values())
+        .transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
           @Override
-          public boolean apply(IssuesIndexKey issuesIndexKey) {
-            return issuesIndexKey.getIsNew();
+          public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
+            return sonarIssues;
           }
-        }).toSet().size();
+        }).firstMatch(new Predicate<SonarIssue>() {
+          @Override
+          public boolean apply(SonarIssue sonarIssue) {
+            return sonarIssue.getIsNew();
+          }
+        });
 
-    if (newIssuesCount > 0) {
-      String errorText = String.format("Found %d new sonar issues", newIssuesCount);
+    if (anyNewIssues.isPresent()) {
+      String errorText = String.format("Found new sonar issues");
       Notifications.Bus.notify(new Notification("Sonar", "Sonar", errorText, NotificationType.ERROR), myProject);
     } else {
       Notifications.Bus.notify(new Notification("Sonar", "Sonar", "No new sonar issues", NotificationType.INFORMATION), myProject);

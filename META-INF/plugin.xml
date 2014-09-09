@@ -63,11 +63,11 @@
                 org.intellij.sonar.DocumentChangeListener
             </implementation-class>
         </component>
-        <!--<component>
+        <component>
             <implementation-class>
                 org.intellij.sonar.analysis.NotificationManager
             </implementation-class>
-        </component>-->
+        </component>
         <!--
         <component>
             <implementation-class>

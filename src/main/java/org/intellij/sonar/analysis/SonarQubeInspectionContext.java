@@ -41,6 +41,7 @@ import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
@@ -138,11 +139,16 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   public void performPostRunActivities(@NotNull List<InspectionToolWrapper> inspections, @NotNull GlobalInspectionContext context) {
     DocumentChangeListener.CHANGED_FILES.clear();
 
-    removeAllHighlighters();
+    final Project project = context.getProject();
+    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+    if (indexComponent.isPresent()) {
+      NotificationManager.getInstance(project)
+          .showNotificationFor(indexComponent.get().getIndex());
+    }
 
     // rerun external annotator and refresh highlighters in editor
-    Project p = context.getProject();
-    DaemonCodeAnalyzer.getInstance(p).restart();
+    removeAllHighlighters();
+    DaemonCodeAnalyzer.getInstance(project).restart();
   }
 
   private static void removeAllHighlighters() {
