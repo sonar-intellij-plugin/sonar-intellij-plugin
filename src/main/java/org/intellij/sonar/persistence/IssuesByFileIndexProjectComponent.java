@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.index.SonarIssue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

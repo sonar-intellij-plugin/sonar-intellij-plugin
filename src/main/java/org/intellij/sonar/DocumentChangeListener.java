@@ -17,7 +17,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
-import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.util.Finders;
 

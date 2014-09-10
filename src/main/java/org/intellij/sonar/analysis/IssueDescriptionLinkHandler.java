@@ -10,7 +10,7 @@ import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarserver.Rule;
 import org.intellij.sonar.sonarserver.SonarServer;

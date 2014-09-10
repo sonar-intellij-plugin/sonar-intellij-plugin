@@ -1,0 +1,222 @@
+{"maxResultsReached": true, "paging": {
+    "pageIndex": 1,
+    "pageSize": 10,
+    "total": 10000,
+    "pages": 1000
+}, "issues": [
+    {
+        "key": "b4396866-bbfb-4d8a-a3b8-32f42c61d0eb",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ComparableRelational",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'comparable' must be private and have accessor methods.",
+        "line": 12,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "14b9156c-4084-434d-9b75-4eee6dc67888",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'args' must be private and have accessor methods.",
+        "line": 35,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "4a46526e-bd49-4403-9eb5-ad0b1a58650e",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'joiner' must be private and have accessor methods.",
+        "line": 103,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "4b8fc6bd-33a9-4986-b977-efc4d74730c5",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'message' must be private and have accessor methods.",
+        "line": 32,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "aa95574c-c8dd-46c0-bd5d-f75878f4503d",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'field' must be private and have accessor methods.",
+        "line": 29,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "b3a561f3-8c07-411f-bfd2-76defc343450",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'path' must be private and have accessor methods.",
+        "line": 105,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "c27ebf8e-698f-479e-ad6e-9bc0f5a04e14",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'violations' must be private and have accessor methods.",
+        "line": 107,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "0affa6cb-0719-49a9-9185-92fa18e26fb6",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.EnvkvValidation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "pmd:CyclomaticComplexity",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "The method 'validate' has a Cyclomatic Complexity of 10.",
+        "line": 33,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 3,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "45e3139a-fd1c-40b2-bb40-5e378c0e1dde",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.EnvkvValidation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Variable 'ad' must be private and have accessor methods.",
+        "line": 15,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 1,
+            "minutes": 0
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    },
+    {
+        "key": "707ed422-7c67-4bc9-af95-edab37ac5414",
+        "component": "de.mobile:mobile-validation:de.mobile.domain.validation.EnvkvValidation",
+        "project": "de.mobile:mobile-multimodule-pom",
+        "rule": "checkstyle:com.puppycrawl.tools.checkstyle.checks.metrics.BooleanExpressionComplexityCheck",
+        "status": "OPEN",
+        "severity": "MAJOR",
+        "message": "Boolean expression complexity is 4 (max allowed is 3).",
+        "line": 172,
+        "technicalDebt": {
+            "days": 0,
+            "hours": 0,
+            "minutes": 30
+        },
+        "creationDate": "2013-11-20T18:28:49+0100",
+        "updateDate": "2014-02-06T22:17:02+0100"
+    }
+], "components": [
+    {
+        "key": "de.mobile:mobile-validation:de.mobile.domain.validation.EnvkvValidation",
+        "qualifier": "CLA",
+        "name": "EnvkvValidation",
+        "longName": "de.mobile.domain.validation.EnvkvValidation"
+    },
+    {
+        "key": "de.mobile:mobile-validation:de.mobile.domain.validation.ConstraintViolation",
+        "qualifier": "CLA",
+        "name": "ConstraintViolation",
+        "longName": "de.mobile.domain.validation.ConstraintViolation"
+    },
+    {
+        "key": "de.mobile:mobile-validation:de.mobile.domain.validation.ComparableRelational",
+        "qualifier": "CLA",
+        "name": "ComparableRelational",
+        "longName": "de.mobile.domain.validation.ComparableRelational"
+    }
+], "projects": [
+    {
+        "key": "de.mobile:mobile-multimodule-pom",
+        "qualifier": "TRK",
+        "name": "Master Build POM / mobile world",
+        "longName": "Master Build POM / mobile world"
+    }
+], "rules": [
+    {
+        "key": "checkstyle:com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck",
+        "name": "Visibility Modifier",
+        "desc": "Checks visibility of class members. Only static final members may be public; other class members must be private unless property protectedAllowed or packageAllowed is set.\n\n<p>\nThis rule is deprecated, use {rule:squid:ClassVariableVisibilityCheck} instead.\n</p>",
+        "status": "DEPRECATED"
+    },
+    {
+        "key": "pmd:CyclomaticComplexity",
+        "name": "Code size - cyclomatic complexity",
+        "desc": "<p>\nComplexity is determined by the number of decision points in a method plus one for the method entry. The decision points are 'if', 'while', 'for', and 'case labels'. Generally, 1-4 is low complexity, 5-7 indicates moderate complexity, 8-10 is high complexity, and 11+ is very high complexity.\n</p>\n\n<p>\nThis rule is deprecated, use {rule:squid:MethodCyclomaticComplexity} or {rule:squid:ClassCyclomaticComplexity} instead.\n</p>",
+        "status": "DEPRECATED"
+    },
+    {
+        "key": "checkstyle:com.puppycrawl.tools.checkstyle.checks.metrics.BooleanExpressionComplexityCheck",
+        "name": "Boolean Expression Complexity",
+        "desc": "Restricts nested boolean operators (&&, || and ^) to a specified depth (default = 3).\n\n<p>\nThis rule is deprecated, use {rule:squid:S1067} instead.\n</p>",
+        "status": "DEPRECATED"
+    }
+], "users": []}

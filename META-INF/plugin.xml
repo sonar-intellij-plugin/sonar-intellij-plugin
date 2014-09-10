@@ -117,7 +117,7 @@
                                             implementation="org.intellij.sonar.analysis.SonarQubeInspectionExtensionsFactory"/>
 
         <inspectionToolProvider
-                implementation="org.intellij.sonar.InspectionToolProviderOne" />
+                implementation="org.intellij.sonar.SonarInspectionToolProvider" />
         <codeInsight.linkHandler id="issueDescriptionLinkHandler" prefix="#sonarissue/" handlerClass="org.intellij.sonar.analysis.IssueDescriptionLinkHandler" />
     </extensions>
 

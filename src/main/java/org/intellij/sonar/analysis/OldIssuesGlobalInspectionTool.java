@@ -1,6 +1,6 @@
 package org.intellij.sonar.analysis;
 
-import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.index.SonarIssue;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

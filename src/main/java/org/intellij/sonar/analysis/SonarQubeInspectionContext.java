@@ -40,7 +40,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
-import org.intellij.sonar.index2.IssuesByFileIndex;
+import org.intellij.sonar.index.IssuesByFileIndex;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;

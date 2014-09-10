@@ -9,7 +9,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.index2.SonarIssue;
+import org.intellij.sonar.index.SonarIssue;
 
 import java.util.Map;
 import java.util.Set;

@@ -78,9 +78,6 @@ public class Finders {
     }
 
     return Optional.absent();
-//    final HighlighterLineFinder finder = new HighlighterLineFinder(editor, line - 1);
-//    ApplicationManager.getApplication().invokeLater(finder);
-//    return fromNullable(finder.getFoundHighlighter());
   }
 
   @NotNull

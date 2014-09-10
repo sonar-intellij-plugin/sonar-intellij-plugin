@@ -1,4 +1,4 @@
-package org.intellij.sonar.index2;
+package org.intellij.sonar.index;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;

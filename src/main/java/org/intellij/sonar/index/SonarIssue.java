@@ -1,4 +1,4 @@
-package org.intellij.sonar.index2;
+package org.intellij.sonar.index;
 
 import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
