@@ -1,5 +1,6 @@
 package org.intellij.sonar.configuration.module;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.diagnostic.Logger;
@@ -8,6 +9,10 @@ import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.vfs.VirtualFile;
+import org.intellij.sonar.configuration.WorkingDirs;
+import org.intellij.sonar.configuration.partials.AlternativeWorkingDirActionListener;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.Settings;
@@ -21,7 +26,11 @@ import org.sonar.wsclient.services.Resource;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
+
+import static org.intellij.sonar.util.UIUtil.makeObj;
 
 
 public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
@@ -42,6 +51,9 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   private JButton myAddLocalAnalysisScriptButton;
   private JButton myEditLocalAnalysisScriptButton;
   private JButton myRemoveLocalAnalysisScriptButton;
+  private JComboBox myWorkingDirComboBox;
+  private JCheckBox myUseAlternativeWorkingDirCheckBox;
+  private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
 
   public ModuleSettingsConfigurable(Module module) {
     this.myModule = module;
@@ -73,7 +85,37 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     mySonarServersView.init();
     myLocalAnalysisScriptView.init();
 
+    initWorkingDir();
+    initAlternativeWorkingDir();
+
     return myRootJPanel;
+  }
+
+  private void initWorkingDir() {
+    myWorkingDirComboBox.removeAllItems();
+    myWorkingDirComboBox.addItem(makeObj(WorkingDirs.MODULE));
+    myWorkingDirComboBox.addItem(makeObj(WorkingDirs.PROJECT));
+  }
+
+  private void initAlternativeWorkingDir() {
+    final VirtualFile moduleFile = myModule.getModuleFile();
+    final VirtualFile projectBaseDir = myProject.getBaseDir();
+    final VirtualFile dirToSelect = moduleFile != null ? moduleFile.getParent() : projectBaseDir;
+    myAlternativeWorkingDirTextFieldWithBrowseButton.addActionListener(new AlternativeWorkingDirActionListener(
+        myProject, myAlternativeWorkingDirTextFieldWithBrowseButton, dirToSelect));
+
+    processAlternativeDirSelections();
+    myUseAlternativeWorkingDirCheckBox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        processAlternativeDirSelections();
+      }
+    });
+  }
+
+  private void processAlternativeDirSelections() {
+    myAlternativeWorkingDirTextFieldWithBrowseButton.setEnabled(myUseAlternativeWorkingDirCheckBox.isSelected());
+    myWorkingDirComboBox.setEnabled(!myUseAlternativeWorkingDirCheckBox.isSelected());
   }
 
   @Override
@@ -140,7 +182,10 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     return Settings.of(
         mySonarServersComboBox.getSelectedItem().toString(),
         ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()),
-        myLocalAnalysisScriptComboBox.getSelectedItem().toString()
+        myLocalAnalysisScriptComboBox.getSelectedItem().toString(),
+        myWorkingDirComboBox.getSelectedItem().toString(),
+        myAlternativeWorkingDirTextFieldWithBrowseButton.getText(),
+        myUseAlternativeWorkingDirCheckBox.isSelected()
     );
   }
 
@@ -155,6 +200,12 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
     final String localAnalysisScripName = LocalAnalysisScriptsUtil.withDefaultForModule(settings.getLocalAnalysisScripName());
     UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, localAnalysisScripName);
+
+    UIUtil.selectComboBoxItem(myWorkingDirComboBox, WorkingDirs.withDefaultForModule(settings.getWorkingDirSelection()));
+    myAlternativeWorkingDirTextFieldWithBrowseButton.setText(settings.getAlternativeWorkingDirPath());
+    myUseAlternativeWorkingDirCheckBox.setSelected(Optional.fromNullable(settings.getUseAlternativeWorkingDir()).or(false));
+
+    processAlternativeDirSelections();
   }
 
 }

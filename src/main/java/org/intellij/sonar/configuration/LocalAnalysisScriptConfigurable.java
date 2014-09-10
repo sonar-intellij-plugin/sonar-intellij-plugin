@@ -89,47 +89,6 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
     return myRootPanel;
   }
 
-  /*private JComponent createScriptSourcePathsTable() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(mySourcePathsTable, null).
-        setAddAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            final VirtualFile projectBaseDir = myProject.getBaseDir();
-
-            FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false, true, false, false, false, true);
-            fileDescriptor.setShowFileSystemRoots(true);
-            fileDescriptor.setTitle("Configure Path");
-            fileDescriptor.setDescription("Configure sonar source path for incremental analysis script");
-            FileChooser.chooseFiles(fileDescriptor, myProject, projectBaseDir, new Consumer<java.util.List<VirtualFile>>() {
-              @Override
-              public void consume(final java.util.List<VirtualFile> selectedFiles) {
-                Set<VirtualFile> currentFiles = ImmutableSet.copyOf(mySourcePathsTable.getItems());
-                Set<VirtualFile> newFilesSelection = ImmutableSet.<VirtualFile>builder()
-                    .addAll(currentFiles)
-                    .addAll(selectedFiles)
-                    .process();
-                mySourcePathsTable.setModelAndUpdateColumns(
-                    new ListTableModel<VirtualFile>(
-                        new ColumnInfo[]{SOURCE_PATH_COLUMN},
-                        Lists.newArrayList(newFilesSelection),
-                        0));
-              }
-            });
-          }
-        }).
-        setRemoveAction(new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            TableUtil.removeSelectedItems(mySourcePathsTable);
-          }
-        }).
-        disableUpDownActions().
-        createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1, 100));
-    return panelForTable;
-  }*/
-
-
   public LocalAnalysisScript toLocalAnalysisScript() {
     return LocalAnalysisScript.of(
         myNameTextField.getText(),
