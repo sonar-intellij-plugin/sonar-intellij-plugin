@@ -8,7 +8,6 @@ import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.configuration.check.ConfigurationCheckActionListener;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.Settings;
@@ -33,7 +32,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   private final Module myModule;
   private final Project myProject;
   private final ModuleSonarServersView mySonarServersView;
-  private JButton myCheckConfigurationButton;
   private JPanel myRootJPanel;
   private JPanel myPanelForSonarResources;
   private JComboBox mySonarServersComboBox;
@@ -75,7 +73,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     mySonarServersView.init();
     myLocalAnalysisScriptView.init();
 
-    addActionListenerForCheckConfigurationButton();
     return myRootJPanel;
   }
 
@@ -158,17 +155,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
     final String localAnalysisScripName = LocalAnalysisScriptsUtil.withDefaultForModule(settings.getLocalAnalysisScripName());
     UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, localAnalysisScripName);
-  }
-
-  private void addActionListenerForCheckConfigurationButton() {
-    myCheckConfigurationButton.addActionListener(
-        new ConfigurationCheckActionListener(
-            mySonarServersView,
-            myModule.getProject(),
-            mySonarResourcesTableView,
-            myLocalAnalysisScriptView
-        )
-    );
   }
 
 }
