@@ -41,7 +41,7 @@ public class NotificationManager extends AbstractProjectComponent {
 
     if (anyNewIssues.isPresent()) {
       String errorText = String.format("Found new sonar issues");
-      Notifications.Bus.notify(new Notification("Sonar", "Sonar", errorText, NotificationType.ERROR), myProject);
+      Notifications.Bus.notify(new Notification("Sonar", "Sonar", errorText, NotificationType.WARNING), myProject);
     } else {
       Notifications.Bus.notify(new Notification("Sonar", "Sonar", "No new sonar issues", NotificationType.INFORMATION), myProject);
     }
