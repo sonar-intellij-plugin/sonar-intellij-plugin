@@ -12,13 +12,52 @@ Usage
 --------------------
 
 At first you need to configure your sonar server connection. You can use a remote server or a local one on your machine, depends on how you work with sonar.
-For a project configuration:
+ 
+Configuration:
 
-Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube` and test your configuration. 
+Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`. 
 ![alt text][projectConfiguration]
-You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the dashboard of SonarQube, click on "Projects" in the menu so a dropdown menu with all configured projects appears. When you hover the mouse arrow over a project name in this dropdown menu, you can see the project keys in the URL. For Maven projects it mostly consists of "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
+Specify a sonar server `Add -> Name + Host url + Credentials(optional)`
+Select the sonar resource `+ -> Download resources`
 
-**NOTE: We will simplify the configuration in a future version.**
+Local analysis:
+
+This is the tricky part of the plugin. The plugin starts an external script for local analysis. 
+To configure your project in the right way three things are important to know.
+The working directory: the root directory of the script execution
+The source code of the script: the script which executes the sonar-runner, maven, gradle, ant or any other tool which runs sonar-runner behind the scences.
+The path to the sonar-report.json: sonar-runner produces an report in json format, which contains issues and new issues in your project. The plugin needs to know the location of this file. It reads the content and shows in the IDE.
+
+Example:
+name: java
+working dir: <PROJECT>
+source code: mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=incremental  -Dsonar.host.url=$SONAR_HOST_URL
+path to sonar-report.json: $WORKING_DIR/target/sonar/sonar-report.json
+
+The plugin will do:
+go to the <PROJECT> dir: cd /your/project/
+execute mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=incremental  -Dsonar.host.url=http://your.url
+read sonar issues from: /your/project/target/sonar/sonar-report.json
+
+The plugin replaces special template variables in the source code and the path to sonar-report.json.
+
+$WORKING_DIR: the root directory of script execution, e.g. /my/workingdir
+$WORKING_DIR_NAME : the name of the root directory e.g. project
+
+$MODULE_NAME: the IntelliJ module name, e.g. "my module"
+$MODULE_BASE_DIR: the directory of the module file, e.g. /your/project/module
+$MODULE_BASE_DIR_NAME: the name of the module directory, e.g. module
+
+$PROJECT_NAME: the IntelliJ project name, e.g. "my project"
+$PROJECT_BASE_DIR: the root directory of the project, e.g. /your/project
+$PROJECT_BASE_DIR_NAME: the name of the project directory, e.g. project
+
+$SONAR_HOST_URL: the sonar host url specified by the sonar server configuration, e.g. http://localhost:9000
+$SONAR_SERVER_NAME: the sonar server name specified by the configuraion, e.g. "my sonar"
+
+You can also find this list inside the IDE.
+
+The module configuration is analog, with the only difference that you can use the special setting <PROJECT>.
 
 [projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
 
