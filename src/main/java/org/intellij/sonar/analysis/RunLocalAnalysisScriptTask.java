@@ -6,6 +6,7 @@ import com.google.common.io.Files;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
+import org.intellij.sonar.configuration.WorkingDirs;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.StreamGobbler;
 import org.intellij.sonar.index2.IssuesByFileIndexer;
@@ -61,10 +62,21 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     final String pathToSonarReport = pathToSonarReportTemplateProcessor.process();
 
     File workingDir;
-    if (enrichedSettings.module != null && enrichedSettings.module.getModuleFile() != null) {
-      workingDir = new File(enrichedSettings.module.getModuleFile().getParent().getPath());
+    if (enrichedSettings.settings.getUseAlternativeWorkingDir()) {
+      workingDir = new File(enrichedSettings.settings.getAlternativeWorkingDirPath());
     } else {
-      workingDir = new File(enrichedSettings.project.getBasePath());
+      final String workingDirSelection = WorkingDirs.withDefaultForModule(enrichedSettings.settings.getWorkingDirSelection());
+      if (WorkingDirs.MODULE.equals(workingDirSelection)) {
+        if (enrichedSettings.module != null && enrichedSettings.module.getModuleFile() != null) {
+          workingDir = new File(enrichedSettings.module.getModuleFile().getParent().getPath());
+        } else {
+          workingDir = new File(enrichedSettings.project.getBasePath());
+        }
+      } else if (WorkingDirs.PROJECT.equals(workingDirSelection)) {
+        workingDir = new File(enrichedSettings.project.getBasePath());
+      } else {
+        workingDir = new File(enrichedSettings.project.getBasePath());
+      }
     }
 
     return Optional.of(new RunLocalAnalysisScriptTask(
