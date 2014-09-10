@@ -39,18 +39,22 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
   public static final MouseAdapter SHOW_HOW_TO_DEFINE_SOURCE_CODE_OF_INCREMENTAL_ANALYSIS_SCRIPT = new MouseAdapter() {
     @Override
     public void mouseClicked(MouseEvent mouseEvent) {
-      Messages.showMessageDialog("Basically a sonar incremental analysis is a call of sonar-runner in incremental mode.\n" +
-              "A script using maven sonar plugin could look like:\n\n" +
-              "mvn sonar:sonar -DskipTests=true -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://sonar\n\n" +
-              "Another script using plain sonar-runner could look like:\n\n" +
-              "sonar-runner -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://sonar\n\n" +
-              "If you prefer use of ant, gradle or yet another build tool you like, it's up to you to setup it properly.\n\n" +
-              "Doesn't matter which tool you use, all of them must generate a sonar-report.json and you need to setup the location of it as well.\n" +
-              "Example location for a maven build: target/sonar/sonar-report.json\n\n" +
-              "Note: if of some reason the incremental mode does not work for you, then you could switch to preview mode\n" +
-              "by changing -Dsonar.analysis.mode=incremental to -Dsonar.analysis.mode=preview .\n" +
-              "This might provide better results, but also potentially increase analysis time a lot and is not recommended."
-          ,
+      Messages.showMessageDialog("Available template variables:\n" +
+              "\n" +
+              "$WORKING_DIR\n" +
+              "$WORKING_DIR_NAME\n" +
+              "\n" +
+              "$MODULE_NAME\n" +
+              "$MODULE_BASE_DIR\n" +
+              "$MODULE_BASE_DIR_NAME\n" +
+              "\n" +
+              "$PROJECT_NAME\n" +
+              "$PROJECT_BASE_DIR\n" +
+              "$PROJECT_BASE_DIR_NAME\n" +
+              "\n" +
+              "$SONAR_HOST_URL\n" +
+              "$SONAR_SERVER_NAME\n" +
+              "$SONAR_USER_NAME\n",
           "Analysis Script", AllIcons.Actions.Help);
     }
   };
