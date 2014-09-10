@@ -12,6 +12,7 @@
     <description>Connects SonarQube to IntelliJ IDEA</description>
 
     <change-notes><![CDATA[
+      10.09.2014 Feature: sonar 4 and local analysis support
       24.02.2014 Fix: NullPointerException running inspection
       20.11.2013 Improvement: Better detection of new rules<br>
       20.11.2013 Feature: Mark as fixed locally quick fix<br>
