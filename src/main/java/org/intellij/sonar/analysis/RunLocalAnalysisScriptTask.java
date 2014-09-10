@@ -61,23 +61,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     final String sourceCode = sourceCodeTemplateProcessor.process();
     final String pathToSonarReport = pathToSonarReportTemplateProcessor.process();
 
-    File workingDir;
-    if (enrichedSettings.settings.getUseAlternativeWorkingDir()) {
-      workingDir = new File(enrichedSettings.settings.getAlternativeWorkingDirPath());
-    } else {
-      final String workingDirSelection = WorkingDirs.withDefaultForModule(enrichedSettings.settings.getWorkingDirSelection());
-      if (WorkingDirs.MODULE.equals(workingDirSelection)) {
-        if (enrichedSettings.module != null && enrichedSettings.module.getModuleFile() != null) {
-          workingDir = new File(enrichedSettings.module.getModuleFile().getParent().getPath());
-        } else {
-          workingDir = new File(enrichedSettings.project.getBasePath());
-        }
-      } else if (WorkingDirs.PROJECT.equals(workingDirSelection)) {
-        workingDir = new File(enrichedSettings.project.getBasePath());
-      } else {
-        workingDir = new File(enrichedSettings.project.getBasePath());
-      }
-    }
+    File workingDir = WorkingDirs.computeFrom(enrichedSettings);
 
     return Optional.of(new RunLocalAnalysisScriptTask(
         enrichedSettings, sourceCode, pathToSonarReport, workingDir,

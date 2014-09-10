@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 import com.intellij.openapi.project.Project;
 import org.intellij.sonar.configuration.partials.SonarServersView;
 import org.intellij.sonar.persistence.ProjectSettings;
-import org.intellij.sonar.persistence.ProjectSettingsBean;
+import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 
@@ -28,19 +28,11 @@ public class ModuleSonarServersView extends SonarServersView {
   public String getSelectedItem() {
     final String selectedItem = super.getSelectedItem();
     if (SonarServers.PROJECT.equals(selectedItem)) {
-//      final ProjectSettingsBean projectSettingsBean = myProjectSettingsComponent.getState();
-      final ProjectSettingsBean projectSettingsBean = null;
-      return null != projectSettingsBean ? projectSettingsBean.getSonarServerName() : NO_SONAR;
+      final Settings settings = ProjectSettings.getInstance(myProject).getState();
+      return null != settings? settings.getServerName() : NO_SONAR;
     }
     return selectedItem;
   }
-/*
-  public String getProperSonarServerName(String sonarServerName) {
-    if (ModuleSettingsConfigurable.PROJECT.equals(sonarServerName)) {
-      final ProjectSettingsBean moduleSettingsBean = myProjectSettingsComponent.getState();
-      return null != moduleSettingsBean ? moduleSettingsBean.getSonarServerName() : ProjectSettingsConfigurable.NO_SONAR;
-    }
-  }*/
 
   @Override
   protected boolean editAndRemoveButtonsCanBeEnabled() {

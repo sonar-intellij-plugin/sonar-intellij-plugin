@@ -3,7 +3,6 @@ package org.intellij.sonar.configuration.module;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.options.Configurable;
@@ -35,7 +34,6 @@ import static org.intellij.sonar.util.UIUtil.makeObj;
 
 public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
 
-  private static final Logger LOG = Logger.getInstance(ModuleSettingsConfigurable.class);
   private final ModuleLocalAnalysisScriptView myLocalAnalysisScriptView;
   private final SonarResourcesTableView mySonarResourcesTableView;
   private final Module myModule;
@@ -61,7 +59,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     this.myLocalAnalysisScriptView = new ModuleLocalAnalysisScriptView(myLocalAnalysisScriptComboBox, myAddLocalAnalysisScriptButton, myEditLocalAnalysisScriptButton, myRemoveLocalAnalysisScriptButton, myProject);
     this.mySonarServersView = new ModuleSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton,myProject);
     this.mySonarResourcesTableView = new SonarResourcesTableView(myProject, mySonarServersView);
-
   }
 
   @Nls

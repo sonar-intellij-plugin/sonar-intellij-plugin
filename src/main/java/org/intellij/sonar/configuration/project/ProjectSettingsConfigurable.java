@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
@@ -32,8 +31,6 @@ import static org.intellij.sonar.util.UIUtil.makeObj;
 
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
-
-  private static final Logger LOG = Logger.getInstance(ProjectSettingsConfigurable.class);
 
   private final ProjectSettings myProjectSettings;
   private final ProjectLocalAnalysisScriptView myLocalAnalysisScriptView;
