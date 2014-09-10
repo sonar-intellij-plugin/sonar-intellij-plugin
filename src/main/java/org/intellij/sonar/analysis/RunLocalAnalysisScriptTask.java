@@ -58,10 +58,13 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       pathToSonarReportTemplateProcessor.withSonarServerConfiguration(serverConfiguration.get());
     }
 
+    File workingDir = WorkingDirs.computeFrom(enrichedSettings);
+
+    sourceCodeTemplateProcessor.withWorkingDir(workingDir);
+    pathToSonarReportTemplateProcessor.withWorkingDir(workingDir);
+
     final String sourceCode = sourceCodeTemplateProcessor.process();
     final String pathToSonarReport = pathToSonarReportTemplateProcessor.process();
-
-    File workingDir = WorkingDirs.computeFrom(enrichedSettings);
 
     return Optional.of(new RunLocalAnalysisScriptTask(
         enrichedSettings, sourceCode, pathToSonarReport, workingDir,
