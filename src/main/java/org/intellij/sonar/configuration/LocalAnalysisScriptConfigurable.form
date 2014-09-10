@@ -10,7 +10,7 @@
     <children>
       <component id="6dd9c" class="javax.swing.JTextPane" binding="myScriptSourceTextPane">
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="2" indent="0" use-parent-layout="false">
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="500" height="150"/>
           </grid>
         </constraints>
