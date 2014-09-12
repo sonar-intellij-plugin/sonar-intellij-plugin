@@ -88,7 +88,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       public void visitFile(PsiFile psiFile) {
         filesBuilder.add(psiFile);
         final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
-        modules.add(module);
+        if (module != null) modules.add(module);
       }
     });
     final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
