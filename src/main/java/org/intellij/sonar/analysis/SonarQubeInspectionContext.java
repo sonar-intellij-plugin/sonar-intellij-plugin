@@ -22,6 +22,7 @@ package org.intellij.sonar.analysis;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
@@ -47,7 +48,6 @@ import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -60,7 +60,6 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   public Key<SonarQubeInspectionContext> getID() {
     return KEY;
   }
-  //TODO: additional to settings we need the module information for the local script task
 
   public static class EnrichedSettings {
     public Settings settings;
@@ -80,7 +79,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
     final Project project = context.getProject();
     SonarConsole.get(project).clear();
-    final Collection<Module> modules = Sets.newHashSet();
+    final Set<Module> modules = Sets.newHashSet();
     final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
 
     context.getRefManager().getScope().accept(new PsiElementVisitor() {
@@ -95,7 +94,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     IssuesByFileIndex.clearIndexFor(psiFiles);
 
     Set<EnrichedSettings> enrichedSettingsFromScope = Sets.newHashSet();
-    if (modules.isEmpty()) {
+    if (modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType()) {
       final Settings settings = ProjectSettings.getInstance(project).getState();
       enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, null));
     } else {
