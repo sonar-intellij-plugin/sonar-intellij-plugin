@@ -5,70 +5,37 @@ The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues
 This plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode or Android Studio and for any programming language you use in these IDE that SonarQube can analyze.
 Each sonar issue and rule is converted to an IntelliJ inspection which makes it possible to use inspection features like for any other IntelliJ inspection.
 
-If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarcube-intellij-plugin) or even sending a pull request. Thanks for your support.
+If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or even sending a pull request. Thanks for your support.
 
 
-Usage
---------------------
+### Usage
 
-At first you need to configure your sonar server connection. You can use a remote server or a local one on your machine, depends on how you work with sonar.
- 
-Configuration:
+#### Project Configuration
 
-Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`. 
+After the installation you first of all need to configure the connection to your sonar server. This is done per project. You can use a remote server or a local one on your machine, depends on how you work with sonar.
+
+Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube` and test your configuration. 
 ![alt text][projectConfiguration]
-Specify a sonar server `Add -> Name + Host url + Credentials(optional)`
-Select the sonar resource `+ -> Download resources`
-
-Local analysis:
-
-This is the tricky part of the plugin. The plugin starts an external script for local analysis. 
-To configure your project in the right way three things are important to know.
-The working directory: the root directory of the script execution
-The source code of the script: the script which executes the sonar-runner, maven, gradle, ant or any other tool which runs sonar-runner behind the scences.
-The path to the sonar-report.json: sonar-runner produces an report in json format, which contains issues and new issues in your project. The plugin needs to know the location of this file. It reads the content and shows in the IDE.
-
-Example:
-name: java
-working dir: <PROJECT>
-source code: mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=incremental  -Dsonar.host.url=$SONAR_HOST_URL
-path to sonar-report.json: $WORKING_DIR/target/sonar/sonar-report.json
-
-The plugin will do:
-go to the <PROJECT> dir: cd /your/project/
-execute mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=incremental  -Dsonar.host.url=http://your.url
-read sonar issues from: /your/project/target/sonar/sonar-report.json
-
-The plugin replaces special template variables in the source code and the path to sonar-report.json.
-
-$WORKING_DIR: the root directory of script execution, e.g. /my/workingdir
-$WORKING_DIR_NAME : the name of the root directory e.g. project
-
-$MODULE_NAME: the IntelliJ module name, e.g. "my module"
-$MODULE_BASE_DIR: the directory of the module file, e.g. /your/project/module
-$MODULE_BASE_DIR_NAME: the name of the module directory, e.g. module
-
-$PROJECT_NAME: the IntelliJ project name, e.g. "my project"
-$PROJECT_BASE_DIR: the root directory of the project, e.g. /your/project
-$PROJECT_BASE_DIR_NAME: the name of the project directory, e.g. project
-
-$SONAR_HOST_URL: the sonar host url specified by the sonar server configuration, e.g. http://localhost:9000
-$SONAR_SERVER_NAME: the sonar server name specified by the configuraion, e.g. "my sonar"
-
-You can also find this list inside the IDE.
-
-The module configuration is analog, with the only difference that you can use the special setting <PROJECT>.
-
 [projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
 
+#### The Resource field
+You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the main dashboard of your SonarQube installation (e.g. http://localhost:9000/), you see the "Projects" section on the right listing all the projects you already ran an analysis for.<sup>1</sup> When you hover the cursor over a project name in this list, the title/ hint you can see is the project's _resourceId_. For Maven projects it also contains a colon like "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
 
-If your project has multiple modules, then you can configure each module as well:
+**NOTE: We will simplify the configuration in a future version.**
 
-Go to File -> Project Structure (Ctrl+Alt+Shift+S)
--> Modules -> SonarQube Tab
+<sup>1</sup> _You can only use the plugin for projects which are already present in SonarQube. If your project is not in SonarQube, yet, you'll need to run the analysis first e.g. via sonarrunner, Maven or Gradle._
+
+
+#### Module Configuration
+
+If your project has multiple modules, you can configure each module individually if you like:
+
+Go to `File -> Project Structure -> Modules -> SonarQube` Tab
 ![alt text][moduleConfiguration]
 
 [moduleConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14228.png "Example module configuration"
+
+#### Syncing
 
 After your project is configured, go to any source file in your project, right click over the source code and press *Sync with sonar*
 ![alt text][syncWithSonar]
