@@ -58,12 +58,6 @@ public class SonarResourcesTableView {
     public String valueOf(Resource sonarResource) {
       return sonarResource.getName();
     }
-
-    @Override
-    public int getWidth(JTable table) {
-      return 300;
-    }
-
   };
 
   private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
