@@ -5,7 +5,7 @@ The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues
 This plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode or Android Studio and for any programming language you use in these IDE that SonarQube can analyze.
 Each sonar issue and rule is converted to an IntelliJ inspection which makes it possible to use inspection features like for any other IntelliJ inspection.
 
-If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarcube-intellij-plugin) or even sending a pull request. Thanks for your support.
+If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or even sending a pull request. Thanks for your support.
 
 
 ### Usage
