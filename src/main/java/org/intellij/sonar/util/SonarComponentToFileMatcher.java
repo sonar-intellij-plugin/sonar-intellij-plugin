@@ -2,10 +2,11 @@ package org.intellij.sonar.util;
 
 import com.google.common.base.Optional;
 import com.intellij.openapi.util.Trinity;
-import com.intellij.openapi.util.text.StringUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.intellij.openapi.util.text.StringUtil.isEmptyOrSpaces;
 
 public class SonarComponentToFileMatcher {
 
@@ -35,16 +36,15 @@ public class SonarComponentToFileMatcher {
 
   private static boolean doMatch(String componentFromSonar, String resourceKeyFromConfiguration, String fullFilePathFromLocalFileSystem) {
     if (
-        StringUtil.isEmptyOrSpaces(componentFromSonar)
-            || StringUtil.isEmptyOrSpaces(resourceKeyFromConfiguration)
-            || StringUtil.isEmptyOrSpaces(fullFilePathFromLocalFileSystem)
+        isEmptyOrSpaces(componentFromSonar)
+            || isEmptyOrSpaces(fullFilePathFromLocalFileSystem)
         ) {
       return false;
     }
 
     // component = "sonar:project:src/main/java/org/sonar/batch/DefaultSensorContext.java";
     // resourceKey = "sonar:project"
-    if (!componentFromSonar.startsWith(resourceKeyFromConfiguration)) {
+    if (!isEmptyOrSpaces(resourceKeyFromConfiguration) && !componentFromSonar.startsWith(resourceKeyFromConfiguration)) {
       return false;
     }
 
@@ -56,7 +56,11 @@ public class SonarComponentToFileMatcher {
     if (fileKeyFromComponentFromCache.isPresent()) {
       fileKeyFromComponent = fileKeyFromComponentFromCache.get();
     } else {
-      fileKeyFromComponent = componentFromSonar.replace(resourceKeyFromConfiguration + ":", "");
+      if (!isEmptyOrSpaces(resourceKeyFromConfiguration)) {
+        fileKeyFromComponent = componentFromSonar.replace(resourceKeyFromConfiguration + ":", "");
+      } else {
+        fileKeyFromComponent = componentFromSonar.replaceAll("(?i)(.+:)(.+/)", "$2");
+      }
       FILE_KEY_FROM_COMPONENT_CACHE.put(componentFromSonar, fileKeyFromComponent);
     }
 
