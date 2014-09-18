@@ -82,12 +82,16 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     final Set<Module> modules = Sets.newHashSet();
     final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
 
+    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
     context.getRefManager().getScope().accept(new PsiElementVisitor() {
       @Override
       public void visitFile(PsiFile psiFile) {
         filesBuilder.add(psiFile);
         final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
         if (module != null) modules.add(module);
+        if (indexComponent.isPresent()) {
+          indexComponent.get().getIndex().remove(psiFile.getVirtualFile().getPath());
+        }
       }
     });
     final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
