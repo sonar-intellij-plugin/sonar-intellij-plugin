@@ -3,6 +3,9 @@ package org.intellij.sonar.analysis;
 import com.google.common.base.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
@@ -115,7 +118,14 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     try {
       int exitCode = process.exitValue();
       sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
-      readIssuesFromSonarReport();
+      if (exitCode != 0) {
+        Notifications.Bus.notify(
+            new Notification(
+                "Sonar", "Sonar",
+                String.format("Local analysis failed (%d)", exitCode), NotificationType.WARNING), enrichedSettings.project);
+      } else {
+        readIssuesFromSonarReport();
+      }
     } catch (IllegalThreadStateException ignore) {
       // do nothing, if the script execution is aborted
     }
@@ -132,14 +142,23 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     }
     final SonarReport sonarReport = SonarReport.fromJson(sonarReportContent);
 
-    for (Resource resource : enrichedSettings.settings.getResources()) {
-      final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resource.getKey())
-          .withSonarReportIssues(sonarReport.getIssues())
-          .create();
-      final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
-      if (indexComponent.isPresent() && !index.isEmpty()) {
-        indexComponent.get().getIndex().putAll(index);
+    if (enrichedSettings.settings.getResources().isEmpty()) {
+      createIndexFrom(sonarReport, new Resource());
+    } else {
+      for (Resource resource : enrichedSettings.settings.getResources()) {
+        createIndexFrom(sonarReport, resource);
       }
+    }
+
+  }
+
+  private void createIndexFrom(SonarReport sonarReport, Resource resource) {
+    final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resource.getKey())
+        .withSonarReportIssues(sonarReport.getIssues())
+        .create();
+    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
+    if (indexComponent.isPresent() && !index.isEmpty()) {
+      indexComponent.get().getIndex().putAll(index);
     }
   }
 
