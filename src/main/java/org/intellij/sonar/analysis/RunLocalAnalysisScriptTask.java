@@ -1,6 +1,7 @@
 package org.intellij.sonar.analysis;
 
 import com.google.common.base.*;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.intellij.notification.Notification;
@@ -133,7 +134,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void readIssuesFromSonarReport() {
-    String sonarReportContent = null;
+    String sonarReportContent;
     try {
       sonarReportContent = Files.toString(new File(pathToSonarReport), Charsets.UTF_8);
     } catch (IOException e) {
@@ -141,6 +142,8 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       return;
     }
     final SonarReport sonarReport = SonarReport.fromJson(sonarReportContent);
+    final int issuesCount = sonarReport != null && sonarReport.getIssues() != null ? sonarReport.getIssues().size() : 0;
+    sonarConsole.info(String.format("Found %d issues in the sonar report", issuesCount));
 
     if (enrichedSettings.settings.getResources().isEmpty()) {
       createIndexFrom(sonarReport, new Resource());
@@ -153,9 +156,16 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void createIndexFrom(SonarReport sonarReport, Resource resource) {
-    final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resource.getKey())
+    final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
         .withSonarReportIssues(sonarReport.getIssues())
         .create();
+    final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
+      @Override
+      public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
+        return sonarIssues;
+      }
+    }).size();
+    sonarConsole.info(String.format("Created index with %d issues from sonar report", issuesCount));
     final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
     if (indexComponent.isPresent() && !index.isEmpty()) {
       indexComponent.get().getIndex().putAll(index);

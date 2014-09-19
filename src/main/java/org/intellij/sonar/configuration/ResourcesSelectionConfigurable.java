@@ -37,11 +37,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     public String valueOf(Resource resource) {
       return SonarResource.of(resource).getName();
     }
-
-    @Override
-    public int getWidth(JTable table) {
-      return 300;
-    }
   };
   private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
     @Nullable

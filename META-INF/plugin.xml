@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>2.0.1</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">SonarQube Community Intellij Plugin
@@ -12,23 +12,8 @@
     <description>Connects SonarQube to IntelliJ IDEA</description>
 
     <change-notes><![CDATA[
-      12.09.2014 Fix: analyse directory
-      10.09.2014 Feature: sonar 4 and local analysis support
-      24.02.2014 Fix: NullPointerException running inspection
-      20.11.2013 Improvement: Better detection of new rules<br>
-      20.11.2013 Feature: Mark as fixed locally quick fix<br>
-      19.11.2013 Fix: No violations found in non intellij IDEs<br>
-      18.11.2013 Improvement: Violations are shown in a more sonar way: mark the whole line instead of one element<br>
-      18.11.2013 Fix: Module configuration is not mandatory anymore<br>
-      10.08.2013 Fix: IllegalArgumentException when IntelliJ IDEA 12 loses focus<br>
-      08.08.2013 Fix: Connection test unsuccessful if server url ends with "/"<br>
-      08.08.2013 Fix: Exception with Intellij11 on "Open Module Settings"<br>
-      08.08.2013 Fix: Password is visible<br>
-      08.08.2013 Fix: Invalid major/minor version exception<br>
-      22.06.2013 Support for phpstorm<br>
-      20.06.2013 Transformation of sonar violations severity to intellij inspection highlight level (avoids to show every violation unnecessary as warning) <br>
-      14.05.2013 Added support for multi module sonar projects<br>
-      10.03.2013 Added support for simple sonar projects<br>
+      2.0.0 - Issues download and incremental analysis with sonar 4.x
+      1.x.x - Issues download with sonar 3.x
       ]]>
     </change-notes>
 

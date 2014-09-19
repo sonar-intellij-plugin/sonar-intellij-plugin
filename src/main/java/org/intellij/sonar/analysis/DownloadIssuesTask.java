@@ -73,9 +73,8 @@ public class DownloadIssuesTask implements Runnable {
 
   public void onSuccess() {
     for (Map.Entry<String, ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
-      final String resourceKey = entry.getKey();
       final ImmutableList<Issue> issues = entry.getValue();
-      final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles, resourceKey).withSonarServerIssues(issues).create();
+      final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles).withSonarServerIssues(issues).create();
       final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
       if (indexComponent.isPresent()) {
         indexComponent.get().setIndex(index);

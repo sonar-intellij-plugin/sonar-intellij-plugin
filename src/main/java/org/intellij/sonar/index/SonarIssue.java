@@ -76,6 +76,7 @@ public class SonarIssue implements Comparable {
     this.isNew = isNew;
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

@@ -1,7 +1,6 @@
 package org.intellij.sonar.util;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.OutputSupplier;
@@ -18,33 +17,6 @@ public class GuaveStreamUtil {
   private GuaveStreamUtil() {
   }
 
-  /**
-   * Copy and close all streams
-   */
-  public static void copy(final InputStream inputStream, final OutputStream outputStream) throws IOException {
-    ByteStreams.copy(toInputSupplier(inputStream), toOutputSupplier(outputStream));
-  }
-
-  /**
-   * Copy and close stream
-   */
-  public static void toStream(final CharSequence from, final OutputStream outputStream) throws IOException {
-    toStream(from, outputStream, DEFAULT_CHARSET);
-  }
-
-  /**
-   * Copy and close stream
-   */
-  public static void toStream(final CharSequence from, final OutputStream outputStream, final Charset charset) throws IOException {
-    CharStreams.write(from, CharStreams.newWriterSupplier(toOutputSupplier(outputStream), charset));
-  }
-
-  /**
-   * Copy and close stream
-   */
-  public static void toStream(final byte[] from, final OutputStream outputStream) throws IOException {
-    ByteStreams.write(from, toOutputSupplier(outputStream));
-  }
 
   /**
    * Copy and close stream

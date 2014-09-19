@@ -81,6 +81,7 @@ public class SonarServerConfig {
     PasswordManager.storePassword(this.name, this.password);
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

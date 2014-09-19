@@ -93,6 +93,7 @@ public class Rule implements Comparable {
     return StringUtils.isEmpty(key) || StringUtils.isEmpty(htmlDesc);
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

@@ -34,6 +34,7 @@ public class SonarComponentToFileMatcher {
     }
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   private static boolean doMatch(String componentFromSonar, String resourceKeyFromConfiguration, String fullFilePathFromLocalFileSystem) {
     if (
         isEmptyOrSpaces(componentFromSonar)

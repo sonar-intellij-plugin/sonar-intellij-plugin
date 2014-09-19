@@ -54,6 +54,7 @@ public class Issue {
     return isNew;
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

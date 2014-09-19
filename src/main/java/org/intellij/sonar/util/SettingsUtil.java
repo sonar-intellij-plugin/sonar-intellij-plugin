@@ -1,11 +1,12 @@
 package org.intellij.sonar.util;
 
 import com.google.common.base.Optional;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
-import org.intellij.sonar.persistence.LocalAnalysisScripts;
-import org.intellij.sonar.persistence.ProjectSettings;
-import org.intellij.sonar.persistence.Settings;
-import org.intellij.sonar.persistence.SonarServers;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import org.intellij.sonar.persistence.*;
 
 public class SettingsUtil {
 
@@ -31,23 +32,22 @@ public class SettingsUtil {
 
     return processed;
   }
-  /*public static SonarSettingsBean getSonarSettingsBeanForFile(VirtualFile virtualFile, Project project) {
-    SonarSettingsBean sonarSettingsBean = null;
-    if (null != project) {
-      if (null != virtualFile) {
-        Module module = ModuleUtil.findModuleForFile(virtualFile, project);
-        if (null != module) {
-//          SonarSettingsComponent component = module.getComponent(SonarSettingsModuleComponent.class);
-//          sonarSettingsBean = getSonarSettingsBeanFromSonarComponent(component);
-        }
+  public static Settings getSettingsFor(PsiFile psiFile) {
+    Settings settings = null;
+    Project project = psiFile.getProject();
+    VirtualFile virtualFile = psiFile.getVirtualFile();
+    if (null != virtualFile) {
+      Module module = ModuleUtil.findModuleForFile(virtualFile, project);
+      if (null != module) {
+        settings = ModuleSettings.getInstance(module).getState();
       }
-      if (null == sonarSettingsBean) {
-        sonarSettingsBean = getSonarSettingsBeanFromProject(project);
-      }
+    } else {
+      settings = ProjectSettings.getInstance(project).getState();
     }
+    settings = process(project, settings);
 
-    return sonarSettingsBean;
-  }*/
+    return settings;
+  }
 
  /* public static SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
     return sonarSettingsComponent.getState();

@@ -21,11 +21,9 @@ public class SonarServerConfigurable extends DialogWrapper {
   private JTextField myUserTextField;
   private JPasswordField myPasswordField;
   private JPanel myRootPanel;
-  private Project myProject;
 
   public SonarServerConfigurable(@Nullable Project project) {
     super(project);
-    myProject = project;
     init();
   }
 

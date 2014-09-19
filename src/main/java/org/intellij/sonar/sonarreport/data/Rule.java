@@ -30,6 +30,7 @@ public class Rule {
     this.name = name;
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

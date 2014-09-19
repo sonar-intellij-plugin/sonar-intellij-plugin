@@ -22,12 +22,12 @@ public class WorkingDirs {
     return workingDirSelection;
   }
 
-  public static File computeFrom(SonarQubeInspectionContext.EnrichedSettings enrichedSettings) {
+  public static File computeFrom(@NotNull SonarQubeInspectionContext.EnrichedSettings enrichedSettings) {
     File workingDir;
-    if (enrichedSettings.settings.getUseAlternativeWorkingDir()) {
+    if (enrichedSettings.settings != null && Boolean.TRUE.equals(enrichedSettings.settings.getUseAlternativeWorkingDir())) {
       workingDir = new File(enrichedSettings.settings.getAlternativeWorkingDirPath());
     } else {
-      final String workingDirSelection = withDefaultForModule(enrichedSettings.settings.getWorkingDirSelection());
+      final String workingDirSelection = withDefaultForModule(enrichedSettings.settings != null ? enrichedSettings.settings.getWorkingDirSelection(): null);
       if (MODULE.equals(workingDirSelection)) {
         if (enrichedSettings.module != null && enrichedSettings.module.getModuleFile() != null) {
           workingDir = new File(enrichedSettings.module.getModuleFile().getParent().getPath());

@@ -17,11 +17,8 @@ import static org.intellij.sonar.util.UIUtil.makeObj;
 
 public class ModuleSonarServersView extends SonarServersView {
 
-  private final ProjectSettings myProjectSettingsComponent;
-
   public ModuleSonarServersView(JComboBox mySonarServersComboBox, JButton myAddSonarServerButton, JButton myEditSonarServerButton, JButton myRemoveSonarServerButton, Project myProject) {
     super(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton, myProject);
-    myProjectSettingsComponent = myProject.getComponent(ProjectSettings.class);
   }
 
   @Override

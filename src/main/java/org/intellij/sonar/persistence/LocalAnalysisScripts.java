@@ -82,6 +82,7 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
     XmlSerializerUtil.copyBean(state, this);
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

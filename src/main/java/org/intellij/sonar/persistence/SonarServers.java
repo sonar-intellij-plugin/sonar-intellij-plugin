@@ -91,6 +91,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
     XmlSerializerUtil.copyBean(state, this);
   }
 
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
