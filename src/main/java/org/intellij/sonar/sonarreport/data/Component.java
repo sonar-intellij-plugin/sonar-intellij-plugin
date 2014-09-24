@@ -4,15 +4,21 @@ public class Component {
 
   private final String key;
 
-  public Component(String key) {
+  private final String path;
+
+  public Component(String key, String path) {
     this.key = key;
+    this.path = path;
   }
 
   public String getKey() {
     return key;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
+  public String getPath() {
+    return path;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -22,19 +28,24 @@ public class Component {
 
     if (key != null ? !key.equals(component.key) : component.key != null)
       return false;
+    if (path != null ? !path.equals(component.path) : component.path != null)
+      return false;
 
     return true;
   }
 
   @Override
   public int hashCode() {
-    return key != null ? key.hashCode() : 0;
+    int result = key != null ? key.hashCode() : 0;
+    result = 31 * result + (path != null ? path.hashCode() : 0);
+    return result;
   }
 
   @Override
   public String toString() {
     return "Component{" +
         "key='" + key + '\'' +
+        ", path='" + path + '\'' +
         '}';
   }
 }

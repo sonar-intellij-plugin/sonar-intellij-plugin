@@ -16,6 +16,7 @@ import org.intellij.sonar.console.StreamGobbler;
 import org.intellij.sonar.index.IssuesByFileIndexer;
 import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.*;
+import org.intellij.sonar.sonarreport.data.Component;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
@@ -156,6 +157,13 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void createIndexFrom(SonarReport sonarReport, Resource resource) {
+    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
+    if (!indexComponent.isPresent()) {
+      return;
+    }
+
+    removeFilesAffectedByReportFromIndex(sonarReport, indexComponent);
+
     final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
         .withSonarReportIssues(sonarReport.getIssues())
         .create();
@@ -166,9 +174,21 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       }
     }).size();
     sonarConsole.info(String.format("Created index with %d issues from sonar report", issuesCount));
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
-    if (indexComponent.isPresent() && !index.isEmpty()) {
+
+    if (!index.isEmpty()) {
       indexComponent.get().getIndex().putAll(index);
+    }
+  }
+
+  private void removeFilesAffectedByReportFromIndex(SonarReport sonarReport, Optional<IssuesByFileIndexProjectComponent> indexComponent) {
+    if (sonarReport.getComponents() != null) {
+      for (Component component : sonarReport.getComponents()) {
+        final String path = component.getPath();
+        if (path != null) {
+          final String componentFullPath = new File(workingDir, path).toString();
+          indexComponent.get().getIndex().remove(componentFullPath);
+        }
+      }
     }
   }
 
