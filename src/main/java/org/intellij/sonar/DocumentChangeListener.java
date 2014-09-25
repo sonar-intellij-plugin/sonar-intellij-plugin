@@ -96,7 +96,7 @@ public class DocumentChangeListener extends AbstractProjectComponent {
             }
             final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
             if (indexComponent.isPresent()) {
-              final Map<String, Set<SonarIssue>> index = indexComponent.get().getState().getIndex();
+              final Map<String, Set<SonarIssue>> index = indexComponent.get().getIndex();
               index.put(file.get().getPath(), issuesFromHighlighters);
             }
           }

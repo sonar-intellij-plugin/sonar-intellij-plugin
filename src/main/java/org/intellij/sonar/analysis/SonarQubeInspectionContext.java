@@ -42,7 +42,6 @@ import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.IssuesByFileIndex;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
@@ -82,16 +81,12 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     final Set<Module> modules = Sets.newHashSet();
     final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
 
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
     context.getRefManager().getScope().accept(new PsiElementVisitor() {
       @Override
       public void visitFile(PsiFile psiFile) {
         filesBuilder.add(psiFile);
         final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
         if (module != null) modules.add(module);
-        if (indexComponent.isPresent()) {
-          indexComponent.get().getIndex().remove(psiFile.getVirtualFile().getPath());
-        }
       }
     });
     final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
@@ -143,11 +138,6 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     DocumentChangeListener.CHANGED_FILES.clear();
 
     final Project project = context.getProject();
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
-    if (indexComponent.isPresent()) {
-      NotificationManager.getInstance(project)
-          .showNotificationFor(indexComponent.get().getIndex());
-    }
 
     // rerun external annotator and refresh highlighters in editor
     removeAllHighlighters();

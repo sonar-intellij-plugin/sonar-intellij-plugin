@@ -91,7 +91,6 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     ProgressManager.getInstance().getProgressIndicator().setText2(this.sourceCode);
     sonarConsole.info("working dir: " + this.workingDir.getPath());
     sonarConsole.info("run: " + this.sourceCode);
-    sonarConsole.info("report: " + this.pathToSonarReport);
 
     final Stopwatch stopwatch = new Stopwatch().start();
 
@@ -135,6 +134,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void readIssuesFromSonarReport() {
+    sonarConsole.info("report: " + this.pathToSonarReport);
     String sonarReportContent;
     try {
       sonarReportContent = Files.toString(new File(pathToSonarReport), Charsets.UTF_8);
@@ -167,15 +167,29 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
         .withSonarReportIssues(sonarReport.getIssues())
         .create();
-    final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
-      @Override
-      public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
-        return sonarIssues;
-      }
-    }).size();
-    sonarConsole.info(String.format("Created index with %d issues from sonar report", issuesCount));
+
+
 
     if (!index.isEmpty()) {
+      final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
+        @Override
+        public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
+          return sonarIssues;
+        }
+      }).size();
+      sonarConsole.info(String.format("Created index with %d issues from sonar report", issuesCount));
+      final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
+        @Override
+        public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
+          return sonarIssues;
+        }
+      }).filter(new Predicate<SonarIssue>() {
+        @Override
+        public boolean apply(SonarIssue sonarIssue) {
+          return sonarIssue.getIsNew();
+        }
+      }).size();
+      if (newIssuesCount > 0) sonarConsole.info(String.format("%d issues are new!", newIssuesCount));
       indexComponent.get().getIndex().putAll(index);
     }
   }

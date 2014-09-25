@@ -72,12 +72,21 @@ public class DownloadIssuesTask implements Runnable {
   }
 
   public void onSuccess() {
+    final int downloadedIssuesCount = FluentIterable.from(downloadedIssuesByResourceKey.values())
+        .transformAndConcat(new Function<ImmutableList<Issue>, Iterable<Issue>>() {
+          @Override
+          public Iterable<Issue> apply(ImmutableList<Issue> issues) {
+            return issues;
+          }
+        }).size();
+    sonarConsole.info(String.format("Downloaded %d issues", downloadedIssuesCount));
+
     for (Map.Entry<String, ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
       final ImmutableList<Issue> issues = entry.getValue();
       final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles).withSonarServerIssues(issues).create();
       final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
       if (indexComponent.isPresent()) {
-        indexComponent.get().setIndex(index);
+        indexComponent.get().getIndex().putAll(index);
       }
     }
   }
