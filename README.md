@@ -31,14 +31,44 @@ Select the sonar resource
 ![alt text][resourceSelection]
 [resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/resource_selection.png "Example resource selection"
 
-The finished sonar server configuration should looks like:
+The finished sonar server configuration should look like:
 
 ![alt text][serverConfigurationComplete]
 [serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration_complete.png "Example resource selection"
 
+#### Local analysis configuration
 
-#### The Resource field
-You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the main dashboard of your SonarQube installation (e.g. http://localhost:9000/), you see the "Projects" section on the right listing all the projects you already ran an analysis for.<sup>1</sup> When you hover the cursor over a project name in this list, the title/ hint you can see is the project's _resourceId_. For Maven projects it also contains a colon like "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
+After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDE. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDE you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contet of that report file and shows the result in the IDE.
+Before configuring the plugin, you need to understand how to run local analysis for your project. 
+
+Go to your prefered console and try to run depending on your project something like:
+
+```
+mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+```
+
+or
+
+```
+sonar-runner -Dsonar.analysis.mode=incremental -Dsonar.issuesReport.html.enable=true -Dsonar.host.url=http://localhost:9000
+```
+
+or
+```
+your_custom_script_to_perform_local_analysis.sh
+```
+
+After the script is done, your should see something like:
+
+```
+[INFO] [18:29:26.380] Export results to /path/to/your/project/target/sonar/sonar-report.json
+[INFO] [18:29:26.383] Store results in database
+[INFO] [18:29:26.500] ANALYSIS SUCCESSFUL
+[INFO] [18:29:26.501] Executing post-job class org.sonar.issuesreport.ReportJob
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+```
 
 **NOTE: We will simplify the configuration in a future version.**
 
