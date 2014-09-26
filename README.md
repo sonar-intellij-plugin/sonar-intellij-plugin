@@ -17,15 +17,22 @@ If you have any issues using the plugin, please let us know by [filing a new iss
 After the installation you first of all need to configure the connection to your sonar server. This is done per project and/or module. You can use a remote server or a local one on your machine, depends on how you work with sonar.
 
 Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`. 
+
 ![alt text][serverSelection]
 [serverSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_selection.png "Example server selection"
+
 Click Add and configure sonar server
+
 ![alt text][serverConfiguration]
 [serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration.png "Example server configuration"
+
 Select the sonar resource
+
 ![alt text][resourceSelection]
 [resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/resource_selection.png "Example resource selection"
+
 The finished sonar server configuration should looks like:
+
 ![alt text][serverConfigurationComplete]
 [serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration_complete.png "Example resource selection"
 
