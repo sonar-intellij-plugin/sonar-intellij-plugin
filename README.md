@@ -70,7 +70,7 @@ After the script is done, your should see something like:
 [INFO] ------------------------------------------------------------------------
 ```
 
-**NOTE: We will simplify the configuration in a future version.**
+**NOTE: The configuration of the local analysis is out of the scope of the plugin, please read the SonarQube documation about how to perform it**
 
 <sup>1</sup> _You can only use the plugin for projects which are already present in SonarQube. If your project is not in SonarQube, yet, you'll need to run the analysis first e.g. via sonarrunner, Maven or Gradle._
 
