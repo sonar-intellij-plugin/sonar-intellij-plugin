@@ -3,7 +3,9 @@ SonarQube IntelliJ Community Plugin
 
 The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues directly from within the IntelliJ IDE.
 This plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode or Android Studio and for any programming language you use in these IDE that SonarQube can analyze.
-Each sonar issue and rule is converted to an IntelliJ inspection which makes it possible to use inspection features like for any other IntelliJ inspection.
+Two tasks are covered by the plugin: 
+* downloading already analyzed code from sonar server and show them in the IDEA
+* running a local analysis script and analyze new issues
 
 If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or even sending a pull request. Thanks for your support.
 
@@ -12,11 +14,21 @@ If you have any issues using the plugin, please let us know by [filing a new iss
 
 #### Project Configuration
 
-After the installation you first of all need to configure the connection to your sonar server. This is done per project. You can use a remote server or a local one on your machine, depends on how you work with sonar.
+After the installation you first of all need to configure the connection to your sonar server. This is done per project and/or module. You can use a remote server or a local one on your machine, depends on how you work with sonar.
 
-Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube` and test your configuration. 
-![alt text][projectConfiguration]
-[projectConfiguration]: http://plugins.jetbrains.com/files/7238/screenshot_14229.png "Example project configuration"
+Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`. 
+![alt text][serverSelection]
+[serverSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_selection.png "Example server selection"
+Click Add and configure sonar server
+![alt text][serverConfiguration]
+[serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration.png "Example server configuration"
+Select the sonar resource
+![alt text][resourceSelection]
+[resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/resource_selection.png "Example resource selection"
+The finished sonar server configuration should looks like:
+![alt text][serverConfigurationComplete]
+[serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration_complete.png "Example resource selection"
+
 
 #### The Resource field
 You can find the "`Resource`" name specific for your project in the Sonar WebUI! When you're on the main dashboard of your SonarQube installation (e.g. http://localhost:9000/), you see the "Projects" section on the right listing all the projects you already ran an analysis for.<sup>1</sup> When you hover the cursor over a project name in this list, the title/ hint you can see is the project's _resourceId_. For Maven projects it also contains a colon like "`groupId:artifactId`" or "`PROJECTS_KEY:MODULE_KEY`".
