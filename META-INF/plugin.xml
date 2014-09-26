@@ -27,35 +27,15 @@
 
     <project-components>
         <component>
-            <implementation-class>org.intellij.sonar.persistence.ProjectSettings</implementation-class>
-        </component>
-        <!--
-        <component>
             <implementation-class>
-                org.intellij.sonar.FileChangeListener
+                org.intellij.sonar.persistence.ProjectSettings
             </implementation-class>
         </component>
-        <component>
-            <implementation-class>
-                org.intellij.sonar.FileEditorListener
-            </implementation-class>
-        </component>
-        <component>
-            <implementation-class>
-                org.intellij.sonar.persistence.ChangedFilesComponent
-            </implementation-class>
-        </component>-->
         <component>
             <implementation-class>
                 org.intellij.sonar.DocumentChangeListener
             </implementation-class>
         </component>
-        <!--
-        <component>
-            <implementation-class>
-                org.intellij.sonar.persistence.IndexComponent
-            </implementation-class>
-        </component>-->
         <component>
             <implementation-class>
                 org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
@@ -84,23 +64,23 @@
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"/>
         <moduleConfigurable id="moduleSettingsConfigurable"
                             instance="org.intellij.sonar.configuration.module.ModuleSettingsConfigurable"/>
-        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarServers" />
-        <applicationService serviceImplementation="org.intellij.sonar.persistence.LocalAnalysisScripts" />
-        <applicationService serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent" />
-       <!--
-        <inspectionToolProvider implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
-        <projectService serviceImplementation="org.intellij.sonar.SonarIssuesProvider"/>
-        <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRulesComponent"/>
-        <projectService serviceImplementation="org.intellij.sonar.persistence.IndexComponent"/>
-      -->  <!--<globalInspection
-                implementationClass="org.intellij.sonar.analysis.SonarGlobalInspectionTool"/>-->
-        <toolWindow id="Sonar" anchor="bottom" icon="/images/onde-sonar-13.png" factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
+        <applicationService
+                serviceImplementation="org.intellij.sonar.persistence.SonarServers"/>
+        <applicationService
+                serviceImplementation="org.intellij.sonar.persistence.LocalAnalysisScripts"/>
+        <applicationService
+                serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent"/>
+        <toolWindow id="Sonar" anchor="bottom"
+                    icon="/images/onde-sonar-13.png"
+                    factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
         <codeInspection.InspectionExtension id="sonarqubeInspection"
                                             implementation="org.intellij.sonar.analysis.SonarQubeInspectionExtensionsFactory"/>
 
         <inspectionToolProvider
-                implementation="org.intellij.sonar.SonarInspectionToolProvider" />
-        <codeInsight.linkHandler id="issueDescriptionLinkHandler" prefix="#sonarissue/" handlerClass="org.intellij.sonar.analysis.IssueDescriptionLinkHandler" />
+                implementation="org.intellij.sonar.SonarInspectionToolProvider"/>
+        <codeInsight.linkHandler id="issueDescriptionLinkHandler"
+                                 prefix="#sonarissue/"
+                                 handlerClass="org.intellij.sonar.analysis.IssueDescriptionLinkHandler"/>
     </extensions>
 
     <application-components>
