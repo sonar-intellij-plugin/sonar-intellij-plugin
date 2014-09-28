@@ -54,7 +54,8 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
               "\n" +
               "$SONAR_HOST_URL\n" +
               "$SONAR_SERVER_NAME\n" +
-              "$SONAR_USER_NAME\n",
+              "$SONAR_USER_NAME\n" +
+              "$SONAR_USER_PASSWORD\n",
           "Analysis Script", AllIcons.Actions.Help);
     }
   };
