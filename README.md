@@ -50,7 +50,7 @@ After the execution the inspection result should look like:
 ![alt text][analysisResults]
 [analysisResults]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/analysis_results.png "Example resource selection"
 
-As the sonar analysis process is a prone to errors, it is essential to see what happened. You might want to use the sonar console for error analysis, especially during the first time configuration:
+As the sonar analysis process is prone to errors, it is essential to see what happened during the analysis. You can use the sonar console for error analysis, especially during the first time configuration:
 ![alt text][sonarConsole]
 [sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/sonar_console2.png "Example resource selection"
 
