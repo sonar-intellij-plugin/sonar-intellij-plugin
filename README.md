@@ -38,7 +38,7 @@ The finished sonar server configuration should look like:
 
 #### Local analysis configuration
 
-After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDE. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDE you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contet of that report file and shows the result in the IDE.
+After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in the IDEA like any other inspection.
 Before configuring the plugin, you need to understand how to run local analysis for your project. 
 
 Go to your prefered console and try to run depending on your project something like:
@@ -55,7 +55,7 @@ sonar-runner -Dsonar.analysis.mode=incremental -Dsonar.issuesReport.html.enable=
 
 or
 ```
-your_custom_script_to_perform_local_analysis.sh
+your_custom_script_to_perform_local_analysis.sh # may use gradle, ant, what ever else you prefer
 ```
 
 After the script is done, your should see something like:
@@ -70,6 +70,25 @@ After the script is done, your should see something like:
 [INFO] ------------------------------------------------------------------------
 ```
 
+This tells you where to find the sonar-report.json. This file is essential, as it tells the plugin the location of the new issues.
+
 **NOTE: The configuration of the local analysis is out of the scope of the plugin, please read the SonarQube documation about how to perform it**
+
+After you know how to perform the local analysis, you need to configure the plugin:
+
+Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
+
+![alt text][localScriptManagement]
+[localScriptManagement]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/local_script_management.png "Example local script management"
+
+Click add and define:
+
+* an unique name, e.g. java-only
+* the script itself, e.g. sonar-runner -Dsonar.analysis.mode=incremental ...
+* path to the sonar-report.json
+
+A finished configuration can look like:
+![alt text][localScriptConfigured]
+[localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/local_script_configured.png "Example local script management"
 
 TBD
