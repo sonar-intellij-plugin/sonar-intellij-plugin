@@ -91,4 +91,70 @@ A finished configuration can look like:
 ![alt text][localScriptConfigured]
 [localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/local_script_configured.png "Example local script management"
 
-TBD
+**NOTE: If command like "mvn" or "sonar-runner" does not work, you can use a full path instead: /path/to/mvn.
+
+##### Placeholders
+
+In the previous example we have used a hard coded script and a sonar-report.json file path using a $WORKING_DIR placeholder. You can use several placeholders to replace values in your script or sonare-report.json file path.
+
+placeholder | meaning
+----------- | -------
+$WORKING_DIR | the working directory of script executin, e.g. /path/to/project
+$WORKING_DIR_NAME | the name of the working directory without the full path, e.g. project
+$MODULE_NAME | the name of the module, e.g. example-java-maven
+$MODULE_BASE_DIR | the directory of the .iml file, e.g. /path/to/project/module
+$MODULE_BASE_DIR_NAME | the name of the directory of the .iml file, e.g. module
+$PROJECT_NAME | the name of the project, e.g. my project
+$PROJECT_BASE_DIR | the project root directory, e.g. /path/to/project
+$PROJECT_BASE_DIR_NAME | the name of the project root directory, e.g. project
+$SONAR_HOST_URL | the sonar host url, e.g. http://localhost:9000
+$SONAR_SERVER_NAME | the sonar server name, e.g. my server
+$SONAR_USER_NAME | the sonar user name, e.g. my_user
+$SONAR_USER_PASSWORD | the sonar user password, e.g. pw
+
+Using the placeholders you can define one script and reuse it in several project. It is also usefull if your project is a multi module project.
+For example in a multi module mvn project you can define:
+
+Script
+```
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=$SONAR_HOST_URL
+```
+
+Path to sonar-report.json
+```
+$WORKING_DIR/target/sonar/sonar-report.json
+```
+
+If executing full project analysis, the plugin will do:
+
+working dir
+```
+/path/to/project
+```
+
+script
+```
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+```
+
+path to sonar-report.json
+```
+/path/to/project/target/sonar/sonar-report.json
+```
+
+And during analysis of a single module:
+
+working dir
+```
+/path/to/project/module
+```
+
+script
+```
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+```
+
+path to sonar-report.json
+```
+/path/to/project/mobule/target/sonar/sonar-report.json
+```
