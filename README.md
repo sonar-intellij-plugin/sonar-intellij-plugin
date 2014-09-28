@@ -178,6 +178,7 @@ path to sonar-report.json
 ```
 
 **NOTE: how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module.**
+
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override it manually.**
 
 #### Module configuration
