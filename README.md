@@ -179,7 +179,7 @@ path to sonar-report.json
 
 **NOTE: how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module.**
 
-**NOTE: if your module.iml files are not located in same directory as the module root, then you can override it manually.**
+**NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
 #### Module configuration
 The module configuration is straight forward and similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
