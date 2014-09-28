@@ -36,6 +36,24 @@ The finished sonar server configuration should look like:
 ![alt text][serverConfigurationComplete]
 [serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration_complete.png "Example resource selection"
 
+#### Code inspection
+
+The plugin provides two inspections:
+* SonarQube - shows already analysed issues
+* SonarQube (new issues) - shows only new issues from local analysis
+
+To perform a code inspection you can:
+Go to `Analyze -> Inspect code`.
+Select whole project. It is recommended to create a Sonar Inspection profile, with sonar inspections only, but you can also use default profile or any other self defined inspection profile.
+
+After the execution the inspection result should look like:
+![alt text][analysisResults]
+[analysisResults]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/analysis_results.png "Example resource selection"
+
+As the sonar analysis process is a prone to errors, it is essential to see what happened. You might want to use the sonar console for error analysis, especially during the first time configuration:
+![alt text][sonarConsole]
+[sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/sonar_console.png "Example resource selection"
+
 #### Local analysis configuration
 
 After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in the IDEA like any other inspection.
@@ -158,3 +176,9 @@ path to sonar-report.json
 ```
 /path/to/project/mobule/target/sonar/sonar-report.json
 ```
+
+** NOTE how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module
+** NOTE if your module.iml files are not located in same directory as the module root, then you can override it manually.
+
+#### Module configuration
+The module configuration is straight forward and similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
