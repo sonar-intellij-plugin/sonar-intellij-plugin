@@ -109,7 +109,7 @@ A finished configuration can look like:
 ![alt text][localScriptConfigured]
 [localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/local_script_configured.png "Example local script management"
 
-**NOTE: If command like "mvn" or "sonar-runner" does not work, you can use a full path instead: /path/to/mvn.
+**NOTE: If command like "mvn" or "sonar-runner" does not work, you can use a full path instead: /path/to/mvn.**
 
 ##### Placeholders
 
@@ -177,8 +177,8 @@ path to sonar-report.json
 /path/to/project/mobule/target/sonar/sonar-report.json
 ```
 
-** NOTE how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module
-** NOTE if your module.iml files are not located in same directory as the module root, then you can override it manually.
+**NOTE: how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module.**
+**NOTE: if your module.iml files are not located in same directory as the module root, then you can override it manually.**
 
 #### Module configuration
 The module configuration is straight forward and similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
