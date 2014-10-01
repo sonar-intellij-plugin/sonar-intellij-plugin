@@ -215,4 +215,5 @@ possible contents of the up_to_you.sh script:
 #!/bin/bash
 export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
 export MAVEN_OPTS="-XX:MaxPermSize=128m"
-/path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=mobile_relaxed_java_8```
+/path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=mobile_relaxed_java_8
+```
