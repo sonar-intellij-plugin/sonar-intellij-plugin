@@ -182,4 +182,37 @@ path to sonar-report.json
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
 #### Module configuration
-The module configuration is straight forward and similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
+The module configuration is similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
+
+Go to `File -> Project Structure (Ctrl+Alt+Shift+S)-> Select a module -> SonarQube Tab`.
+Configure the module in same way like a project. You can use a special option `<PROJECT>`, in this case the project configuration will be used.
+The local analysis script is per default starting in the module base directory.
+
+Example:
+multi mvn project
+
+```
+project
+  module1
+    pom.xml 
+  module2
+    pom.xml
+  pom.xml <- parent
+```
+
+if analysing module1 a script will download the issues configured by module configuration and start a local analysis script in `project/module2/`.
+if analysing whole project plugin will download sonar resource configured in project settings and start a local analysis script in `project/`
+You can use same local script configuration for module or project level analysis:
+
+script
+up_to_you.sh $SONAR_HOST_URL
+
+path so sonar-report.json
+$WORKING_DIR/target/sonar/sonar-report.json
+
+possible contents of the up_to_you.sh script:
+```
+#!/bin/bash
+export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
+export MAVEN_OPTS="-XX:MaxPermSize=128m"
+/path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=mobile_relaxed_java_8```
