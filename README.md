@@ -1,44 +1,48 @@
-*Draft!!!*
+**This is a draft!!!**
 
 SonarQube IntelliJ Community Plugin
 ===================================
 
-The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues directly from within the IntelliJ IDE.
-This plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode or Android Studio and for any programming language you use in these IDE that SonarQube can analyze.
+The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues directly within your IntelliJ IDE.
+Hereby the plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode and Android Studio with any programming language you can analyze in SonarQube.
+
 Two tasks are covered by the plugin: 
-* downloading already analyzed code from sonar server and show them in the IDEA
-* running a local analysis script and analyze new issues
+* downloading issues of previously analyzed code from a sonar server and show them in your IDE
+* running an script to perform a local analysis to find issues in your local code
 
-If you have any issues using the plugin, please let us know by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), contacting us via the [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or even sending a pull request. Thanks for your support.
+We appreciate constructive feedback and contributions of any kind, so please report any issues with the plugin by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), get in touch via our [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or send a pull request whenever you feel things could be done in a better way. We're really thankful for your support.
 
 
-### Usage
+## Usage
 
-#### Project Configuration
+### Project Configuration
 
-After the installation you first of all need to configure the connection to your sonar server. This is done per project and/or module. You can use a remote server or a local one on your machine, depends on how you work with sonar.
+You can install the "SonarQube Community Plugin" via the plugin manager inside your Jetbrains IDE or download it from the [Jetbrains Plugin Repository](http://plugins.jetbrains.com/plugin/7238). After the installation, you first of all need to  configure the connection to your sonar server. This is done per project and/ or module. You can use a remote server or a local one on your machine.
 
-Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`. 
+In your IDE go to `Preferences -> SonarQube`. 
 
 ![alt text][serverSelection]
 [serverSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_selection.png "Example server selection"
 
-Click Add and configure sonar server
+
+Click Add, enter the adress of your sonar server and the credentials (if needed) and click `OK`.
 
 ![alt text][serverConfiguration]
 [serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration.png "Example server configuration"
 
-Select the sonar resource
+
+Back on the previous screen, find the `Sonar resources` section and click the `+` button to select the sonar resource for this project:
 
 ![alt text][resourceSelection]
 [resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/resource_selection.png "Example resource selection"
 
-The finished sonar server configuration should look like:
+Your final SonarQube Server configuration should now look like the following:
 
 ![alt text][serverConfigurationComplete]
 [serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration_complete.png "Example resource selection"
 
-#### Code inspection
+
+### Code inspection
 
 The plugin provides two inspections:
 * SonarQube - shows already analysed issues
@@ -56,7 +60,7 @@ As the sonar analysis process is prone to errors, it is essential to see what ha
 ![alt text][sonarConsole]
 [sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/sonar_console2.png "Example resource selection"
 
-#### Local analysis configuration
+### Local analysis configuration
 
 After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in the IDEA like any other inspection.
 Before configuring the plugin, you need to understand how to run local analysis for your project. 
@@ -113,24 +117,24 @@ A finished configuration can look like:
 
 **NOTE: If command like "mvn" or "sonar-runner" does not work, you can use a full path instead: /path/to/mvn.**
 
-##### Placeholders
+#### Placeholders
 
 In the previous example we have used a hard coded script and a sonar-report.json file path using a $WORKING_DIR placeholder. You can use several placeholders to replace values in your script or sonare-report.json file path.
 
 placeholder | meaning
 ----------- | -------
-$WORKING_DIR | the working directory of script executin, e.g. /path/to/project
-$WORKING_DIR_NAME | the name of the working directory without the full path, e.g. project
-$MODULE_NAME | the name of the module, e.g. example-java-maven
-$MODULE_BASE_DIR | the directory of the .iml file, e.g. /path/to/project/module
-$MODULE_BASE_DIR_NAME | the name of the directory of the .iml file, e.g. module
-$PROJECT_NAME | the name of the project, e.g. my project
-$PROJECT_BASE_DIR | the project root directory, e.g. /path/to/project
-$PROJECT_BASE_DIR_NAME | the name of the project root directory, e.g. project
-$SONAR_HOST_URL | the sonar host url, e.g. http://localhost:9000
-$SONAR_SERVER_NAME | the sonar server name, e.g. my server
-$SONAR_USER_NAME | the sonar user name, e.g. my_user
-$SONAR_USER_PASSWORD | the sonar user password, e.g. pw
+`$WORKING_DIR` | the working directory of script executin, e.g. /path/to/project
+`$WORKING_DIR_NAME` | the name of the working directory without the full path, e.g. project
+`$MODULE_NAME` | the name of the module, e.g. example-java-maven
+`$MODULE_BASE_DIR` | the directory of the .iml file, e.g. /path/to/project/module
+`$MODULE_BASE_DIR_NAME` | the name of the directory of the .iml file, e.g. module
+`$PROJECT_NAME` | the name of the project, e.g. my project
+`$PROJECT_BASE_DIR` | the project root directory, e.g. /path/to/project
+`$PROJECT_BASE_DIR_NAME` | the name of the project root directory, e.g. project
+`$SONAR_HOST_URL` | the sonar host url, e.g. http://localhost:9000
+`$SONAR_SERVER_NAME` | the sonar server name, e.g. my server
+`$SONAR_USER_NAME` | the sonar user name, e.g. my_user
+`$SONAR_USER_PASSWORD` | the sonar user password, e.g. pw
 
 Using the placeholders you can define one script and reuse it in several project. It is also usefull if your project is a multi module project.
 For example in a multi module mvn project you can define:
@@ -179,11 +183,11 @@ path to sonar-report.json
 /path/to/project/mobule/target/sonar/sonar-report.json
 ```
 
-**NOTE: how the $WORKING_DIR is replaced by /path/to/project for project and by /path/to/project/module for a module.**
+**NOTE: how the `$WORKING_DIR` is replaced by `/path/to/project` for project and by `/path/to/project/module` for a module.**
 
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
-#### Module configuration
+### Module configuration
 The module configuration is similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
 
 Go to `File -> Project Structure (Ctrl+Alt+Shift+S)-> Select a module -> SonarQube Tab`.
@@ -209,7 +213,7 @@ You can use same local script configuration for module or project level analysis
 script
 up_to_you.sh $SONAR_HOST_URL
 
-path so sonar-report.json
+path to sonar-report.json
 $WORKING_DIR/target/sonar/sonar-report.json
 
 possible contents of the up_to_you.sh script:
@@ -219,3 +223,6 @@ export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
 export MAVEN_OPTS="-XX:MaxPermSize=128m"
 /path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=your_java_profile
 ```
+## License
+
+The project is licensed under Apache Public License 2.0! See the `LICENSE` file for details.
