@@ -92,7 +92,9 @@ public class TemplateProcessor {
     processedTemplate = processedTemplate.replaceAll("\\$SONAR_HOST_URL", sonarServerConfig.getHostUrl());
     processedTemplate = processedTemplate.replaceAll("\\$SONAR_SERVER_NAME", sonarServerConfig.getName());
     processedTemplate = processedTemplate.replaceAll("\\$SONAR_USER_NAME", sonarServerConfig.getUser());
-    processedTemplate = processedTemplate.replaceAll("\\$SONAR_USER_PASSWORD", sonarServerConfig.loadPassword());
+    if (template.contains("$SONAR_USER_PASSWORD")) {
+      processedTemplate = processedTemplate.replaceAll("\\$SONAR_USER_PASSWORD", sonarServerConfig.loadPassword());
+    }
     return processedTemplate;
   }
 }

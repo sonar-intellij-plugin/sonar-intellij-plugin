@@ -60,7 +60,7 @@ public class SonarComponentToFileMatcher {
       if (!isEmptyOrSpaces(resourceKeyFromConfiguration)) {
         fileKeyFromComponent = componentFromSonar.replace(resourceKeyFromConfiguration + ":", "");
       } else {
-        fileKeyFromComponent = componentFromSonar.replaceAll("(?i)(.+:)(.+/)", "$2");
+        fileKeyFromComponent = componentFromSonar.replaceAll("(?i)(.+:)(.+)", "$2");
       }
       FILE_KEY_FROM_COMPONENT_CACHE.put(componentFromSonar, fileKeyFromComponent);
     }
