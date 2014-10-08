@@ -134,7 +134,7 @@ placeholder | meaning
 `$SONAR_USER_NAME` | the sonar user name, e.g. my_user
 `$SONAR_USER_PASSWORD` | the sonar user password, e.g. pw
 
-Using the placeholders you can define one script and reuse it in several projectsw. It is also useful if your project is a multi module project.
+Using the placeholders you can define one script and reuse it in several projects. It is also useful if your project is a multi module project.
 For example in a multi module mvn project you can define:
 
 Script
@@ -209,10 +209,10 @@ if analysing whole project plugin will download sonar resource configured in pro
 You can use the same local script configuration for module or project level analysis:
 
 script
-up_to_you.sh $SONAR_HOST_URL
+`up_to_you.sh $SONAR_HOST_URL`
 
 path to sonar-report.json
-$WORKING_DIR/target/sonar/sonar-report.json
+`$WORKING_DIR/target/sonar/sonar-report.json`
 
 possible contents of the up_to_you.sh script:
 ```
