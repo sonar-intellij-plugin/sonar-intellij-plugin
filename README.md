@@ -1,5 +1,3 @@
-**This is a draft!!!**
-
 SonarQube IntelliJ Community Plugin
 ===================================
 
