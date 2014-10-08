@@ -13,7 +13,6 @@
 
     <change-notes><![CDATA[
       2.0.0 - Issues download and incremental analysis with sonar 4.x
-      1.x.x - Issues download with sonar 3.x
       ]]>
     </change-notes>
 
