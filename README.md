@@ -4,20 +4,20 @@ SonarQube IntelliJ Community Plugin
 ===================================
 
 The main goal of this plugin is to show [SonarQube](http://sonarqube.org) issues directly within your IntelliJ IDE.
-Hereby the plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode and Android Studio with any programming language you can analyze in SonarQube.
+Currently the plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode and Android Studio with any programming language you can analyze in SonarQube.
 
 Two tasks are covered by the plugin: 
-* downloading issues of previously analyzed code from a sonar server and show them in your IDE
+* downloading issues of previously analyzed code from a Sonar server and show them in your IDE
 * running an script to perform a local analysis to find issues in your local code
 
-We appreciate constructive feedback and contributions of any kind, so please report any issues with the plugin by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), get in touch via our [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or send a pull request whenever you feel things could be done in a better way. We're really thankful for your support.
+We appreciate constructive feedback and contributions of any kind, so please report any issues with the plugin by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), get in touch via our [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or send a pull request whenever you feel things could be done in a better way. We are really grateful for your support.
 
 
 ## Usage
 
 ### Project Configuration
 
-You can install the "SonarQube Community Plugin" via the plugin manager inside your Jetbrains IDE or download it from the [Jetbrains Plugin Repository](http://plugins.jetbrains.com/plugin/7238). After the installation, you first of all need to  configure the connection to your sonar server. This is done per project and/ or module. You can use a remote server or a local one on your machine.
+You can install the "SonarQube Community Plugin" via the plugin manager inside your Jetbrains IDE or download it from the [Jetbrains Plugin Repository](http://plugins.jetbrains.com/plugin/7238). After the installation, you first of all need to configure the connection to your Sonar server. This is done per project and/ or module. You can use a remote server or a local one on your machine.
 
 In your IDE go to `Preferences -> SonarQube`. 
 
@@ -25,13 +25,13 @@ In your IDE go to `Preferences -> SonarQube`.
 [serverSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_selection.png "Example server selection"
 
 
-Click Add, enter the adress of your sonar server and the credentials (if needed) and click `OK`.
+Click Add, enter the address of your Sonar server and the credentials (if needed) and click `OK`.
 
 ![alt text][serverConfiguration]
 [serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/server_configuration.png "Example server configuration"
 
 
-Back on the previous screen, find the `Sonar resources` section and click the `+` button to select the sonar resource for this project:
+Back on the previous screen, find the `Sonar resources` section and click the `+` button to select the Sonar resource for this project:
 
 ![alt text][resourceSelection]
 [resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/resource_selection.png "Example resource selection"
@@ -50,22 +50,22 @@ The plugin provides two inspections:
 
 To perform a code inspection you can:
 Go to `Analyze -> Inspect code`.
-Select whole project. It is recommended to create a Sonar Inspection profile, with sonar inspections only, but you can also use default profile or any other self defined inspection profile.
+Select whole project. It is recommended that you create a Sonar Inspection profile, with Sonar inspections only, but you can also use the default profile or any other self defined inspection profile.
 
 After the execution the inspection result should look like:
 ![alt text][analysisResults]
 [analysisResults]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/analysis_results.png "Example resource selection"
 
-As the sonar analysis process is prone to errors, it is essential to see what happened during the analysis. You can use the sonar console for error analysis, especially during the first time configuration:
+As the Sonar analysis process is prone to errors, it is essential to see what happened during the analysis. You can use the Sonar console for error analysis, especially during initial configuration:
 ![alt text][sonarConsole]
 [sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/sonar_4/screenshots/sonar_console2.png "Example resource selection"
 
 ### Local analysis configuration
 
-After the configuration of the sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in the IDEA like any other inspection.
+After configuring the Sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in IDEA like any other inspection.
 Before configuring the plugin, you need to understand how to run local analysis for your project. 
 
-Go to your prefered console and try to run depending on your project something like:
+Go to your preferred console and try to run depending on your project something like:
 
 ```
 mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
@@ -94,11 +94,11 @@ After the script is done, your should see something like:
 [INFO] ------------------------------------------------------------------------
 ```
 
-This tells you where to find the sonar-report.json. This file is essential, as it tells the plugin the location of the new issues.
+This tells you where to find sonar-report.json. This file is essential, as it tells the plugin the location of the new issues.
 
 **NOTE: The configuration of the local analysis is out of the scope of the plugin, please read the SonarQube documation about how to perform it**
 
-After you know how to perform the local analysis, you need to configure the plugin:
+After you know how to perform local analysis, you need to configure the plugin:
 
 Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
 
@@ -107,7 +107,7 @@ Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
 
 Click add and define:
 
-* an unique name, e.g. java-only
+* a unique name, e.g. java-only
 * the script itself, e.g. sonar-runner -Dsonar.analysis.mode=incremental ...
 * path to the sonar-report.json
 
@@ -119,7 +119,7 @@ A finished configuration can look like:
 
 #### Placeholders
 
-In the previous example we have used a hard coded script and a sonar-report.json file path using a $WORKING_DIR placeholder. You can use several placeholders to replace values in your script or sonare-report.json file path.
+In the previous example we have used a hard coded script and a sonar-report.json file path using a $WORKING_DIR placeholder. You can use several placeholders to replace values in your script or sonar-report.json file path.
 
 placeholder | meaning
 ----------- | -------
@@ -136,7 +136,7 @@ placeholder | meaning
 `$SONAR_USER_NAME` | the sonar user name, e.g. my_user
 `$SONAR_USER_PASSWORD` | the sonar user password, e.g. pw
 
-Using the placeholders you can define one script and reuse it in several project. It is also usefull if your project is a multi module project.
+Using the placeholders you can define one script and reuse it in several projectsw. It is also useful if your project is a multi module project.
 For example in a multi module mvn project you can define:
 
 Script
@@ -183,16 +183,16 @@ path to sonar-report.json
 /path/to/project/mobule/target/sonar/sonar-report.json
 ```
 
-**NOTE: how the `$WORKING_DIR` is replaced by `/path/to/project` for project and by `/path/to/project/module` for a module.**
+**NOTE: `$WORKING_DIR` is replaced by `/path/to/project` for project and by `/path/to/project/module` for a module.**
 
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
 ### Module configuration
-The module configuration is similar the project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module. 
+Module configuration is similar project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module.
 
 Go to `File -> Project Structure (Ctrl+Alt+Shift+S)-> Select a module -> SonarQube Tab`.
-Configure the module in same way like a project. You can use a special option `<PROJECT>`, in this case the project configuration will be used.
-The local analysis script is per default starting in the module base directory.
+Configure the module in the same way as a project. You can use a special option `<PROJECT>`, in this case the project configuration will be used.
+The local analysis script is per default, starting in the module base directory.
 
 Example:
 multi mvn project
@@ -208,7 +208,7 @@ project
 
 if analysing module1 a script will download the issues configured by module configuration and start a local analysis script in `project/module2/`.
 if analysing whole project plugin will download sonar resource configured in project settings and start a local analysis script in `project/`
-You can use same local script configuration for module or project level analysis:
+You can use the same local script configuration for module or project level analysis:
 
 script
 up_to_you.sh $SONAR_HOST_URL
