@@ -186,14 +186,15 @@ path to sonar-report.json
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
 ### Module configuration
-Module configuration is similar project configuration. Please note that for a multi module maven project you need to manually define the sonar resource for each module.
 
-Go to `File -> Project Structure (Ctrl+Alt+Shift+S)-> Select a module -> SonarQube Tab`.
+Module configuration is similar project configuration. **Please note that for a multi module maven project you need to manually define the sonar resource for each module.**
+
+Go to `Project Structure -> Select a module -> Select SonarQube Tab`.
+
 Configure the module in the same way as a project. You can use a special option `<PROJECT>`, in this case the project configuration will be used.
 The local analysis script is per default, starting in the module base directory.
 
-Example:
-multi mvn project
+#### Example: A multi-module maven project
 
 ```
 project
@@ -204,23 +205,25 @@ project
   pom.xml <- parent
 ```
 
-if analysing module1 a script will download the issues configured by module configuration and start a local analysis script in `project/module2/`.
-if analysing whole project plugin will download sonar resource configured in project settings and start a local analysis script in `project/`
+When you analyze `module1`, the plugin will download the issues and rules for the sonar resource configured in the module settings for `module1` and start a local analysis script in `project/module1/`.
+
+When you analyze the whole project, the plugin will download the issues and rules for the sonar resource configured in the project settings and start a local analysis script in `project/`
+
 You can use the same local script configuration for module or project level analysis:
 
-script
-`up_to_you.sh $SONAR_HOST_URL`
+- script: `up_to_you.sh $SONAR_HOST_URL`
+- path to sonar-report.json: `$WORKING_DIR/target/sonar/sonar-report.json`
 
-path to sonar-report.json
-`$WORKING_DIR/target/sonar/sonar-report.json`
-
-possible contents of the up_to_you.sh script:
+possible contents of the `up_to_you.sh` script:
 ```
 #!/bin/bash
 export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
 export MAVEN_OPTS="-XX:MaxPermSize=128m"
 /path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=your_java_profile
 ```
+
+Tip: Omit the `sonar.language` parameter if you have multiple languages in your project (e.g. Java and Groovy).
+
 ## License
 
 The project is licensed under Apache Public License 2.0! See the `LICENSE` file for details.
