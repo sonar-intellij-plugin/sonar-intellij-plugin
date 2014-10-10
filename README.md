@@ -226,4 +226,4 @@ Tip: Omit the `sonar.language` parameter if you have multiple languages in your 
 
 ## License
 
-The project is licensed under Apache Public License 2.0! See the `LICENSE` file for details.
+The project is licensed under Apache Public License 2.0! See the [LICENSE](LICENSE) file for details.
