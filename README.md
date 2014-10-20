@@ -205,9 +205,9 @@ project
   pom.xml <- parent
 ```
 
-When you analyze `module1`, the plugin will download the issues and rules for the sonar resource configured in the module settings for `module1` and start a local analysis script in `project/module1/`.
+When you analyze `module1`, the plugin will download the issues for the sonar resource configured in the module settings for `module1` and start a local analysis script in `project/module1/`.
 
-When you analyze the whole project, the plugin will download the issues and rules for the sonar resource configured in the project settings and start a local analysis script in `project/`
+When you analyze the whole project, the plugin will download the issues for the sonar resource configured in the project settings and start a local analysis script in `project/`
 
 You can use the same local script configuration for module or project level analysis:
 
