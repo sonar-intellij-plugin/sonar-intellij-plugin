@@ -1,6 +1,7 @@
 package org.intellij.sonar.configuration;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
@@ -97,16 +98,18 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
   public LocalAnalysisScript toLocalAnalysisScript() {
     return LocalAnalysisScript.of(
         myNameTextField.getText(),
-        myScriptSourceTextPane.getText(),
-        myPathToSonarReportTextFieldWithBrowseButton.getText()
+        StringUtil.trimLeading(myScriptSourceTextPane.getText()),
+        myPathToSonarReportTextFieldWithBrowseButton.getText().trim()
     );
   }
 
   public void setValuesFrom(LocalAnalysisScript s) {
     myNameTextField.setText(s.getName());
-    myScriptSourceTextPane.setText(s.getSourceCode());
-    myPathToSonarReportTextFieldWithBrowseButton.setText(s.getPathToSonarReport());
+    myScriptSourceTextPane.setText(StringUtil.trimLeading(Strings.nullToEmpty(s.getSourceCode())));
+    myPathToSonarReportTextFieldWithBrowseButton.setText(Strings.nullToEmpty(s.getPathToSonarReport()).trim());
   }
+
+
 
   private final class ExternalEditorPathActionListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
