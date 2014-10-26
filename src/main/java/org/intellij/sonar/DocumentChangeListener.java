@@ -101,7 +101,7 @@ public class DocumentChangeListener extends AbstractProjectComponent {
             }
           }
 
-          if (file.isPresent() && !project.isDisposed()) {
+          if (file.isPresent() && !project.isDisposed() && project.isInitialized()) {
             Optional<PsiFile> psiFile = fromNullable(PsiManager.getInstance(project).findFile(file.get()));
             if (psiFile.isPresent()) {
               DaemonCodeAnalyzer.getInstance(project).restart(psiFile.get());
