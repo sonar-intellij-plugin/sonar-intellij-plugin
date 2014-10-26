@@ -1,6 +1,7 @@
 package org.intellij.sonar.sonarserver;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -24,6 +25,7 @@ import retrofit.http.Query;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -238,10 +240,13 @@ public class SonarServer {
   public List<Resource> getAllProjectsAndModules() {
     List<Resource> allResources = new LinkedList<Resource>();
     List<Resource> projects = getAllProjects(sonar);
+    projects = FluentIterable.from(projects).toSortedList(new ByResourceName());
+
     if (null != projects) {
       for (Resource project : projects) {
         allResources.add(project);
         List<Resource> modules = getAllModules(sonar, project.getId());
+        modules = FluentIterable.from(modules).toSortedList(new ByResourceName());
         if (null != modules) {
           for (Resource module : modules) {
             allResources.add(module);
@@ -302,4 +307,10 @@ public class SonarServer {
     return builder.build();
   }
 
+  private static class ByResourceName implements Comparator<Resource> {
+    @Override
+    public int compare(Resource resource, Resource resource2) {
+      return resource.getName().compareTo(resource2.getName());
+    }
+  }
 }
