@@ -20,6 +20,9 @@ public class SettingsUtil {
         if (settings.getResources().isEmpty()) {
           processed.setResources(projectSettings.get().getResources());
         }
+        processed.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
+        processed.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
+        processed.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
       }
     }
     final String scripName = settings.getLocalAnalysisScripName();
