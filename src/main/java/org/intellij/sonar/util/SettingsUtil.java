@@ -52,13 +52,4 @@ public class SettingsUtil {
     return settings;
   }
 
- /* public static SonarSettingsBean getSonarSettingsBeanFromSonarComponent(SonarSettingsComponent sonarSettingsComponent) {
-    return sonarSettingsComponent.getState();
-  }*/
-
-  /*public static SonarSettingsBean getSonarSettingsBeanFromProject(Project project) {
-//    SonarSettingsProjectComponent sonarProjectComponent = project.getComponent(SonarSettingsProjectComponent.class);
-//    return sonarProjectComponent.getState();
-    return null;
-  }*/
 }
