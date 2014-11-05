@@ -11,6 +11,7 @@ import org.intellij.sonar.persistence.*;
 public class SettingsUtil {
 
   public static Settings process(Project project, Settings settings) {
+    if (settings == null) return null;
     Settings processed = Settings.copyOf(settings);
     final String serverName = settings.getServerName();
     if (SonarServers.PROJECT.equals(serverName)) {

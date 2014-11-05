@@ -61,7 +61,7 @@ public class IssuesByFileIndexer {
       String fullFilePath = psiFile.getVirtualFile().getPath();
       ImmutableSet.Builder<SonarIssue> entriesBuilder = ImmutableSet.builder();
       final Settings settings = SettingsUtil.getSettingsFor(psiFile);
-
+      if (settings == null) continue;
       final Collection<Resource> resources = settings.getResources();
       if (resources == null || resources.isEmpty()) {
         matchFileByResource(fullFilePath, entriesBuilder, new Resource());
