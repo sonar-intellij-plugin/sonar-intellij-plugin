@@ -19,12 +19,17 @@
  */
 package org.intellij.sonar.analysis;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
+import com.intellij.codeInspection.InspectionProfile;
+import com.intellij.codeInspection.ex.GlobalInspectionContextBase;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
@@ -69,12 +74,32 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       this.settings = settings;
       this.project = project;
       this.module = module;
-
     }
+  }
+
+  private boolean isInspectionToolEnabled(final String toolName, final GlobalInspectionContext context) {
+    final InspectionProfile currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
+    final Project project = context.getProject();
+    return FluentIterable.from(currentProfile.getAllEnabledInspectionTools(project))
+        .transform(new Function<Tools, String>() {
+          @Override
+          public String apply(Tools tools) {
+            return tools.getShortName();
+          }
+        }).firstMatch(new Predicate<String>() {
+      @Override
+      public boolean apply(String shortName) {
+        return toolName.equals(shortName);
+      }
+    }).isPresent();
   }
 
   @Override
   public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
+
+    final boolean newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(NewIssuesGlobalInspectionTool.class.getSimpleName(), context);
+    final boolean oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(OldIssuesGlobalInspectionTool.class.getSimpleName(), context);
+    if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled) return;
 
     final Project project = context.getProject();
     SonarConsole.get(project).clear();
@@ -103,31 +128,35 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       }
     }
 
-    for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
-      if (downloadTask.isPresent()) {
-        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-          @Override
-          public void run() {
-            ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                downloadTask.get(), "Downloading Issues", true, project
-            );
-          }
-        }, ModalityState.NON_MODAL);
+    if (oldIssuesGlobalInspectionToolEnabled) {
+      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+        final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
+        if (downloadTask.isPresent()) {
+          ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+              ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                  downloadTask.get(), "Downloading Issues", true, project
+              );
+            }
+          }, ModalityState.NON_MODAL);
+        }
       }
     }
 
-    for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-      final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
-      if (scriptTask.isPresent()) {
-        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-          @Override
-          public void run() {
-            ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                scriptTask.get(), "Running Local Analysis", true, project
-            );
-          }
-        }, ModalityState.NON_MODAL);
+    if (newIssuesGlobalInspectionToolEnabled) {
+      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+        final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
+        if (scriptTask.isPresent()) {
+          ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+              ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                  scriptTask.get(), "Running Local Analysis", true, project
+              );
+            }
+          }, ModalityState.NON_MODAL);
+        }
       }
     }
 
