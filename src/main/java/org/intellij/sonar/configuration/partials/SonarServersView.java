@@ -91,7 +91,7 @@ public abstract class SonarServersView {
             mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
             UIUtil.selectComboBoxItem(mySonarServersComboBox, newSonarConfigurationBean.getName());
           } catch (IllegalArgumentException e) {
-            Messages.showErrorDialog(newSonarConfigurationBean.getName() + " already exists", "Sonar Name Error");
+            Messages.showErrorDialog(newSonarConfigurationBean.getName() + " already exists", "SonarQube Name Error");
             showSonarServerConfigurableDialog(newSonarConfigurationBean);
           }
         }
@@ -127,7 +127,7 @@ public abstract class SonarServersView {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
-        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove Sonar Server", Messages.getQuestionIcon());
+        int rc = Messages.showOkCancelDialog("Are you sure you want to remove " + selectedSonarServer.toString() + " ?", "Remove SonarQube Server", Messages.getQuestionIcon());
         if (rc == Messages.OK) {
           SonarServers.remove(selectedSonarServer.toString());
           mySonarServersComboBox.removeItem(selectedSonarServer);

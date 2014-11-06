@@ -103,10 +103,10 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
           }).size();
 
       if (newIssuesCount > 0) {
-        String errorText = String.format("Found %d new sonar issues", newIssuesCount);
-        Notifications.Bus.notify(new Notification("Sonar", "Sonar", errorText, NotificationType.WARNING), context.getProject());
+        String errorText = String.format("Found %d new SonarQube issues", newIssuesCount);
+        Notifications.Bus.notify(new Notification("SonarQube", "SonarQube", errorText, NotificationType.WARNING), context.getProject());
       } else {
-        Notifications.Bus.notify(new Notification("Sonar", "Sonar", "No new sonar issues", NotificationType.INFORMATION), context.getProject());
+        Notifications.Bus.notify(new Notification("SonarQube", "SonarQube", "No new SonarQube issues", NotificationType.INFORMATION), context.getProject());
       }
 
     }

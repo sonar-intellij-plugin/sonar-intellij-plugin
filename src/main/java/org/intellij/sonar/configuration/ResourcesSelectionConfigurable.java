@@ -82,7 +82,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       @Override
       public void actionPerformed(ActionEvent actionEvent) {
         DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable();
-        ProgressManager.getInstance().runProcessWithProgressSynchronously(downloadResourcesRunnable, "Loading sonar resources from server", true, myProject);
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(downloadResourcesRunnable, "Loading SonarQube resources from server", true, myProject);
       }
     });
 
@@ -115,12 +115,12 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
             }
           });
         } catch (Exception e) {
-          final String message = "Cannot fetch sonar project and modules from " + mySonarServerName
+          final String message = "Cannot fetch SonarQube project and modules from " + mySonarServerName
               + "\n\n" + Throwables.getStackTraceAsString(e);
           ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-              Messages.showErrorDialog(message, "Sonar Server Error");
+              Messages.showErrorDialog(message, "SonarQube Server Error");
             }
           });
         }

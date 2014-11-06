@@ -30,7 +30,7 @@ public class SonarServerConfigurable extends DialogWrapper {
   @Override
   protected void doOKAction() {
     if (StringUtil.isEmptyOrSpaces(myNameTestField.getText())) {
-      Messages.showErrorDialog("Please provide an unique name for the sonar server", "Empty Name");
+      Messages.showErrorDialog("Please provide an unique name for the SonarQube server", "Empty Name");
     } else if (!isHostUrlSyntaxCorrect()) {
       Messages.showErrorDialog("Host url syntax should be: http(s)://your.host(:1234)/possible/path", "Malformed Host Url");
     } else if (!myAnonymousCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(myUserTextField.getText())) {

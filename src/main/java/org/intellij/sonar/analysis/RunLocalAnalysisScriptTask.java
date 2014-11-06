@@ -122,7 +122,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       if (exitCode != 0) {
         Notifications.Bus.notify(
             new Notification(
-                "Sonar", "Sonar",
+                "SonarQube", "SonarQube",
                 String.format("Local analysis failed (%d)", exitCode), NotificationType.WARNING), enrichedSettings.project);
       } else {
         readIssuesFromSonarReport();
@@ -144,7 +144,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     }
     final SonarReport sonarReport = SonarReport.fromJson(sonarReportContent);
     final int issuesCount = sonarReport != null && sonarReport.getIssues() != null ? sonarReport.getIssues().size() : 0;
-    sonarConsole.info(String.format("Found %d issues in the sonar report", issuesCount));
+    sonarConsole.info(String.format("Found %d issues in the SonarQube report", issuesCount));
 
     if (enrichedSettings.settings.getResources().isEmpty()) {
       createIndexFrom(sonarReport, new Resource());
@@ -177,7 +177,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
           return sonarIssues;
         }
       }).size();
-      sonarConsole.info(String.format("Created index with %d issues from sonar report", issuesCount));
+      sonarConsole.info(String.format("Created index with %d issues from SonarQube report", issuesCount));
       final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
         @Override
         public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {

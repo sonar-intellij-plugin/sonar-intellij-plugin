@@ -48,7 +48,7 @@ public class SourcePathConfigurable extends DialogWrapper {
       FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false, true, false, false, false, true);
       fileDescriptor.setShowFileSystemRoots(true);
       fileDescriptor.setTitle("Configure Path");
-      fileDescriptor.setDescription("Configure sonar source path for incremental analysis script");
+      fileDescriptor.setDescription("Configure SonarQube source path for incremental analysis script");
       FileChooser.chooseFiles(fileDescriptor, null, previous, new Consumer<List<VirtualFile>>() {
         @Override
         public void consume(final java.util.List<VirtualFile> files) {

@@ -25,7 +25,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 
 public class SonarToolWindowFactory implements ToolWindowFactory {
 
-  public static final String TOOL_WINDOW_ID = "Sonar";
+  public static final String TOOL_WINDOW_ID = "SonarQube";
 
   @Override
   public void createToolWindowContent(Project project, ToolWindow toolWindow) {
