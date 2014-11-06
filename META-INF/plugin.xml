@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>2.0.1-SNAPSHOT</version>
+    <version>2.0.1</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">SonarQube Community Intellij Plugin
@@ -11,9 +11,27 @@
 
     <description>Connects SonarQube to IntelliJ IDEA</description>
 
-    <change-notes><![CDATA[
-      2.0.0 - Issues download and incremental analysis with sonar 4.x
-      ]]>
+
+    <change-notes>
+        <![CDATA[
+<p>
+2.0.1
+<ul>
+<li>Fixes #84: download more then one resources in one analysis</li>
+<li>Fixes #73: download or local analysis only if inspections are enabled in current context</li>
+<li>Fixes #70: Project is not yet initialized exception in DocumentChangeListener</li>
+<li>Fixes #67: alternative working dir does not work in pycharm</li>
+<li>Fixes #64: sonar resources not sorted alpha-numerically</li>
+<li>Fixes #62: Remove space in start of script</li>
+</ul>
+</p>
+<p>
+2.0.0
+<ul>
+<li>Issues download and incremental analysis with sonar 4.x</li>
+</ul>
+</p>
+]]>
     </change-notes>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
