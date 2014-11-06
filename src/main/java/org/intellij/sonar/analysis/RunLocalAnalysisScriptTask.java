@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
 import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
@@ -92,7 +91,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     sonarConsole.info("working dir: " + this.workingDir.getPath());
     sonarConsole.info("run: " + this.sourceCode);
 
-    final Stopwatch stopwatch = new Stopwatch().start();
+    final long startTime = System.currentTimeMillis();
 
     final Process process;
     try {
@@ -118,7 +117,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
     try {
       int exitCode = process.exitValue();
-      sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)));
+      sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, System.currentTimeMillis() - startTime));
       if (exitCode != 0) {
         Notifications.Bus.notify(
             new Notification(
