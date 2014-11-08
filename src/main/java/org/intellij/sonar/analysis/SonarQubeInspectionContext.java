@@ -34,12 +34,10 @@ import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElementVisitor;
@@ -132,14 +130,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
         final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
         if (downloadTask.isPresent()) {
-          ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-              ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                  downloadTask.get(), "Downloading Issues", true, project
-              );
-            }
-          }, ModalityState.NON_MODAL);
+          downloadTask.get().run();
         }
       }
     }
@@ -148,14 +139,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
         final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
         if (scriptTask.isPresent()) {
-          ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-              ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                  scriptTask.get(), "Running Local Analysis", true, project
-              );
-            }
-          }, ModalityState.NON_MODAL);
+          scriptTask.get().run();
         }
       }
     }

@@ -127,7 +127,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         readIssuesFromSonarReport();
       }
     } catch (IllegalThreadStateException ignore) {
-      // do nothing, if the script execution is aborted
+      sonarConsole.info("Script execution aborted.");
     }
 
   }
