@@ -29,14 +29,6 @@ public class SonarResourcesTableView {
   private final SonarServersView mySonarServersView;
   private final Project myProject;
 
-
-  public SonarResourcesTableView(Project project, SonarServersView sonarServersView) {
-    this.mySonarServersView = sonarServersView;
-    this.mySonarResourcesTable = new TableView<Resource>();
-    this.myJComponent = createJComponent();
-    this.myProject = project;
-  }
-
   private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
     @Nullable
     @Override
@@ -61,7 +53,6 @@ public class SonarResourcesTableView {
   };
 
   private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
-
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
@@ -69,6 +60,13 @@ public class SonarResourcesTableView {
     }
 
   };
+
+  public SonarResourcesTableView(Project project, SonarServersView sonarServersView) {
+    this.mySonarServersView = sonarServersView;
+    this.mySonarResourcesTable = new TableView<Resource>();
+    this.myJComponent = createJComponent();
+    this.myProject = project;
+  }
 
   private JComponent createJComponent() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).

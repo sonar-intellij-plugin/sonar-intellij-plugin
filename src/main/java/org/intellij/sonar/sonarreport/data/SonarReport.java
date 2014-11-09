@@ -13,6 +13,9 @@ public class SonarReport {
   private List<Component> components;
   private List<Rule> rules;
   private List<User> users;
+  private static final Gson GSON = new GsonBuilder()
+      .registerTypeAdapter(DateTime.class, new DateTimeTypeConverter())
+      .create();
 
   public SonarReport(String version, List<Issue> issues, List<Component> components, List<Rule> rules, List<User> users) {
     this.version = version;
@@ -85,11 +88,7 @@ public class SonarReport {
         '}';
   }
 
-  private static final Gson gson = new GsonBuilder()
-      .registerTypeAdapter(DateTime.class, new DateTimeTypeConverter())
-      .create();
-
   public static SonarReport fromJson(String json) {
-    return gson.fromJson(json, SonarReport.class);
+    return GSON.fromJson(json, SonarReport.class);
   }
 }

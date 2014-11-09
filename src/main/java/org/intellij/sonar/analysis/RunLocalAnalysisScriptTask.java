@@ -38,6 +38,15 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   private final SonarConsole sonarConsole;
   private final ImmutableList<PsiFile> psiFiles;
 
+  public RunLocalAnalysisScriptTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, String sourceCode, String pathToSonarReport, File workingDir, ImmutableList<PsiFile> psiFiles) {
+    this.enrichedSettings = enrichedSettings;
+    this.sourceCode = sourceCode;
+    this.pathToSonarReport = pathToSonarReport;
+    this.workingDir = workingDir;
+    this.psiFiles = psiFiles;
+    this.sonarConsole = SonarConsole.get(enrichedSettings.project);
+  }
+
   public static Optional<RunLocalAnalysisScriptTask> from(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, ImmutableList<PsiFile> psiFiles) {
     enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
     final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
@@ -73,15 +82,6 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     return Optional.of(new RunLocalAnalysisScriptTask(
         enrichedSettings, sourceCode, pathToSonarReport, workingDir,
         psiFiles));
-  }
-
-  public RunLocalAnalysisScriptTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, String sourceCode, String pathToSonarReport, File workingDir, ImmutableList<PsiFile> psiFiles) {
-    this.enrichedSettings = enrichedSettings;
-    this.sourceCode = sourceCode;
-    this.pathToSonarReport = pathToSonarReport;
-    this.workingDir = workingDir;
-    this.psiFiles = psiFiles;
-    this.sonarConsole = SonarConsole.get(enrichedSettings.project);
   }
 
   public void run() {
@@ -126,8 +126,8 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       } else {
         readIssuesFromSonarReport();
       }
-    } catch (IllegalThreadStateException ignore) {
-      sonarConsole.info("Script execution aborted.");
+    } catch (IllegalThreadStateException ite) {
+      sonarConsole.info("Script execution aborted.\n"+Throwables.getStackTraceAsString(ite));
     }
 
   }

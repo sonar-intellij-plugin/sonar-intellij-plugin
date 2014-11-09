@@ -5,6 +5,7 @@ import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.intellij.sonar.configuration.LocalAnalysisScriptConfigurable;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.persistence.LocalAnalysisScript;
 import org.intellij.sonar.persistence.LocalAnalysisScripts;
 import org.intellij.sonar.util.UIUtil;
@@ -59,7 +60,9 @@ public abstract class LocalAnalysisScriptView {
             myLocalAnalysisScriptComboBox.addItem(makeObj(newLocalAnalysisScript.getName()));
             UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, newLocalAnalysisScript.getName());
           } catch (IllegalArgumentException ex) {
-            Messages.showErrorDialog(newLocalAnalysisScript.getName() + " already exists", "Local Analysis Script Name Error");
+            final String errorMessage = newLocalAnalysisScript.getName() + " already exists";
+            SonarConsole.get(myProject).error(errorMessage + "\n" + Throwables.getStackTraceAsString(ex));
+            Messages.showErrorDialog(errorMessage, "Local Analysis Script Name Error");
             showLocalAnalysisScriptConfigurableDialog(newLocalAnalysisScript);
           }
         }

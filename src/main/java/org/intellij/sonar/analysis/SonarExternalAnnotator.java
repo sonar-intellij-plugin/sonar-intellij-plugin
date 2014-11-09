@@ -122,8 +122,6 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
             }
           } else {
             TextAttributes attrs = new TextAttributes();
-//            uncomment to make visible
-//            attrs.setForegroundColor(JBColor.BLUE);
             final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
                 textRange.getStartOffset(),
                 textRange.getEndOffset(),
@@ -167,8 +165,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
     if (keymapManager != null) {
       final Keymap keymap = keymapManager.getActiveKeymap();
       myShortcutText = keymap == null ? "" : "(" + KeymapUtil.getShortcutsText(keymap.getShortcuts(IdeActions.ACTION_SHOW_ERROR_DESCRIPTION)) + ")";
-    }
-    else {
+    } else {
       myShortcutText = "";
     }
     @NonNls final String link = " <a "

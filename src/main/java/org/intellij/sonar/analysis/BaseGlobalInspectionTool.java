@@ -11,7 +11,23 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionTool {
+public abstract class BaseGlobalInspectionTool extends GlobalSimpleInspectionTool {
+
+  @Override
+  public void checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, @NotNull final ProblemsHolder problemsHolder, @NotNull final GlobalInspectionContext globalContext, @NotNull final ProblemDescriptionsProcessor problemDescriptionsProcessor) {
+    Set<SonarIssue> issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+    for (final SonarIssue issue : issues) {
+      if (!processIssue(issue)) continue;
+      final ProblemHighlightType severity = SonarToIjSeverityMapping.toProblemHighlightType(issue.getSeverity());
+      final TextRange textRange = Finders.getLineRange(psiFile, issue.getLine());
+      final ProblemDescriptor problemDescriptor = problemsHolder.getManager().createProblemDescriptor(psiFile, textRange,
+          issue.formattedMessage() + " " + issue.getRuleKey(),
+          severity,
+          false
+      );
+      problemDescriptionsProcessor.addProblemElement(globalContext.getRefManager().getReference(psiFile), problemDescriptor);
+    }
+  }
 
   /**
    * @see com.intellij.codeInspection.InspectionEP#displayName
@@ -26,23 +42,5 @@ abstract public class BaseGlobalInspectionTool extends GlobalSimpleInspectionToo
   }
 
   public abstract Boolean processIssue(SonarIssue issue);
-
-  @Override
-  public void checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, @NotNull final ProblemsHolder problemsHolder, @NotNull final GlobalInspectionContext globalContext, @NotNull final ProblemDescriptionsProcessor problemDescriptionsProcessor) {
-
-    Set<SonarIssue> issues = IssuesByFileIndex.getIssuesForFile(psiFile);
-    for (final SonarIssue issue : issues) {
-      if (!processIssue(issue)) continue;
-      final ProblemHighlightType severity = SonarToIjSeverityMapping.toProblemHighlightType(issue.getSeverity());
-      final TextRange textRange = Finders.getLineRange(psiFile, issue.getLine());
-      final ProblemDescriptor problemDescriptor = problemsHolder.getManager().createProblemDescriptor(psiFile, textRange,
-          issue.formattedMessage() + " " + issue.getRuleKey(),
-          severity,
-          false
-      );
-      problemDescriptionsProcessor.addProblemElement(globalContext.getRefManager().getReference(psiFile), problemDescriptor);
-    }
-
-  }
 
 }
