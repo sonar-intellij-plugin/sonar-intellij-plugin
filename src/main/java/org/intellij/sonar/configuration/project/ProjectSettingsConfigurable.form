@@ -208,7 +208,7 @@
             </constraints>
             <properties>
               <selected value="true"/>
-              <text value="show SonarQube tool window if starting analysis"/>
+              <text value="Show SonarQube tool window if starting analysis"/>
             </properties>
           </component>
           <hspacer id="687b0">

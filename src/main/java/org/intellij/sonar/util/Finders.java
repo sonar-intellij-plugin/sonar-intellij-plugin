@@ -17,7 +17,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -82,7 +81,7 @@ public class Finders {
 
   @NotNull
   public static Set<RangeHighlighter> findAllRangeHighlightersFrom(@NotNull Document document) {
-    final HashSet<RangeHighlighter> highlighters = Sets.newHashSet();
+    final Set<RangeHighlighter> highlighters = Sets.newHashSet();
     for (Editor editor: findEditorsFrom(document)) {
 
       final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();

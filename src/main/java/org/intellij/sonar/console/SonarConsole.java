@@ -28,7 +28,7 @@ public class SonarConsole extends AbstractProjectComponent {
   }
 
   private ConsoleView createConsoleView(Project project) {
-    final ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+    final ConsoleView newConsoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
     final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
     ApplicationManager.getApplication().invokeLater(new Runnable() {
       @Override
@@ -36,13 +36,13 @@ public class SonarConsole extends AbstractProjectComponent {
         toolWindow.show(new Runnable() {
           @Override
           public void run() {
-            Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "SonarQube Console", true);
+            Content content = toolWindow.getContentManager().getFactory().createContent(newConsoleView.getComponent(), "SonarQube Console", true);
             toolWindow.getContentManager().addContent(content);
           }
         });
       }
     });
-    return consoleView;
+    return newConsoleView;
   }
 
   public void log(String msg, ConsoleLogLevel logLevel) {
