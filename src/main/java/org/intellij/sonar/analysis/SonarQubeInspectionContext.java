@@ -40,14 +40,18 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
+import org.intellij.sonar.console.SonarToolWindowFactory;
 import org.intellij.sonar.index.IssuesByFileIndex;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
+import org.intellij.sonar.persistence.SonarConsoleSettings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -100,7 +104,11 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled) return;
 
     final Project project = context.getProject();
+
+    showSonarQubeToolWindowIfNeeded(project);
+
     SonarConsole.get(project).clear();
+
     final Set<Module> modules = Sets.newHashSet();
     final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
 
@@ -146,6 +154,18 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
   }
 
+  private void showSonarQubeToolWindowIfNeeded(final Project project) {
+    if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
+      ApplicationManager.getApplication().invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
+          toolWindow.show(null);
+        }
+      });
+    }
+  }
+
   @Override
   public void performPostRunActivities(@NotNull List<InspectionToolWrapper> inspections, @NotNull GlobalInspectionContext context) {
     DocumentChangeListener.CHANGED_FILES.clear();
@@ -155,6 +175,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     // rerun external annotator and refresh highlighters in editor
     removeAllHighlighters();
     DaemonCodeAnalyzer.getInstance(project).restart();
+
   }
 
   private static void removeAllHighlighters() {

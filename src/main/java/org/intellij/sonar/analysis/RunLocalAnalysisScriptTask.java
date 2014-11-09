@@ -86,8 +86,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   public void run() {
 
-    ProgressManager.getInstance().getProgressIndicator().setText(this.workingDir.getName());
-    ProgressManager.getInstance().getProgressIndicator().setText2(this.sourceCode);
+    final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+    indicator.setText(this.workingDir.getName());
+    indicator.setText2(this.sourceCode);
+    indicator.setIndeterminate(true);
+
     sonarConsole.info("working dir: " + this.workingDir.getPath());
     sonarConsole.info("run: " + this.sourceCode);
 
@@ -104,9 +107,6 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     final StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(), sonarConsole, INFO);
     errorGobbler.start();
     outputGobbler.start();
-
-    final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-    indicator.setIndeterminate(true);
 
     while (outputGobbler.isAlive()) {
       if (indicator.isCanceled()) {

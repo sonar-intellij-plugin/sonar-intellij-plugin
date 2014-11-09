@@ -13,6 +13,7 @@ import org.intellij.sonar.configuration.partials.AlternativeWorkingDirActionList
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
+import org.intellij.sonar.persistence.SonarConsoleSettings;
 import org.intellij.sonar.util.LocalAnalysisScriptsUtil;
 import org.intellij.sonar.util.SonarServersUtil;
 import org.intellij.sonar.util.UIUtil;
@@ -33,6 +34,7 @@ import static org.intellij.sonar.util.UIUtil.makeObj;
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
   private final ProjectSettings myProjectSettings;
+  private final SonarConsoleSettings mySonarConsoleSettings;
   private final ProjectLocalAnalysisScriptView myLocalAnalysisScriptView;
   private final SonarResourcesTableView mySonarResourcesTableView;
   private final ProjectSonarServersView mySonarServersView;
@@ -50,10 +52,12 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   private JCheckBox myUseAlternativeWorkingDirCheckBox;
   private JComboBox myWorkingDirComboBox;
   private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
+  private JCheckBox myShowSonarQubeToolWindowCheckBox;
 
   public ProjectSettingsConfigurable(Project project) {
     this.myProject = project;
     this.myProjectSettings = ProjectSettings.getInstance(project);
+    this.mySonarConsoleSettings = SonarConsoleSettings.getInstance();
     this.mySonarServersView = new ProjectSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton, project);
     this.myLocalAnalysisScriptView = new ProjectLocalAnalysisScriptView(myLocalAnalysisScriptComboBox, myAddLocalAnalysisScriptButton, myEditLocalAnalysisScriptButton, myRemoveLocalAnalysisScriptButton, project);
     this.mySonarResourcesTableView = new SonarResourcesTableView(project, mySonarServersView);
@@ -110,14 +114,25 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
 
   @Override
   public boolean isModified() {
+    return isProjectSettingsModified() || isSonarConsoleSettings();
+  }
+
+  private boolean isProjectSettingsModified() {
     if (null == myProjectSettings) return false;
     Settings state = myProjectSettings.getState();
     return null == state || !state.equals(this.toSettings());
   }
 
+  private boolean isSonarConsoleSettings() {
+    if (null == mySonarConsoleSettings) return false;
+    SonarConsoleSettings state = mySonarConsoleSettings.getState();
+    return null == state || !state.equals(this.toSonarConsoleSettings());
+  }
+
   @Override
   public void apply() throws ConfigurationException {
     myProjectSettings.loadState(this.toSettings());
+    mySonarConsoleSettings.loadState(this.toSonarConsoleSettings());
   }
 
   @Override
@@ -125,6 +140,10 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     if (myProjectSettings != null && myProjectSettings.getState() != null) {
       Settings persistedSettings = myProjectSettings.getState();
       this.setValuesFromSettings(persistedSettings);
+    }
+    if (mySonarConsoleSettings != null && mySonarConsoleSettings.getState() != null) {
+      final SonarConsoleSettings persistedSettings = mySonarConsoleSettings.getState();
+      this.setValuesFromSonarConsoleSettings(persistedSettings);
     }
   }
 
@@ -187,6 +206,15 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     myUseAlternativeWorkingDirCheckBox.setSelected(Optional.fromNullable(settings.getUseAlternativeWorkingDir()).or(false));
 
     processAlternativeDirSelections();
+  }
+
+  public SonarConsoleSettings toSonarConsoleSettings() {
+    return SonarConsoleSettings.of(myShowSonarQubeToolWindowCheckBox.isSelected());
+  }
+
+  public void setValuesFromSonarConsoleSettings(SonarConsoleSettings settings) {
+    if (null == settings) return;
+    myShowSonarQubeToolWindowCheckBox.setSelected(settings.isShowSonarConsoleOnAnalysis());
   }
 
 }

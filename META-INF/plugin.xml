@@ -93,6 +93,8 @@
                 serviceImplementation="org.intellij.sonar.persistence.LocalAnalysisScripts"/>
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent"/>
+        <applicationService
+                serviceImplementation="org.intellij.sonar.persistence.SonarConsoleSettings"/>
         <toolWindow id="SonarQube" anchor="bottom"
                     icon="/images/onde-sonar-13.png"
                     factoryClass="org.intellij.sonar.console.SonarToolWindowFactory"/>
