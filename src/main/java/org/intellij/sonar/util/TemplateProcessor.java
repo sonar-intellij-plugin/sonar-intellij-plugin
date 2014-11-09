@@ -65,37 +65,37 @@ public class TemplateProcessor {
 
   private String replacePlaceHolders(String template, File workingDir) {
     String processedTemplate = template;
-    processedTemplate = processedTemplate.replaceAll(WORKING_DIR.getRegex(), workingDir.getPath());
-    processedTemplate = processedTemplate.replaceAll(WORKING_DIR_NAME.getRegex(), workingDir.getName());
+    processedTemplate = processedTemplate.replace(WORKING_DIR.getVariableName(), workingDir.getPath());
+    processedTemplate = processedTemplate.replace(WORKING_DIR_NAME.getVariableName(), workingDir.getName());
     return processedTemplate;
   }
 
   private String replacePlaceHolders(String template, Module module) {
     String processedTemplate = template;
-    processedTemplate = processedTemplate.replaceAll(MODULE_NAME.getRegex(), module.getName());
+    processedTemplate = processedTemplate.replace(MODULE_NAME.getVariableName(), module.getName());
     final VirtualFile moduleFile = module.getModuleFile();
     if (moduleFile == null) return processedTemplate;
     final VirtualFile moduleBaseDir = moduleFile.getParent();
-    processedTemplate = processedTemplate.replaceAll(MODULE_BASE_DIR.getRegex(), moduleBaseDir.getPath());
-    processedTemplate = processedTemplate.replaceAll(MODULE_BASE_DIR_NAME.getRegex(), moduleBaseDir.getName());
+    processedTemplate = processedTemplate.replace(MODULE_BASE_DIR.getVariableName(), moduleBaseDir.getPath());
+    processedTemplate = processedTemplate.replace(MODULE_BASE_DIR_NAME.getVariableName(), moduleBaseDir.getName());
     return processedTemplate;
   }
 
   public static String replacePlaceHolders(String template, Project project) {
     String processedTemplate = template;
-    processedTemplate = processedTemplate.replaceAll(PROJECT_NAME.getRegex(), project.getName());
-    processedTemplate = processedTemplate.replaceAll(PROJECT_BASE_DIR.getRegex(), project.getBasePath());
-    processedTemplate = processedTemplate.replaceAll(PROJECT_BASE_DIR_NAME.getRegex(), project.getBaseDir().getName());
+    processedTemplate = processedTemplate.replace(PROJECT_NAME.getVariableName(), project.getName());
+    processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR.getVariableName(), project.getBasePath());
+    processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR_NAME.getVariableName(), project.getBaseDir().getName());
     return processedTemplate;
   }
 
   public static String replacePlaceHolders(String template, SonarServerConfig sonarServerConfig) {
     String processedTemplate = template;
-    processedTemplate = processedTemplate.replaceAll(SONAR_HOST_URL.getRegex(), sonarServerConfig.getHostUrl());
-    processedTemplate = processedTemplate.replaceAll(SONAR_SERVER_NAME.getRegex(), sonarServerConfig.getName());
-    processedTemplate = processedTemplate.replaceAll(SONAR_USER_NAME.getRegex(), sonarServerConfig.getUser());
+    processedTemplate = processedTemplate.replace(SONAR_HOST_URL.getVariableName(), sonarServerConfig.getHostUrl());
+    processedTemplate = processedTemplate.replace(SONAR_SERVER_NAME.getVariableName(), sonarServerConfig.getName());
+    processedTemplate = processedTemplate.replace(SONAR_USER_NAME.getVariableName(), sonarServerConfig.getUser());
     if (template.contains(SONAR_USER_PASSWORD.getVariableName())) {
-      processedTemplate = processedTemplate.replaceAll(SONAR_USER_PASSWORD.getRegex(), sonarServerConfig.loadPassword());
+      processedTemplate = processedTemplate.replace(SONAR_USER_PASSWORD.getVariableName(), sonarServerConfig.loadPassword());
     }
     return processedTemplate;
   }

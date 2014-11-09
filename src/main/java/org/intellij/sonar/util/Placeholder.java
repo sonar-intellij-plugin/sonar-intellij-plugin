@@ -14,10 +14,6 @@ public enum Placeholder {
   SONAR_USER_NAME,
   SONAR_USER_PASSWORD;
 
-  public String getRegex() {
-    return "\\" + getVariableName();
-  }
-
   public String getVariableName() {
     return "$" + this.name();
   }
