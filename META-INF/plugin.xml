@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>SNAPSHOT</version>
+    <version>2.0.3</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">SonarQube Community Intellij Plugin
@@ -11,9 +11,17 @@
 
     <description>Connects SonarQube to IntelliJ IDEA</description>
 
-
     <change-notes>
         <![CDATA[
+<p>
+2.0.3
+<ul>
+<li>Fixes #80: When starting a local analysis script the SonarQube tool window should be shown</li>
+<li>Fixes #76: IDEA hangs and eats all memory</li>
+<li>Fixes #66: It should be possible to put analysis in background Fixes</li>
+<li>Fixes #72: Canceling a local analysis does not work</li>
+</ul>
+</p>
 <p>
 2.0.2
 <ul>
