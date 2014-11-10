@@ -23,7 +23,10 @@ public final class AlternativeWorkingDirActionListener implements ActionListener
     private final TextFieldWithBrowseButton textFieldWithBrowseButton;
     private final VirtualFile dirToSelect;
 
-    public AlternativeWorkingDirActionListener(Project project, TextFieldWithBrowseButton textFieldWithBrowseButton, VirtualFile dirToSelect) {
+    public AlternativeWorkingDirActionListener(
+            Project project,
+            TextFieldWithBrowseButton textFieldWithBrowseButton,
+            VirtualFile dirToSelect) {
         this.project = project;
         this.textFieldWithBrowseButton = textFieldWithBrowseButton;
         this.dirToSelect = dirToSelect;
@@ -34,7 +37,9 @@ public final class AlternativeWorkingDirActionListener implements ActionListener
         VirtualFile previous = application.runWriteAction(new NullableComputable<VirtualFile>() {
             public VirtualFile compute() {
                 final String path = FileUtil.toSystemIndependentName(textFieldWithBrowseButton.getText());
-                return !StringUtil.isEmptyOrSpaces(path) ? LocalFileSystem.getInstance().refreshAndFindFileByPath(path) : null;
+                return
+                        !StringUtil.isEmptyOrSpaces(path) ?
+                                LocalFileSystem.getInstance().refreshAndFindFileByPath(path) : null;
             }
         });
         FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false, true, false, false, false, false);

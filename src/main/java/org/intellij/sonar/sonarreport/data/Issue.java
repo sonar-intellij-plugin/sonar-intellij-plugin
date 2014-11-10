@@ -11,7 +11,16 @@ public class Issue {
     private String status;
     private Boolean isNew;
 
-    public Issue(String key, String component, Integer line, String message, String severity, String rule, String status, Boolean isNew) {
+    public Issue(
+            String key,
+            String component,
+            Integer line,
+            String message,
+            String severity,
+            String rule,
+            String status,
+            Boolean isNew) {
+
         this.key = key;
         this.component = component;
         this.line = line;
@@ -54,9 +63,9 @@ public class Issue {
         return isNew;
     }
 
-    @SuppressWarnings("RedundantIfStatement")
+    @SuppressWarnings("RedundantIfStatement") //NOSONAR
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o) { //NOSONAR
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 

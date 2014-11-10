@@ -11,27 +11,33 @@ import org.jetbrains.annotations.NotNull;
 
 public class ApplicationComponent implements com.intellij.openapi.components.ApplicationComponent {
 
+    private IdeaPluginDescriptor plugin;
+
     @Override
     public void initComponent() {
-        IdeaPluginDescriptor plugin = PluginManager.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
+        plugin = PluginManager.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
         if (plugin != null && plugin.isEnabled()) {
-            registerExternalAnnotatorForAllLanguages(plugin);
+            registerExternalAnnotatorForAllLanguages();
         }
     }
 
-    private void registerExternalAnnotatorForAllLanguages(IdeaPluginDescriptor plugin) {
+    private void registerExternalAnnotatorForAllLanguages() {
         for (Language language : Language.getRegisteredLanguages()) {
-            LanguageExtensionPoint<SonarExternalAnnotator> extensionPoint = new LanguageExtensionPoint<SonarExternalAnnotator>();
-            extensionPoint.language = language.getID();
-            extensionPoint.implementationClass = SonarExternalAnnotator.class.getName();
-            extensionPoint.setPluginDescriptor(plugin);
-            Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(extensionPoint);
+            registerExternalAnnotatorFor(language);
         }
+    }
+
+    private void registerExternalAnnotatorFor(Language language) {
+        LanguageExtensionPoint<SonarExternalAnnotator> ep = new LanguageExtensionPoint<SonarExternalAnnotator>();
+        ep.language = language.getID();
+        ep.implementationClass = SonarExternalAnnotator.class.getName();
+        ep.setPluginDescriptor(plugin);
+        Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(ep);
     }
 
     @Override
     public void disposeComponent() {
-
+        // nothing to free
     }
 
     @NotNull

@@ -32,7 +32,12 @@ public class DownloadIssuesTask implements Runnable {
     private final SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
     private final SonarConsole sonarConsole;
 
-    public DownloadIssuesTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, SonarServerConfig sonarServerConfig, Set<String> resourceKeys, ImmutableList<PsiFile> psiFiles) {
+    public DownloadIssuesTask(
+            SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+            SonarServerConfig sonarServerConfig,
+            Set<String> resourceKeys,
+            ImmutableList<PsiFile> psiFiles) {
+
         this.enrichedSettings = enrichedSettings;
         this.sonarServerConfig = sonarServerConfig;
         this.resourceKeys = resourceKeys;
@@ -40,7 +45,9 @@ public class DownloadIssuesTask implements Runnable {
         this.sonarConsole = SonarConsole.get(enrichedSettings.project);
     }
 
-    public static Optional<DownloadIssuesTask> from(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, ImmutableList<PsiFile> psiFiles) {
+    public static Optional<DownloadIssuesTask> from(
+            SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+            ImmutableList<PsiFile> psiFiles) {
         final Settings settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
         final Optional<SonarServerConfig> c = SonarServers.get(settings.getServerName());
         if (!c.isPresent()) return Optional.absent();
@@ -83,8 +90,12 @@ public class DownloadIssuesTask implements Runnable {
 
         for (Map.Entry<String, ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
             final ImmutableList<Issue> issues = entry.getValue();
-            final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles).withSonarServerIssues(issues).create();
-            final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
+            final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
+                    .withSonarServerIssues(issues)
+                    .create();
+            final Optional<IssuesByFileIndexProjectComponent> indexComponent =
+                    IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
+
             if (indexComponent.isPresent()) {
                 indexComponent.get().getIndex().putAll(index);
             }

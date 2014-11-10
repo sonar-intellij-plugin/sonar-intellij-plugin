@@ -25,13 +25,17 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
 
     @Nullable
     @Override
-    public String getDescription(@NotNull final String sonarIssueKey, @NotNull final Editor editor) {
+    public String getDescription(
+            @NotNull final String sonarIssueKey,
+            @NotNull final Editor editor) {
+
         // retrieve sonar issue data
         final Project project = editor.getProject();
         if (project == null || project.isDisposed()) return null;
         final PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
         if (psiFile == null) return null;
-        final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+        final Optional<IssuesByFileIndexProjectComponent> indexComponent =
+                IssuesByFileIndexProjectComponent.getInstance(project);
         if (!indexComponent.isPresent()) return null;
         final IssuesByFileIndexProjectComponent state = indexComponent.get().getState();
         if (state == null) return null;

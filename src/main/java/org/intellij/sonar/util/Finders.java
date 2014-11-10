@@ -28,25 +28,30 @@ public class Finders {
         if (line == null) return Optional.absent();
         int ijLine = line - 1;
         final Document document = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
-        Optional<PsiElement> element = Optional.absent();
-        try {
-            if (document != null) {
-                final int offset = document.getLineStartOffset(ijLine);
-                element = fromNullable(file.getViewProvider().findElementAt(offset));
-                if (element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
-                    element = fromNullable(element.get().getNextSibling());
-                }
-            }
-        } catch (@NotNull final IndexOutOfBoundsException ignore) {
-            // Ignore this exception
-        }
+        Optional<PsiElement> element = getFirstSiblingFrom(file, ijLine, document);
 
         while (element.isPresent() && element.get().getTextLength() == 0) {
             element = fromNullable(element.get().getNextSibling());
         }
 
-        if (document != null && element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
+        if (document != null && element.isPresent()
+                && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
             element = Optional.absent();
+        }
+        return element;
+    }
+
+    private static Optional<PsiElement> getFirstSiblingFrom(PsiFile file, int ijLine, Document document) {
+        if (document == null) return Optional.absent();
+        Optional<PsiElement> element = Optional.absent();
+        try {
+            final int offset = document.getLineStartOffset(ijLine);
+            element = fromNullable(file.getViewProvider().findElementAt(offset));
+            if (element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
+                element = fromNullable(element.get().getNextSibling());
+            }
+        } catch (@NotNull final IndexOutOfBoundsException ignore) { //NOSONAR
+            // element keeps to be absent
         }
         return element;
     }
@@ -114,7 +119,9 @@ public class Finders {
                 public void run() {
                     final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
                     for (RangeHighlighter highlighter : highlighters) {
-                        final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
+                        final LogicalPosition logicalPosition =
+                                editor.offsetToLogicalPosition(highlighter.getStartOffset());
+
                         final int lineOfHighlighter = logicalPosition.line;
                         if (lineOfHighlighter == line) {
                             foundHighlighter = highlighter;
@@ -148,7 +155,7 @@ public class Finders {
             int lineStartOffset = document.getLineStartOffset(line);
             int lineEndOffset = document.getLineEndOffset(line);
             return new TextRange(lineStartOffset, lineEndOffset);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException ignore) { //NOSONAR
             // Local file should be different than remote
             return TextRange.EMPTY_RANGE;
         }
