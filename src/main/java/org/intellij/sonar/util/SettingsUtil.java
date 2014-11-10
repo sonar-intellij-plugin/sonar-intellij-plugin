@@ -10,47 +10,48 @@ import org.intellij.sonar.persistence.*;
 
 public class SettingsUtil {
 
-  public static Settings process(Project project, Settings settings) {
-    if (settings == null) return null;
-    Settings processed = Settings.copyOf(settings);
-    final String serverName = settings.getServerName();
-    if (SonarServers.PROJECT.equals(serverName)) {
-      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
-      if (projectSettings.isPresent()) {
-        processed.setServerName(projectSettings.get().getServerName());
-        if (settings.getResources().isEmpty()) {
-          processed.setResources(projectSettings.get().getResources());
+    public static Settings process(Project project, Settings settings) {
+        if (settings == null) return null;
+        Settings processed = Settings.copyOf(settings);
+        final String serverName = settings.getServerName();
+        if (SonarServers.PROJECT.equals(serverName)) {
+            final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
+            if (projectSettings.isPresent()) {
+                processed.setServerName(projectSettings.get().getServerName());
+                if (settings.getResources().isEmpty()) {
+                    processed.setResources(projectSettings.get().getResources());
+                }
+                processed.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
+                processed.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
+                processed.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
+            }
         }
-        processed.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
-        processed.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
-        processed.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
-      }
-    }
-    final String scripName = settings.getLocalAnalysisScripName();
-    if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
-      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
-      if (projectSettings.isPresent()) {
-        processed.setLocalAnalysisScripName(projectSettings.get().getLocalAnalysisScripName());
-      }
+        final String scripName = settings.getLocalAnalysisScripName();
+        if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
+            final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
+            if (projectSettings.isPresent()) {
+                processed.setLocalAnalysisScripName(projectSettings.get().getLocalAnalysisScripName());
+            }
+        }
+
+        return processed;
     }
 
-    return processed;
-  }
-  public static Settings getSettingsFor(PsiFile psiFile) {
-    Settings settings = null;
-    Project project = psiFile.getProject();
-    VirtualFile virtualFile = psiFile.getVirtualFile();
-    if (null != virtualFile) {
-      Module module = ModuleUtil.findModuleForFile(virtualFile, project);
-      if (null != module) {
-        settings = ModuleSettings.getInstance(module).getState();
-      }
-    } else {
-      settings = ProjectSettings.getInstance(project).getState();
-    }
-    settings = process(project, settings);
+    public static Settings getSettingsFor(PsiFile psiFile) {
+        Settings settings = null;
+        Project project = psiFile.getProject();
+        VirtualFile virtualFile = psiFile.getVirtualFile();
+        if (null != virtualFile) {
+            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
+            if (null != module) {
+                settings = ModuleSettings.getInstance(module).getState();
+            }
+        } else {
+            settings = ProjectSettings.getInstance(project).getState();
+        }
+        settings = process(project, settings);
 
-    return settings;
-  }
+        return settings;
+    }
 
 }

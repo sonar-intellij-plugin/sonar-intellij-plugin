@@ -33,188 +33,188 @@ import static org.intellij.sonar.util.UIUtil.makeObj;
 
 public class ProjectSettingsConfigurable implements Configurable, ProjectComponent {
 
-  private final ProjectSettings myProjectSettings;
-  private final SonarConsoleSettings mySonarConsoleSettings;
-  private final ProjectLocalAnalysisScriptView myLocalAnalysisScriptView;
-  private final SonarResourcesTableView mySonarResourcesTableView;
-  private final ProjectSonarServersView mySonarServersView;
-  private Project myProject;
-  private JPanel myRootJPanel;
-  private JPanel myPanelForSonarResources;
-  private JComboBox mySonarServersComboBox;
-  private JButton myAddSonarServerButton;
-  private JButton myEditSonarServerButton;
-  private JButton myRemoveSonarServerButton;
-  private JButton myAddLocalAnalysisScriptButton;
-  private JButton myEditLocalAnalysisScriptButton;
-  private JButton myRemoveLocalAnalysisScriptButton;
-  private JComboBox myLocalAnalysisScriptComboBox;
-  private JCheckBox myUseAlternativeWorkingDirCheckBox;
-  private JComboBox myWorkingDirComboBox;
-  private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
-  private JCheckBox myShowSonarQubeToolWindowCheckBox;
+    private final ProjectSettings myProjectSettings;
+    private final SonarConsoleSettings mySonarConsoleSettings;
+    private final ProjectLocalAnalysisScriptView myLocalAnalysisScriptView;
+    private final SonarResourcesTableView mySonarResourcesTableView;
+    private final ProjectSonarServersView mySonarServersView;
+    private Project myProject;
+    private JPanel myRootJPanel;
+    private JPanel myPanelForSonarResources;
+    private JComboBox mySonarServersComboBox;
+    private JButton myAddSonarServerButton;
+    private JButton myEditSonarServerButton;
+    private JButton myRemoveSonarServerButton;
+    private JButton myAddLocalAnalysisScriptButton;
+    private JButton myEditLocalAnalysisScriptButton;
+    private JButton myRemoveLocalAnalysisScriptButton;
+    private JComboBox myLocalAnalysisScriptComboBox;
+    private JCheckBox myUseAlternativeWorkingDirCheckBox;
+    private JComboBox myWorkingDirComboBox;
+    private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
+    private JCheckBox myShowSonarQubeToolWindowCheckBox;
 
-  public ProjectSettingsConfigurable(Project project) {
-    this.myProject = project;
-    this.myProjectSettings = ProjectSettings.getInstance(project);
-    this.mySonarConsoleSettings = SonarConsoleSettings.getInstance();
-    this.mySonarServersView = new ProjectSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton, project);
-    this.myLocalAnalysisScriptView = new ProjectLocalAnalysisScriptView(myLocalAnalysisScriptComboBox, myAddLocalAnalysisScriptButton, myEditLocalAnalysisScriptButton, myRemoveLocalAnalysisScriptButton, project);
-    this.mySonarResourcesTableView = new SonarResourcesTableView(project, mySonarServersView);
-  }
+    public ProjectSettingsConfigurable(Project project) {
+        this.myProject = project;
+        this.myProjectSettings = ProjectSettings.getInstance(project);
+        this.mySonarConsoleSettings = SonarConsoleSettings.getInstance();
+        this.mySonarServersView = new ProjectSonarServersView(mySonarServersComboBox, myAddSonarServerButton, myEditSonarServerButton, myRemoveSonarServerButton, project);
+        this.myLocalAnalysisScriptView = new ProjectLocalAnalysisScriptView(myLocalAnalysisScriptComboBox, myAddLocalAnalysisScriptButton, myEditLocalAnalysisScriptButton, myRemoveLocalAnalysisScriptButton, project);
+        this.mySonarResourcesTableView = new SonarResourcesTableView(project, mySonarServersView);
+    }
 
-  @Nls
-  @Override
-  public String getDisplayName() {
-    return "SonarQube";
-  }
+    @Nls
+    @Override
+    public String getDisplayName() {
+        return "SonarQube";
+    }
 
-  @Nullable
-  @Override
-  public String getHelpTopic() {
-    return null;
-  }
+    @Nullable
+    @Override
+    public String getHelpTopic() {
+        return null;
+    }
 
-  @Nullable
-  @Override
-  public JComponent createComponent() {
-    myPanelForSonarResources.setLayout(new BorderLayout());
-    myPanelForSonarResources.add(mySonarResourcesTableView.getComponent(), BorderLayout.CENTER);
-    mySonarServersView.init();
-    myLocalAnalysisScriptView.init();
+    @Nullable
+    @Override
+    public JComponent createComponent() {
+        myPanelForSonarResources.setLayout(new BorderLayout());
+        myPanelForSonarResources.add(mySonarResourcesTableView.getComponent(), BorderLayout.CENTER);
+        mySonarServersView.init();
+        myLocalAnalysisScriptView.init();
 
-    initWorkingDir();
-    initAlternativeWorkingDir();
+        initWorkingDir();
+        initAlternativeWorkingDir();
 
-    return myRootJPanel;
-  }
+        return myRootJPanel;
+    }
 
-  private void initWorkingDir() {
-    myWorkingDirComboBox.removeAllItems();
-    myWorkingDirComboBox.addItem(makeObj(WorkingDirs.PROJECT));
-    myWorkingDirComboBox.addItem(makeObj(WorkingDirs.MODULE));
-  }
+    private void initWorkingDir() {
+        myWorkingDirComboBox.removeAllItems();
+        myWorkingDirComboBox.addItem(makeObj(WorkingDirs.PROJECT));
+        myWorkingDirComboBox.addItem(makeObj(WorkingDirs.MODULE));
+    }
 
-  private void initAlternativeWorkingDir() {
-    myAlternativeWorkingDirTextFieldWithBrowseButton.addActionListener(new AlternativeWorkingDirActionListener(
-        myProject, myAlternativeWorkingDirTextFieldWithBrowseButton, myProject.getBaseDir()));
-    processAlternativeDirSelections();
-    myUseAlternativeWorkingDirCheckBox.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
+    private void initAlternativeWorkingDir() {
+        myAlternativeWorkingDirTextFieldWithBrowseButton.addActionListener(new AlternativeWorkingDirActionListener(
+                myProject, myAlternativeWorkingDirTextFieldWithBrowseButton, myProject.getBaseDir()));
         processAlternativeDirSelections();
-      }
-    });
-  }
-
-  private void processAlternativeDirSelections() {
-    myAlternativeWorkingDirTextFieldWithBrowseButton.setEnabled(myUseAlternativeWorkingDirCheckBox.isSelected());
-    myWorkingDirComboBox.setEnabled(!myUseAlternativeWorkingDirCheckBox.isSelected());
-  }
-
-  @Override
-  public boolean isModified() {
-    return isProjectSettingsModified() || isSonarConsoleSettings();
-  }
-
-  private boolean isProjectSettingsModified() {
-    if (null == myProjectSettings) return false;
-    Settings state = myProjectSettings.getState();
-    return null == state || !state.equals(this.toSettings());
-  }
-
-  private boolean isSonarConsoleSettings() {
-    if (null == mySonarConsoleSettings) return false;
-    SonarConsoleSettings state = mySonarConsoleSettings.getState();
-    return null == state || !state.equals(this.toSonarConsoleSettings());
-  }
-
-  @Override
-  public void apply() throws ConfigurationException {
-    myProjectSettings.loadState(this.toSettings());
-    mySonarConsoleSettings.loadState(this.toSonarConsoleSettings());
-  }
-
-  @Override
-  public void reset() {
-    if (myProjectSettings != null && myProjectSettings.getState() != null) {
-      Settings persistedSettings = myProjectSettings.getState();
-      this.setValuesFromSettings(persistedSettings);
+        myUseAlternativeWorkingDirCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                processAlternativeDirSelections();
+            }
+        });
     }
-    if (mySonarConsoleSettings != null && mySonarConsoleSettings.getState() != null) {
-      final SonarConsoleSettings persistedSettings = mySonarConsoleSettings.getState();
-      this.setValuesFromSonarConsoleSettings(persistedSettings);
+
+    private void processAlternativeDirSelections() {
+        myAlternativeWorkingDirTextFieldWithBrowseButton.setEnabled(myUseAlternativeWorkingDirCheckBox.isSelected());
+        myWorkingDirComboBox.setEnabled(!myUseAlternativeWorkingDirCheckBox.isSelected());
     }
-  }
 
-  @Override
-  public void disposeUIResources() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
+    @Override
+    public boolean isModified() {
+        return isProjectSettingsModified() || isSonarConsoleSettings();
+    }
 
-  @Override
-  public void projectOpened() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
+    private boolean isProjectSettingsModified() {
+        if (null == myProjectSettings) return false;
+        Settings state = myProjectSettings.getState();
+        return null == state || !state.equals(this.toSettings());
+    }
 
-  @Override
-  public void projectClosed() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
+    private boolean isSonarConsoleSettings() {
+        if (null == mySonarConsoleSettings) return false;
+        SonarConsoleSettings state = mySonarConsoleSettings.getState();
+        return null == state || !state.equals(this.toSonarConsoleSettings());
+    }
 
-  @Override
-  public void initComponent() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
+    @Override
+    public void apply() throws ConfigurationException {
+        myProjectSettings.loadState(this.toSettings());
+        mySonarConsoleSettings.loadState(this.toSonarConsoleSettings());
+    }
 
-  @Override
-  public void disposeComponent() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
+    @Override
+    public void reset() {
+        if (myProjectSettings != null && myProjectSettings.getState() != null) {
+            Settings persistedSettings = myProjectSettings.getState();
+            this.setValuesFromSettings(persistedSettings);
+        }
+        if (mySonarConsoleSettings != null && mySonarConsoleSettings.getState() != null) {
+            final SonarConsoleSettings persistedSettings = mySonarConsoleSettings.getState();
+            this.setValuesFromSonarConsoleSettings(persistedSettings);
+        }
+    }
 
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return "SonarQube";
-  }
+    @Override
+    public void disposeUIResources() {
+        // To change body of implemented methods use File | Settings | File Templates.
+    }
 
-  public Settings toSettings() {
-    return Settings.of(
-        mySonarServersComboBox.getSelectedItem().toString(),
-        ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()),
-        myLocalAnalysisScriptComboBox.getSelectedItem().toString(),
-        myWorkingDirComboBox.getSelectedItem().toString(),
-        myAlternativeWorkingDirTextFieldWithBrowseButton.getText(),
-        myUseAlternativeWorkingDirCheckBox.isSelected()
-    );
-  }
+    @Override
+    public void projectOpened() {
+        // To change body of implemented methods use File | Settings | File Templates.
+    }
 
-  public void setValuesFromSettings(Settings settings) {
+    @Override
+    public void projectClosed() {
+        // To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    if (null == settings) return;
-    final String serverName = SonarServersUtil.withDefaultForProject(settings.getServerName());
-    UIUtil.selectComboBoxItem(mySonarServersComboBox, serverName);
+    @Override
+    public void initComponent() {
+        // To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    final ArrayList<Resource> resources = Lists.newArrayList(settings.getResources());
-    mySonarResourcesTableView.setModel(resources);
+    @Override
+    public void disposeComponent() {
+        // To change body of implemented methods use File | Settings | File Templates.
+    }
 
-    final String localAnalysisScripName = LocalAnalysisScriptsUtil.withDefaultForProject(settings.getLocalAnalysisScripName());
-    UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, localAnalysisScripName);
+    @NotNull
+    @Override
+    public String getComponentName() {
+        return "SonarQube";
+    }
 
-    UIUtil.selectComboBoxItem(myWorkingDirComboBox, WorkingDirs.withDefaultForProject(settings.getWorkingDirSelection()));
-    myAlternativeWorkingDirTextFieldWithBrowseButton.setText(settings.getAlternativeWorkingDirPath());
-    myUseAlternativeWorkingDirCheckBox.setSelected(Optional.fromNullable(settings.getUseAlternativeWorkingDir()).or(false));
+    public Settings toSettings() {
+        return Settings.of(
+                mySonarServersComboBox.getSelectedItem().toString(),
+                ImmutableList.copyOf(mySonarResourcesTableView.getTable().getItems()),
+                myLocalAnalysisScriptComboBox.getSelectedItem().toString(),
+                myWorkingDirComboBox.getSelectedItem().toString(),
+                myAlternativeWorkingDirTextFieldWithBrowseButton.getText(),
+                myUseAlternativeWorkingDirCheckBox.isSelected()
+        );
+    }
 
-    processAlternativeDirSelections();
-  }
+    public void setValuesFromSettings(Settings settings) {
 
-  public SonarConsoleSettings toSonarConsoleSettings() {
-    return SonarConsoleSettings.of(myShowSonarQubeToolWindowCheckBox.isSelected());
-  }
+        if (null == settings) return;
+        final String serverName = SonarServersUtil.withDefaultForProject(settings.getServerName());
+        UIUtil.selectComboBoxItem(mySonarServersComboBox, serverName);
 
-  public void setValuesFromSonarConsoleSettings(SonarConsoleSettings settings) {
-    if (null == settings) return;
-    myShowSonarQubeToolWindowCheckBox.setSelected(settings.isShowSonarConsoleOnAnalysis());
-  }
+        final ArrayList<Resource> resources = Lists.newArrayList(settings.getResources());
+        mySonarResourcesTableView.setModel(resources);
+
+        final String localAnalysisScripName = LocalAnalysisScriptsUtil.withDefaultForProject(settings.getLocalAnalysisScripName());
+        UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox, localAnalysisScripName);
+
+        UIUtil.selectComboBoxItem(myWorkingDirComboBox, WorkingDirs.withDefaultForProject(settings.getWorkingDirSelection()));
+        myAlternativeWorkingDirTextFieldWithBrowseButton.setText(settings.getAlternativeWorkingDirPath());
+        myUseAlternativeWorkingDirCheckBox.setSelected(Optional.fromNullable(settings.getUseAlternativeWorkingDir()).or(false));
+
+        processAlternativeDirSelections();
+    }
+
+    public SonarConsoleSettings toSonarConsoleSettings() {
+        return SonarConsoleSettings.of(myShowSonarQubeToolWindowCheckBox.isSelected());
+    }
+
+    public void setValuesFromSonarConsoleSettings(SonarConsoleSettings settings) {
+        if (null == settings) return;
+        myShowSonarQubeToolWindowCheckBox.setSelected(settings.isShowSonarConsoleOnAnalysis());
+    }
 
 }

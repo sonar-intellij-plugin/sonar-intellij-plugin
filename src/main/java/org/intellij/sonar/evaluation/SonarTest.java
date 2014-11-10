@@ -12,82 +12,82 @@ import java.util.List;
 
 @SuppressWarnings("UnusedDeclaration")
 public class SonarTest {
-  public static void main(String[] args) {
+    public static void main(String[] args) {
 //      checkRulesRetrieval();
 //        testGetResources();
 //    testGetAllProjectsAndModulesBySonarService();
 //    testGetResourceWithProfile();
 //    testGetProfile();
 //    testGetIssues();
-    testGetRules();
-  }
+        testGetRules();
+    }
 
-  private static void testGetIssues() {
-    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
-    final String resourceKey = "de.mobile.dealer:dealer-admin";
+    private static void testGetIssues() {
+        SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+        final String resourceKey = "de.mobile.dealer:dealer-admin";
 //    final String resourceKey = "de.mobile:mobile-multimodule-pom";
-    final Issues issues = sonarServer.getIssuesFor(resourceKey);
-    System.out.println(issues.size() + " issues for " + resourceKey + " | total: " + issues.paging().total() +
-    " pages: " + issues.paging().pages() + " max results reached: " + issues.maxResultsReached());
-  }
+        final Issues issues = sonarServer.getIssuesFor(resourceKey);
+        System.out.println(issues.size() + " issues for " + resourceKey + " | total: " + issues.paging().total() +
+                " pages: " + issues.paging().pages() + " max results reached: " + issues.maxResultsReached());
+    }
 
-  private static void testGetProfile() {
-    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
-    final Profile profile = sonarServer.getProfile("java", "mobile_relaxed");
-    System.out.println("rules count: " + profile.getRules().size());
-  }
+    private static void testGetProfile() {
+        SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+        final Profile profile = sonarServer.getProfile("java", "mobile_relaxed");
+        System.out.println("rules count: " + profile.getRules().size());
+    }
 
-  private static void testGetRules() {
-    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
-    final List<Rule> rules = sonarServer.getRules("java");
-    System.out.println("rules count: " + rules.size());
-    // title, description, key,
+    private static void testGetRules() {
+        SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+        final List<Rule> rules = sonarServer.getRules("java");
+        System.out.println("rules count: " + rules.size());
+        // title, description, key,
 //    new SonarRuleBean()
-    // title
-    // key
-  }
-
-  private static void testGetResourceWithProfile() {
-    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
-    final Resource resourceWithProfile = sonarServer.getResourceWithProfile("de.mobile:mobile-parkings-job");
-    System.out.println("language: " + resourceWithProfile.getLanguage());
-    System.out.println("profile: " + resourceWithProfile.getMeasure("profile").getData());
-  }
-
-  private static void testGetAllProjectsAndModulesBySonarService() {
-    SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
-    List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules();
-    for (Resource projectOrModule : allProjectsWithModules) {
-      if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
-        System.out.println("##################################################");
-        System.out.println(projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
-      } else if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
-        System.out.println("     " + projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
-      } else {
-        System.out.println("!!!UNKNOWN RESOURCE!!! ::: " + projectOrModule.toString() + " ::: " + projectOrModule.getQualifier());
-      }
+        // title
+        // key
     }
-  }
 
-  private static void testGetResources() {
-    Sonar sonar = Sonar.create("https://sonar.corp.mobile.de/sonar");
-    ResourceQuery projectResourceQuery = new ResourceQuery();
-    projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT);
+    private static void testGetResourceWithProfile() {
+        SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+        final Resource resourceWithProfile = sonarServer.getResourceWithProfile("de.mobile:mobile-parkings-job");
+        System.out.println("language: " + resourceWithProfile.getLanguage());
+        System.out.println("profile: " + resourceWithProfile.getMeasure("profile").getData());
+    }
+
+    private static void testGetAllProjectsAndModulesBySonarService() {
+        SonarServer sonarServer = SonarServer.create("https://sonar.corp.mobile.de/sonar");
+        List<Resource> allProjectsWithModules = sonarServer.getAllProjectsAndModules();
+        for (Resource projectOrModule : allProjectsWithModules) {
+            if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_PROJECT)) {
+                System.out.println("##################################################");
+                System.out.println(projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
+            } else if (projectOrModule.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
+                System.out.println("     " + projectOrModule.getName() + " (" + projectOrModule.getKey() + ")");
+            } else {
+                System.out.println("!!!UNKNOWN RESOURCE!!! ::: " + projectOrModule.toString() + " ::: " + projectOrModule.getQualifier());
+            }
+        }
+    }
+
+    private static void testGetResources() {
+        Sonar sonar = Sonar.create("https://sonar.corp.mobile.de/sonar");
+        ResourceQuery projectResourceQuery = new ResourceQuery();
+        projectResourceQuery.setQualifiers(Resource.QUALIFIER_PROJECT);
 //        projectResourceQuery.
-    List<Resource> projectResourceList = sonar.findAll(projectResourceQuery);
-    for (Resource projectResource : projectResourceList) {
-      System.out.println("##################################################");
-      System.out.println(projectResource.toString() + " ::: " + projectResource.getQualifier());
-      ResourceQuery moduleResourceQuery = new ResourceQuery(projectResource.getId());
-      moduleResourceQuery.setDepth(-1);
-      moduleResourceQuery.setQualifiers(Resource.QUALIFIER_MODULE);
-      List<Resource> moduleResourceList = sonar.findAll(moduleResourceQuery);
-      for (Resource moduleResource : moduleResourceList) {
-        System.out.println("     " + moduleResource.toString() + " ::: " + moduleResource.getQualifier());
-      }
-      System.out.println("##################################################");
+        List<Resource> projectResourceList = sonar.findAll(projectResourceQuery);
+        for (Resource projectResource : projectResourceList) {
+            System.out.println("##################################################");
+            System.out.println(projectResource.toString() + " ::: " + projectResource.getQualifier());
+            ResourceQuery moduleResourceQuery = new ResourceQuery(projectResource.getId());
+            moduleResourceQuery.setDepth(-1);
+            moduleResourceQuery.setQualifiers(Resource.QUALIFIER_MODULE);
+            List<Resource> moduleResourceList = sonar.findAll(moduleResourceQuery);
+            for (Resource moduleResource : moduleResourceList) {
+                System.out.println("     " + moduleResource.toString() + " ::: " + moduleResource.getQualifier());
+            }
+            System.out.println("##################################################");
+        }
     }
-  }
 /*
   private static void checkRulesRetrieval() {
     List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<SonarSettingsBean>(3);

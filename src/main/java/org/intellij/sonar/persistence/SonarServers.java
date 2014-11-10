@@ -15,97 +15,98 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 @State(
-    name = "sonarServers",
-    storages = {
-        @Storage(id = "sonarServers", file = StoragePathMacros.APP_CONFIG + "/sonarSettings.xml")
-    }
+        name = "sonarServers",
+        storages = {
+                @Storage(id = "sonarServers", file = StoragePathMacros.APP_CONFIG + "/sonarSettings.xml")
+        }
 )
 public class SonarServers implements PersistentStateComponent<SonarServers> {
 
-  public static final String NO_SONAR = "<NO SONAR>";
-  public static final String PROJECT = "<PROJECT>";
-  public Collection<SonarServerConfig> beans = new ArrayList<SonarServerConfig>();
+    public static final String NO_SONAR = "<NO SONAR>";
+    public static final String PROJECT = "<PROJECT>";
+    public Collection<SonarServerConfig> beans = new ArrayList<SonarServerConfig>();
 
-  @NotNull
-  public static SonarServers getInstance() {
-    return ServiceManager.getService(SonarServers.class);
-  }
-
-  public static void add(final SonarServerConfig newSonarServerConfigBean) {
-    final Collection<SonarServerConfig> sonarServerConfigBeans = SonarServers.getInstance().getState().beans;
-    final boolean alreadyExists = FluentIterable.from(sonarServerConfigBeans).anyMatch(new Predicate<SonarServerConfig>() {
-      @Override
-      public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
-        return sonarServerConfigurationBean.equals(newSonarServerConfigBean);
-      }
-    });
-    if (alreadyExists) {
-      throw new IllegalArgumentException("already exists");
-    } else {
-      sonarServerConfigBeans.add(newSonarServerConfigBean);
-      if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigBean.getPassword())) {
-        newSonarServerConfigBean.storePassword();
-        newSonarServerConfigBean.clearPassword();
-      }
+    @NotNull
+    public static SonarServers getInstance() {
+        return ServiceManager.getService(SonarServers.class);
     }
-  }
 
-  public static void remove(@NotNull final String sonarServerName) {
-    final Optional<SonarServerConfig> bean = get(sonarServerName);
-    Preconditions.checkArgument(bean.isPresent());
-    final ImmutableList<SonarServerConfig> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfig>() {
-      @Override
-      public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
-        return !bean.get().equals(sonarServerConfigurationBean);
-      }
-    }).toList();
-    getInstance().beans = new LinkedList<SonarServerConfig>(newBeans);
-  }
-
-  public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {
-    Optional<SonarServerConfig> bean = Optional.absent();
-    final Optional<Collection<SonarServerConfig>> allBeans = getAll();
-    if (allBeans.isPresent()) {
-      bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfig>() {
-        @Override
-        public boolean apply(SonarServerConfig sonarServerConfigBean) {
-          return sonarServerName.equals(sonarServerConfigBean.getName());
+    public static void add(final SonarServerConfig newSonarServerConfigBean) {
+        final Collection<SonarServerConfig> sonarServerConfigBeans = SonarServers.getInstance().getState().beans;
+        final boolean alreadyExists = FluentIterable.from(sonarServerConfigBeans).anyMatch(new Predicate<SonarServerConfig>() {
+            @Override
+            public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
+                return sonarServerConfigurationBean.equals(newSonarServerConfigBean);
+            }
+        });
+        if (alreadyExists) {
+            throw new IllegalArgumentException("already exists");
+        } else {
+            sonarServerConfigBeans.add(newSonarServerConfigBean);
+            if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigBean.getPassword())) {
+                newSonarServerConfigBean.storePassword();
+                newSonarServerConfigBean.clearPassword();
+            }
         }
-      });
     }
-    return bean;
-  }
 
-  public static Optional<Collection<SonarServerConfig>> getAll() {
-    return Optional.fromNullable(SonarServers.getInstance().getState().beans);
-  }
+    public static void remove(@NotNull final String sonarServerName) {
+        final Optional<SonarServerConfig> bean = get(sonarServerName);
+        Preconditions.checkArgument(bean.isPresent());
+        final ImmutableList<SonarServerConfig> newBeans = FluentIterable.from(getAll().get()).filter(new Predicate<SonarServerConfig>() {
+            @Override
+            public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
+                return !bean.get().equals(sonarServerConfigurationBean);
+            }
+        }).toList();
+        getInstance().beans = new LinkedList<SonarServerConfig>(newBeans);
+    }
 
-  @NotNull
-  @Override
-  public SonarServers getState() {
-    return this;
-  }
+    public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {
+        Optional<SonarServerConfig> bean = Optional.absent();
+        final Optional<Collection<SonarServerConfig>> allBeans = getAll();
+        if (allBeans.isPresent()) {
+            bean = FluentIterable.from(allBeans.get()).firstMatch(new Predicate<SonarServerConfig>() {
+                @Override
+                public boolean apply(SonarServerConfig sonarServerConfigBean) {
+                    return sonarServerName.equals(sonarServerConfigBean.getName());
+                }
+            });
+        }
+        return bean;
+    }
 
-  @Override
-  public void loadState(SonarServers state) {
-    XmlSerializerUtil.copyBean(state, this);
-  }
+    public static Optional<Collection<SonarServerConfig>> getAll() {
+        return Optional.fromNullable(SonarServers.getInstance().getState().beans);
+    }
 
-  @SuppressWarnings("RedundantIfStatement")
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    @NotNull
+    @Override
+    public SonarServers getState() {
+        return this;
+    }
 
-    SonarServers that = (SonarServers) o;
+    @Override
+    public void loadState(SonarServers state) {
+        XmlSerializerUtil.copyBean(state, this);
+    }
 
-    if (beans != null ? !beans.equals(that.beans) : that.beans != null) return false;
+    @SuppressWarnings("RedundantIfStatement")
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    return true;
-  }
+        SonarServers that = (SonarServers) o;
 
-  @Override
-  public int hashCode() {
-    return beans != null ? beans.hashCode() : 0;
-  }
+        if (beans != null ? !beans.equals(that.beans) : that.beans != null)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return beans != null ? beans.hashCode() : 0;
+    }
 }

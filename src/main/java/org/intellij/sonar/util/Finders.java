@@ -24,145 +24,145 @@ import static com.google.common.base.Optional.fromNullable;
 
 public class Finders {
 
-  public static Optional<PsiElement> findFirstElementAtLine(@NotNull final PsiFile file, Integer line) {
-    if (line == null) return Optional.absent();
-    int ijLine = line - 1;
-    final Document document = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
-    Optional<PsiElement> element = Optional.absent();
-    try {
-      if (document != null) {
-        final int offset = document.getLineStartOffset(ijLine);
-        element = fromNullable(file.getViewProvider().findElementAt(offset));
-        if (element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
-          element = fromNullable(element.get().getNextSibling());
+    public static Optional<PsiElement> findFirstElementAtLine(@NotNull final PsiFile file, Integer line) {
+        if (line == null) return Optional.absent();
+        int ijLine = line - 1;
+        final Document document = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
+        Optional<PsiElement> element = Optional.absent();
+        try {
+            if (document != null) {
+                final int offset = document.getLineStartOffset(ijLine);
+                element = fromNullable(file.getViewProvider().findElementAt(offset));
+                if (element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
+                    element = fromNullable(element.get().getNextSibling());
+                }
+            }
+        } catch (@NotNull final IndexOutOfBoundsException ignore) {
+            // Ignore this exception
         }
-      }
-    } catch (@NotNull final IndexOutOfBoundsException ignore) {
-      // Ignore this exception
+
+        while (element.isPresent() && element.get().getTextLength() == 0) {
+            element = fromNullable(element.get().getNextSibling());
+        }
+
+        if (document != null && element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
+            element = Optional.absent();
+        }
+        return element;
     }
 
-    while (element.isPresent() && element.get().getTextLength() == 0) {
-      element = fromNullable(element.get().getNextSibling());
+    public static Optional<Document> findDocumentFromPsiFile(PsiFile psiFile) {
+        final Optional<Project> project = fromNullable(psiFile.getProject());
+        if (!project.isPresent()) return Optional.absent();
+
+        return fromNullable(PsiDocumentManager.getInstance(project.get()).getDocument(psiFile));
     }
 
-    if (document != null && element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
-      element = Optional.absent();
-    }
-    return element;
-  }
-
-  public static Optional<Document> findDocumentFromPsiFile(PsiFile psiFile) {
-    final Optional<Project> project = fromNullable(psiFile.getProject());
-    if (!project.isPresent()) return Optional.absent();
-
-    return fromNullable(PsiDocumentManager.getInstance(project.get()).getDocument(psiFile));
-  }
-
-  @NotNull
-  public static List<Editor> findEditorsFrom(@NotNull Document document) {
-    return Lists.newArrayList(EditorFactory.getInstance().getEditors(document));
-  }
-
-  @NotNull
-  public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final Integer line) {
-    if (line == null) return Optional.absent();
-    final MarkupModel markupModel = editor.getMarkupModel();
-    final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
-    for (RangeHighlighter highlighter : highlighters) {
-      final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
-      final int lineOfHighlighter = logicalPosition.line;
-      if (lineOfHighlighter == line - 1) {
-        return Optional.of(highlighter);
-      }
+    @NotNull
+    public static List<Editor> findEditorsFrom(@NotNull Document document) {
+        return Lists.newArrayList(EditorFactory.getInstance().getEditors(document));
     }
 
-    return Optional.absent();
-  }
-
-  @NotNull
-  public static Set<RangeHighlighter> findAllRangeHighlightersFrom(@NotNull Document document) {
-    final Set<RangeHighlighter> highlighters = Sets.newHashSet();
-    for (Editor editor: findEditorsFrom(document)) {
-
-      final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
-      highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
-    }
-    return highlighters;
-  }
-
-  public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter, @NotNull Editor editor) {
-    final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
-    return logicalPosition.line;
-  }
-
-  private static class HighlighterLineFinder implements Runnable {
-    private final MarkupModel markupModel;
-    private final Editor editor;
-    private final int line;
-    private RangeHighlighter foundHighlighter;
-
-    public HighlighterLineFinder(Editor editor, int line) {
-      this.markupModel = editor.getMarkupModel();
-      this.editor = editor;
-      this.line = line;
-    }
-
-    @Override
-    public void run() {
-      ApplicationManager.getApplication().runReadAction(new Runnable() {
-        @Override
-        public void run() {
-          final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
-          for (RangeHighlighter highlighter : highlighters) {
+    @NotNull
+    public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor, final Integer line) {
+        if (line == null) return Optional.absent();
+        final MarkupModel markupModel = editor.getMarkupModel();
+        final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
+        for (RangeHighlighter highlighter : highlighters) {
             final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
             final int lineOfHighlighter = logicalPosition.line;
-            if (lineOfHighlighter == line) {
-              foundHighlighter = highlighter;
-              break;
+            if (lineOfHighlighter == line - 1) {
+                return Optional.of(highlighter);
             }
-          }
         }
-      });
+
+        return Optional.absent();
     }
 
-    public RangeHighlighter getFoundHighlighter() {
-      return foundHighlighter;
-    }
-  }
+    @NotNull
+    public static Set<RangeHighlighter> findAllRangeHighlightersFrom(@NotNull Document document) {
+        final Set<RangeHighlighter> highlighters = Sets.newHashSet();
+        for (Editor editor : findEditorsFrom(document)) {
 
-  @NotNull
-  public static TextRange getLineRange(@NotNull PsiFile psiFile, Integer line) {
-    if (line == null) return TextRange.EMPTY_RANGE;
-    Project project = psiFile.getProject();
-    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-    Document document = documentManager.getDocument(psiFile.getContainingFile());
-    if (document == null) {
-      return TextRange.EMPTY_RANGE;
+            final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
+            highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
+        }
+        return highlighters;
     }
-    int ijLine = line > 0 ? line - 1 : 0;
-    return getTextRangeForLine(document, ijLine);
-  }
 
-  private static TextRange getTextRangeForLine(Document document, int line) {
-    try {
-      int lineStartOffset = document.getLineStartOffset(line);
-      int lineEndOffset = document.getLineEndOffset(line);
-      return new TextRange(lineStartOffset, lineEndOffset);
-    } catch (IndexOutOfBoundsException e) {
-      // Local file should be different than remote
-      return TextRange.EMPTY_RANGE;
+    public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter, @NotNull Editor editor) {
+        final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
+        return logicalPosition.line;
     }
-  }
 
-  public static TextRange getLineRange(@NotNull PsiElement psiElement) {
-    Project project = psiElement.getProject();
-    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-    Document document = documentManager.getDocument(psiElement.getContainingFile().getContainingFile());
-    if (document == null) {
-      return TextRange.EMPTY_RANGE;
+    private static class HighlighterLineFinder implements Runnable {
+        private final MarkupModel markupModel;
+        private final Editor editor;
+        private final int line;
+        private RangeHighlighter foundHighlighter;
+
+        public HighlighterLineFinder(Editor editor, int line) {
+            this.markupModel = editor.getMarkupModel();
+            this.editor = editor;
+            this.line = line;
+        }
+
+        @Override
+        public void run() {
+            ApplicationManager.getApplication().runReadAction(new Runnable() {
+                @Override
+                public void run() {
+                    final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
+                    for (RangeHighlighter highlighter : highlighters) {
+                        final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
+                        final int lineOfHighlighter = logicalPosition.line;
+                        if (lineOfHighlighter == line) {
+                            foundHighlighter = highlighter;
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+        public RangeHighlighter getFoundHighlighter() {
+            return foundHighlighter;
+        }
     }
-    int line = document.getLineNumber(psiElement.getTextOffset());
-    int lineEndOffset = document.getLineEndOffset(line);
-    return new TextRange(psiElement.getTextOffset(), lineEndOffset);
-  }
+
+    @NotNull
+    public static TextRange getLineRange(@NotNull PsiFile psiFile, Integer line) {
+        if (line == null) return TextRange.EMPTY_RANGE;
+        Project project = psiFile.getProject();
+        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+        Document document = documentManager.getDocument(psiFile.getContainingFile());
+        if (document == null) {
+            return TextRange.EMPTY_RANGE;
+        }
+        int ijLine = line > 0 ? line - 1 : 0;
+        return getTextRangeForLine(document, ijLine);
+    }
+
+    private static TextRange getTextRangeForLine(Document document, int line) {
+        try {
+            int lineStartOffset = document.getLineStartOffset(line);
+            int lineEndOffset = document.getLineEndOffset(line);
+            return new TextRange(lineStartOffset, lineEndOffset);
+        } catch (IndexOutOfBoundsException e) {
+            // Local file should be different than remote
+            return TextRange.EMPTY_RANGE;
+        }
+    }
+
+    public static TextRange getLineRange(@NotNull PsiElement psiElement) {
+        Project project = psiElement.getProject();
+        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+        Document document = documentManager.getDocument(psiElement.getContainingFile().getContainingFile());
+        if (document == null) {
+            return TextRange.EMPTY_RANGE;
+        }
+        int line = document.getLineNumber(psiElement.getTextOffset());
+        int lineEndOffset = document.getLineEndOffset(line);
+        return new TextRange(psiElement.getTextOffset(), lineEndOffset);
+    }
 }

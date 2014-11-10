@@ -17,64 +17,64 @@ import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
 
 public class SonarConsole extends AbstractProjectComponent {
 
-  private ConsoleView consoleView;
+    private ConsoleView consoleView;
 
-  public SonarConsole(Project project) {
-    super(project);
-  }
+    public SonarConsole(Project project) {
+        super(project);
+    }
 
-  public static synchronized SonarConsole get(Project project) {
-    return project.getComponent(SonarConsole.class);
-  }
+    public static synchronized SonarConsole get(Project project) {
+        return project.getComponent(SonarConsole.class);
+    }
 
-  private ConsoleView createConsoleView(Project project) {
-    final ConsoleView newConsoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
-    final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        toolWindow.show(new Runnable() {
-          @Override
-          public void run() {
-            Content content = toolWindow.getContentManager().getFactory().createContent(newConsoleView.getComponent(), "SonarQube Console", true);
-            toolWindow.getContentManager().addContent(content);
-          }
+    private ConsoleView createConsoleView(Project project) {
+        final ConsoleView newConsoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+        final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                toolWindow.show(new Runnable() {
+                    @Override
+                    public void run() {
+                        Content content = toolWindow.getContentManager().getFactory().createContent(newConsoleView.getComponent(), "SonarQube Console", true);
+                        toolWindow.getContentManager().addContent(content);
+                    }
+                });
+            }
         });
-      }
-    });
-    return newConsoleView;
-  }
-
-  public void log(String msg, ConsoleLogLevel logLevel) {
-    if (INFO == logLevel) {
-      info(msg);
-    } else if (ERROR == logLevel) {
-      error(msg);
-    } else {
-      throw new IllegalArgumentException(String.format("Unknown log level %s", logLevel));
+        return newConsoleView;
     }
-  }
 
-  public void info(String msg) {
-    getConsoleView().print(String.format("%s %s > %s\n", INFO, getNowFormatted(), msg), ConsoleViewContentType.NORMAL_OUTPUT);
-  }
-
-  public void error(String msg) {
-    getConsoleView().print(String.format("%s %s > %s\n", ERROR, getNowFormatted(), msg), ConsoleViewContentType.ERROR_OUTPUT);
-  }
-
-  private String getNowFormatted() {
-    return DateTimeFormat.forPattern("HH:mm:ss.SSS").print(DateTime.now());
-  }
-
-  public void clear() {
-    getConsoleView().clear();
-  }
-
-  private synchronized ConsoleView getConsoleView() {
-    if (this.consoleView == null) {
-      this.consoleView = createConsoleView(myProject);
+    public void log(String msg, ConsoleLogLevel logLevel) {
+        if (INFO == logLevel) {
+            info(msg);
+        } else if (ERROR == logLevel) {
+            error(msg);
+        } else {
+            throw new IllegalArgumentException(String.format("Unknown log level %s", logLevel));
+        }
     }
-    return this.consoleView;
-  }
+
+    public void info(String msg) {
+        getConsoleView().print(String.format("%s %s > %s\n", INFO, getNowFormatted(), msg), ConsoleViewContentType.NORMAL_OUTPUT);
+    }
+
+    public void error(String msg) {
+        getConsoleView().print(String.format("%s %s > %s\n", ERROR, getNowFormatted(), msg), ConsoleViewContentType.ERROR_OUTPUT);
+    }
+
+    private String getNowFormatted() {
+        return DateTimeFormat.forPattern("HH:mm:ss.SSS").print(DateTime.now());
+    }
+
+    public void clear() {
+        getConsoleView().clear();
+    }
+
+    private synchronized ConsoleView getConsoleView() {
+        if (this.consoleView == null) {
+            this.consoleView = createConsoleView(myProject);
+        }
+        return this.consoleView;
+    }
 }

@@ -11,32 +11,32 @@ import org.jetbrains.annotations.NotNull;
 
 public class ApplicationComponent implements com.intellij.openapi.components.ApplicationComponent {
 
-  @Override
-  public void initComponent() {
-    IdeaPluginDescriptor plugin = PluginManager.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
-    if (plugin != null && plugin.isEnabled()) {
-      registerExternalAnnotatorForAllLanguages(plugin);
+    @Override
+    public void initComponent() {
+        IdeaPluginDescriptor plugin = PluginManager.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
+        if (plugin != null && plugin.isEnabled()) {
+            registerExternalAnnotatorForAllLanguages(plugin);
+        }
     }
-  }
 
-  private void registerExternalAnnotatorForAllLanguages(IdeaPluginDescriptor plugin) {
-    for (Language language : Language.getRegisteredLanguages()) {
-      LanguageExtensionPoint<SonarExternalAnnotator> extensionPoint = new LanguageExtensionPoint<SonarExternalAnnotator>();
-      extensionPoint.language = language.getID();
-      extensionPoint.implementationClass = SonarExternalAnnotator.class.getName();
-      extensionPoint.setPluginDescriptor(plugin);
-      Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(extensionPoint);
+    private void registerExternalAnnotatorForAllLanguages(IdeaPluginDescriptor plugin) {
+        for (Language language : Language.getRegisteredLanguages()) {
+            LanguageExtensionPoint<SonarExternalAnnotator> extensionPoint = new LanguageExtensionPoint<SonarExternalAnnotator>();
+            extensionPoint.language = language.getID();
+            extensionPoint.implementationClass = SonarExternalAnnotator.class.getName();
+            extensionPoint.setPluginDescriptor(plugin);
+            Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(extensionPoint);
+        }
     }
-  }
 
-  @Override
-  public void disposeComponent() {
+    @Override
+    public void disposeComponent() {
 
-  }
+    }
 
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return getClass().getSimpleName();
-  }
+    @NotNull
+    @Override
+    public String getComponentName() {
+        return getClass().getSimpleName();
+    }
 }

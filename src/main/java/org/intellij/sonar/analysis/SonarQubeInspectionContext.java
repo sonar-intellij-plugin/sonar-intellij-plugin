@@ -59,138 +59,140 @@ import java.util.Set;
 
 public class SonarQubeInspectionContext implements GlobalInspectionContextExtension<SonarQubeInspectionContext> {
 
-  public static final Key<SonarQubeInspectionContext> KEY = Key.create("SonarQubeInspectionContext");
+    public static final Key<SonarQubeInspectionContext> KEY = Key.create("SonarQubeInspectionContext");
 
-  @NotNull
-  @Override
-  public Key<SonarQubeInspectionContext> getID() {
-    return KEY;
-  }
-
-  public static class EnrichedSettings {
-    public Settings settings;
-    public Project project;
-    public Module module;
-
-    public EnrichedSettings(Settings settings, Project project, Module module) {
-      this.settings = settings;
-      this.project = project;
-      this.module = module;
-    }
-  }
-
-  private boolean isInspectionToolEnabled(final String toolName, final GlobalInspectionContext context) {
-    final InspectionProfile currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
-    final Project project = context.getProject();
-    return FluentIterable.from(currentProfile.getAllEnabledInspectionTools(project))
-        .transform(new Function<Tools, String>() {
-          @Override
-          public String apply(Tools tools) {
-            return tools.getShortName();
-          }
-        }).firstMatch(new Predicate<String>() {
-      @Override
-      public boolean apply(String shortName) {
-        return toolName.equals(shortName);
-      }
-    }).isPresent();
-  }
-
-  @Override
-  public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
-
-    final boolean newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(NewIssuesGlobalInspectionTool.class.getSimpleName(), context);
-    final boolean oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(OldIssuesGlobalInspectionTool.class.getSimpleName(), context);
-    if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled) return;
-
-    final Project project = context.getProject();
-
-    showSonarQubeToolWindowIfNeeded(project);
-
-    SonarConsole.get(project).clear();
-
-    final Set<Module> modules = Sets.newHashSet();
-    final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
-
-    context.getRefManager().getScope().accept(new PsiElementVisitor() {
-      @Override
-      public void visitFile(PsiFile psiFile) {
-        filesBuilder.add(psiFile);
-        final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
-        if (module != null) modules.add(module);
-      }
-    });
-    final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
-    IssuesByFileIndex.clearIndexFor(psiFiles);
-
-    Set<EnrichedSettings> enrichedSettingsFromScope = Sets.newHashSet();
-    if (modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType()) {
-      final Settings settings = ProjectSettings.getInstance(project).getState();
-      enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, null));
-    } else {
-      for (Module module : modules) {
-        final Settings settings = ModuleSettings.getInstance(module).getState();
-        enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, module));
-      }
+    @NotNull
+    @Override
+    public Key<SonarQubeInspectionContext> getID() {
+        return KEY;
     }
 
-    if (oldIssuesGlobalInspectionToolEnabled) {
-      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-        final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
-        if (downloadTask.isPresent()) {
-          downloadTask.get().run();
+    public static class EnrichedSettings {
+        public Settings settings;
+        public Project project;
+        public Module module;
+
+        public EnrichedSettings(Settings settings, Project project, Module module) {
+            this.settings = settings;
+            this.project = project;
+            this.module = module;
         }
-      }
     }
 
-    if (newIssuesGlobalInspectionToolEnabled) {
-      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-        final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
-        if (scriptTask.isPresent()) {
-          scriptTask.get().run();
-        }
-      }
+    private boolean isInspectionToolEnabled(final String toolName, final GlobalInspectionContext context) {
+        final InspectionProfile currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
+        final Project project = context.getProject();
+        return FluentIterable.from(currentProfile.getAllEnabledInspectionTools(project))
+                .transform(new Function<Tools, String>() {
+                    @Override
+                    public String apply(Tools tools) {
+                        return tools.getShortName();
+                    }
+                }).firstMatch(new Predicate<String>() {
+                    @Override
+                    public boolean apply(String shortName) {
+                        return toolName.equals(shortName);
+                    }
+                }).isPresent();
     }
 
-  }
+    @Override
+    public void performPreRunActivities(@NotNull List<Tools> globalTools, @NotNull List<Tools> localTools, @NotNull final GlobalInspectionContext context) {
 
-  private void showSonarQubeToolWindowIfNeeded(final Project project) {
-    if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
-      ApplicationManager.getApplication().invokeLater(new Runnable() {
-        @Override
-        public void run() {
-          final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
-          toolWindow.show(null);
+        final boolean newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(NewIssuesGlobalInspectionTool.class.getSimpleName(), context);
+        final boolean oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(OldIssuesGlobalInspectionTool.class.getSimpleName(), context);
+        if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled)
+            return;
+
+        final Project project = context.getProject();
+
+        showSonarQubeToolWindowIfNeeded(project);
+
+        SonarConsole.get(project).clear();
+
+        final Set<Module> modules = Sets.newHashSet();
+        final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
+
+        context.getRefManager().getScope().accept(new PsiElementVisitor() {
+            @Override
+            public void visitFile(PsiFile psiFile) {
+                filesBuilder.add(psiFile);
+                final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
+                if (module != null) modules.add(module);
+            }
+        });
+        final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
+        IssuesByFileIndex.clearIndexFor(psiFiles);
+
+        Set<EnrichedSettings> enrichedSettingsFromScope = Sets.newHashSet();
+        if (modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType()) {
+            final Settings settings = ProjectSettings.getInstance(project).getState();
+            enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, null));
+        } else {
+            for (Module module : modules) {
+                final Settings settings = ModuleSettings.getInstance(module).getState();
+                enrichedSettingsFromScope.add(new EnrichedSettings(settings, project, module));
+            }
         }
-      });
+
+        if (oldIssuesGlobalInspectionToolEnabled) {
+            for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+                final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
+                if (downloadTask.isPresent()) {
+                    downloadTask.get().run();
+                }
+            }
+        }
+
+        if (newIssuesGlobalInspectionToolEnabled) {
+            for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+                final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(enrichedSettings, psiFiles);
+                if (scriptTask.isPresent()) {
+                    scriptTask.get().run();
+                }
+            }
+        }
+
     }
-  }
 
-  @Override
-  public void performPostRunActivities(@NotNull List<InspectionToolWrapper> inspections, @NotNull GlobalInspectionContext context) {
-    DocumentChangeListener.CHANGED_FILES.clear();
-
-    final Project project = context.getProject();
-
-    // rerun external annotator and refresh highlighters in editor
-    removeAllHighlighters();
-    DaemonCodeAnalyzer.getInstance(project).restart();
-
-  }
-
-  private static void removeAllHighlighters() {
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        Editor[] allEditors = EditorFactory.getInstance().getAllEditors();
-        for (Editor editor : allEditors) {
-          editor.getMarkupModel().removeAllHighlighters();
+    private void showSonarQubeToolWindowIfNeeded(final Project project) {
+        if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    final ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
+                    toolWindow.show(null);
+                }
+            });
         }
-      }
-    });
-  }
+    }
 
-  @Override
-  public void cleanup() {}
+    @Override
+    public void performPostRunActivities(@NotNull List<InspectionToolWrapper> inspections, @NotNull GlobalInspectionContext context) {
+        DocumentChangeListener.CHANGED_FILES.clear();
+
+        final Project project = context.getProject();
+
+        // rerun external annotator and refresh highlighters in editor
+        removeAllHighlighters();
+        DaemonCodeAnalyzer.getInstance(project).restart();
+
+    }
+
+    private static void removeAllHighlighters() {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Editor[] allEditors = EditorFactory.getInstance().getAllEditors();
+                for (Editor editor : allEditors) {
+                    editor.getMarkupModel().removeAllHighlighters();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void cleanup() {
+    }
 
 }

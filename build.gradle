@@ -1,8 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
-targetCompatibility=1.6
-sourceCompatibility=1.6
+targetCompatibility = 1.6
+sourceCompatibility = 1.6
 
 repositories {
     mavenCentral()
@@ -23,7 +23,9 @@ idea {
     }
 
     workspace.iws.withXml {
-        def runManagerComponent = it.node.component.find { it.@name == 'RunManager' }
+        def runManagerComponent = it.node.component.find {
+            it.@name == 'RunManager'
+        }
         runManagerComponent.@selected = 'Plugin.run-sonar-plugin'
         def configuration = runManagerComponent.appendNode("configuration", [default: "false", name: "run-sonar-plugin", type: "#org.jetbrains.idea.devkit.run.PluginConfigurationType", factoryName: "Plugin", singleton: "true"])
         configuration.appendNode("module", [name: 'sonar-intellij-plugin'])

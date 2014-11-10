@@ -10,51 +10,58 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @State(
-    name = "sonarModuleSettings",
-    storages = {
-        @Storage(id = "default", file = "$MODULE_FILE$")
-    }
+        name = "sonarModuleSettings",
+        storages = {
+                @Storage(id = "default", file = "$MODULE_FILE$")
+        }
 )
 public class ModuleSettings implements PersistentStateComponent<Settings>, ModuleComponent {
-  protected Settings settings = new Settings();
+    protected Settings settings = new Settings();
 
-  public static ModuleSettings getInstance(Module module) {
-    return module.getComponent(ModuleSettings.class);
-  }
-
-  @Nullable
-  @Override
-  public Settings getState() {
-    if (settings != null) {
-      if (StringUtil.isEmpty(settings.getServerName())) settings.setServerName(SonarServers.PROJECT);
-      if (StringUtil.isEmpty(settings.getLocalAnalysisScripName())) settings.setLocalAnalysisScripName(LocalAnalysisScripts.PROJECT);
+    public static ModuleSettings getInstance(Module module) {
+        return module.getComponent(ModuleSettings.class);
     }
-    return settings;
-  }
 
-  @Override
-  public void loadState(@NotNull Settings settings) {
-    this.settings = settings;
-  }
+    @Nullable
+    @Override
+    public Settings getState() {
+        if (settings != null) {
+            if (StringUtil.isEmpty(settings.getServerName()))
+                settings.setServerName(SonarServers.PROJECT);
+            if (StringUtil.isEmpty(settings.getLocalAnalysisScripName()))
+                settings.setLocalAnalysisScripName(LocalAnalysisScripts.PROJECT);
+        }
+        return settings;
+    }
 
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return "ModuleSettings";
-  }
+    @Override
+    public void loadState(@NotNull Settings settings) {
+        this.settings = settings;
+    }
 
-  @Override
-  public void projectOpened() {}
+    @NotNull
+    @Override
+    public String getComponentName() {
+        return "ModuleSettings";
+    }
 
-  @Override
-  public void projectClosed() {}
+    @Override
+    public void projectOpened() {
+    }
 
-  @Override
-  public void moduleAdded() {}
+    @Override
+    public void projectClosed() {
+    }
 
-  @Override
-  public void initComponent() {}
+    @Override
+    public void moduleAdded() {
+    }
 
-  @Override
-  public void disposeComponent() {}
+    @Override
+    public void initComponent() {
+    }
+
+    @Override
+    public void disposeComponent() {
+    }
 }

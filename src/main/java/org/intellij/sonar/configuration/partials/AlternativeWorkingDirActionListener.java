@@ -19,39 +19,39 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 public final class AlternativeWorkingDirActionListener implements ActionListener {
-  private final Project project;
-  private final TextFieldWithBrowseButton textFieldWithBrowseButton;
-  private final VirtualFile dirToSelect;
+    private final Project project;
+    private final TextFieldWithBrowseButton textFieldWithBrowseButton;
+    private final VirtualFile dirToSelect;
 
-  public AlternativeWorkingDirActionListener(Project project, TextFieldWithBrowseButton textFieldWithBrowseButton, VirtualFile dirToSelect) {
-    this.project = project;
-    this.textFieldWithBrowseButton = textFieldWithBrowseButton;
-    this.dirToSelect = dirToSelect;
-  }
+    public AlternativeWorkingDirActionListener(Project project, TextFieldWithBrowseButton textFieldWithBrowseButton, VirtualFile dirToSelect) {
+        this.project = project;
+        this.textFieldWithBrowseButton = textFieldWithBrowseButton;
+        this.dirToSelect = dirToSelect;
+    }
 
-  public void actionPerformed(ActionEvent e) {
-    Application application = ApplicationManager.getApplication();
-    VirtualFile previous = application.runWriteAction(new NullableComputable<VirtualFile>() {
-      public VirtualFile compute() {
-        final String path = FileUtil.toSystemIndependentName(textFieldWithBrowseButton.getText());
-        return ! StringUtil.isEmptyOrSpaces(path) ? LocalFileSystem.getInstance().refreshAndFindFileByPath(path) : null ;
-      }
-    });
-    FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false, true, false, false, false, false);
-    fileDescriptor.setShowFileSystemRoots(true);
-    fileDescriptor.setTitle("Configure Path");
-    fileDescriptor.setDescription("Configure working directory");
-    FileChooser.chooseFiles(
-        fileDescriptor,
-        project,
-        Optional.fromNullable(previous).or(dirToSelect),
-        new Consumer<List<VirtualFile>>() {
-          @Override
-          public void consume(final List<VirtualFile> files) {
-            String path = files.get(0).getPath();
-            textFieldWithBrowseButton.setText(path);
-          }
-        }
-    );
-  }
+    public void actionPerformed(ActionEvent e) {
+        Application application = ApplicationManager.getApplication();
+        VirtualFile previous = application.runWriteAction(new NullableComputable<VirtualFile>() {
+            public VirtualFile compute() {
+                final String path = FileUtil.toSystemIndependentName(textFieldWithBrowseButton.getText());
+                return !StringUtil.isEmptyOrSpaces(path) ? LocalFileSystem.getInstance().refreshAndFindFileByPath(path) : null;
+            }
+        });
+        FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false, true, false, false, false, false);
+        fileDescriptor.setShowFileSystemRoots(true);
+        fileDescriptor.setTitle("Configure Path");
+        fileDescriptor.setDescription("Configure working directory");
+        FileChooser.chooseFiles(
+                fileDescriptor,
+                project,
+                Optional.fromNullable(previous).or(dirToSelect),
+                new Consumer<List<VirtualFile>>() {
+                    @Override
+                    public void consume(final List<VirtualFile> files) {
+                        String path = files.get(0).getPath();
+                        textFieldWithBrowseButton.setText(path);
+                    }
+                }
+        );
+    }
 }

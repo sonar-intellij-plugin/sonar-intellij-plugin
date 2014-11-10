@@ -13,30 +13,30 @@ import java.util.Set;
 
 public class IssuesByFileIndex {
 
-  public static Map<String, Set<SonarIssue>> getIndex(Project project) {
+    public static Map<String, Set<SonarIssue>> getIndex(Project project) {
 
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
-    if (!indexComponent.isPresent()) {
-      return Maps.newConcurrentMap();
-    } else {
-      return indexComponent.get().getIndex();
+        final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+        if (!indexComponent.isPresent()) {
+            return Maps.newConcurrentMap();
+        } else {
+            return indexComponent.get().getIndex();
+        }
     }
-  }
 
-  public static Set<SonarIssue> getIssuesForFile(PsiFile psiFile) {
-    String fullPath = psiFile.getVirtualFile().getPath();
-    Project project = psiFile.getProject();
-    final Map<String, Set<SonarIssue>> index = getIndex(project);
-    Set<SonarIssue> issues = index.get(fullPath);
-    if (issues == null) {
-      issues = Sets.newLinkedHashSet();
+    public static Set<SonarIssue> getIssuesForFile(PsiFile psiFile) {
+        String fullPath = psiFile.getVirtualFile().getPath();
+        Project project = psiFile.getProject();
+        final Map<String, Set<SonarIssue>> index = getIndex(project);
+        Set<SonarIssue> issues = index.get(fullPath);
+        if (issues == null) {
+            issues = Sets.newLinkedHashSet();
+        }
+        return issues;
     }
-    return issues;
-  }
 
-  public static void clearIndexFor(Collection<PsiFile> psiFiles) {
-    for (PsiFile psiFile : psiFiles) {
-      getIndex(psiFile.getProject()).remove(psiFile.getVirtualFile().getPath());
+    public static void clearIndexFor(Collection<PsiFile> psiFiles) {
+        for (PsiFile psiFile : psiFiles) {
+            getIndex(psiFile.getProject()).remove(psiFile.getVirtualFile().getPath());
+        }
     }
-  }
 }
