@@ -36,6 +36,7 @@ import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
@@ -44,6 +45,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.ui.UIUtil;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.SonarToolWindowFactory;
@@ -104,6 +106,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
         if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled)
             return;
 
+        saveAllDocuments();
         final Project project = context.getProject();
 
         showSonarQubeToolWindowIfNeeded(project);
@@ -153,6 +156,19 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
             }
         }
 
+    }
+
+    private void saveAllDocuments() {
+        UIUtil.invokeAndWaitIfNeeded(new Runnable() {
+            @Override
+            public void run() {
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    public void run() {
+                        FileDocumentManager.getInstance().saveAllDocuments();
+                    }
+                });
+            }
+        });
     }
 
     private void showSonarQubeToolWindowIfNeeded(final Project project) {
