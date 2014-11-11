@@ -18,6 +18,7 @@ import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarreport.data.Component;
 import org.intellij.sonar.sonarreport.data.SonarReport;
+import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
 import org.sonar.wsclient.services.Resource;
@@ -118,7 +119,9 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
         try {
             int exitCode = process.exitValue();
-            sonarConsole.info(String.format("finished with exit code %s in %d ms", exitCode, System.currentTimeMillis() - startTime));
+            sonarConsole.info(String.format("finished with exit code %s in %s",
+                    exitCode,
+                    DurationUtil.getDurationBreakdown(System.currentTimeMillis() - startTime)));
             if (exitCode != 0) {
                 Notifications.Bus.notify(
                         new Notification(
@@ -134,7 +137,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     }
 
     private void readIssuesFromSonarReport() {
-        sonarConsole.info("report: " + this.pathToSonarReport);
+        sonarConsole.info("Reading issues from " + this.pathToSonarReport);
         String sonarReportContent;
         try {
             sonarReportContent = Files.toString(new File(pathToSonarReport), Charsets.UTF_8);
@@ -163,9 +166,12 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         }
 
         removeFilesAffectedByReportFromIndex(sonarReport, indexComponent);
+        sonarConsole.info("Creating index from SonarQube report");
+        final long indexCreationStartTime = System.currentTimeMillis();
 
         final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
                 .withSonarReportIssues(sonarReport.getIssues())
+                .withSonarConsole(sonarConsole)
                 .create();
 
 
@@ -176,7 +182,10 @@ public class RunLocalAnalysisScriptTask implements Runnable {
                     return sonarIssues;
                 }
             }).size();
-            sonarConsole.info(String.format("Created index with %d issues from SonarQube report", issuesCount));
+            sonarConsole.info(String.format(
+                    "Finished creating index from SonarQube report with %d issues in %s",
+                    issuesCount,
+                    DurationUtil.getDurationBreakdown(System.currentTimeMillis() - indexCreationStartTime)));
             final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
                 @Override
                 public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
@@ -188,8 +197,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
                     return sonarIssue.getIsNew();
                 }
             }).size();
-            if (newIssuesCount > 0)
+            if (newIssuesCount == 1) {
+                sonarConsole.info("1 issue is new!");
+            } else if (newIssuesCount > 1){
                 sonarConsole.info(String.format("%d issues are new!", newIssuesCount));
+            }
             indexComponent.get().getIndex().putAll(index);
         }
     }

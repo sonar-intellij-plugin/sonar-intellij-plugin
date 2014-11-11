@@ -5,7 +5,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.sonarreport.data.Issue;
 import org.intellij.sonar.util.SettingsUtil;
@@ -20,6 +23,7 @@ import java.util.Set;
 public class IssuesByFileIndexer {
     private final ImmutableList<PsiFile> files;
     private ImmutableList<Issue> issues;
+    private SonarConsole sonarConsole;
 
     public IssuesByFileIndexer(ImmutableList<PsiFile> files) {
         this.files = files;
@@ -31,6 +35,11 @@ public class IssuesByFileIndexer {
 
     public IssuesByFileIndexer withSonarReportIssues(List<Issue> issues) {
         setIssues(ImmutableList.copyOf(issues));
+        return this;
+    }
+
+    public IssuesByFileIndexer withSonarConsole(SonarConsole sonarConsole) {
+        this.sonarConsole = sonarConsole;
         return this;
     }
 
@@ -57,7 +66,23 @@ public class IssuesByFileIndexer {
     public Map<String, Set<SonarIssue>> create() {
 
         final Map<String, Set<SonarIssue>> index = Maps.newConcurrentMap();
+        final int filesCount = files.size();
+        int fileIndex = 0;
+        final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+        if (!indicator.isRunning()) indicator.start();
+        info(String.format("Start processing %d files and %d issues", filesCount, issues.size()));
         for (PsiFile psiFile : files) {
+
+            if (indicator.isCanceled()) break;
+            fileIndex++;
+            indicator.setFraction(1.0 * fileIndex / filesCount);
+            indicator.setText(psiFile.getName());
+            final String filesProgressMessage = String.format("%d / %d files processed", fileIndex, filesCount);
+            indicator.setText2(filesProgressMessage);
+            if (filesCount % fileIndex == 20) {
+                info(filesProgressMessage);
+            }
+
             String fullFilePath = psiFile.getVirtualFile().getPath();
             ImmutableSet.Builder<SonarIssue> entriesBuilder = ImmutableSet.builder();
             final Settings settings = SettingsUtil.getSettingsFor(psiFile);
@@ -75,8 +100,14 @@ public class IssuesByFileIndexer {
             if (!sonarIssues.isEmpty())
                 index.put(fullFilePath, sonarIssues);
         }
-
+        if (indicator.isRunning()) indicator.stop();
         return index;
+    }
+
+    private void info(String msg) {
+        if (sonarConsole != null) {
+            sonarConsole.info(msg);
+        }
     }
 
     private void matchFileByResource(String fullFilePath, ImmutableSet.Builder<SonarIssue> entriesBuilder, Resource resource) {

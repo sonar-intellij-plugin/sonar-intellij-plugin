@@ -295,7 +295,8 @@ public class SonarServer {
             final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
             if (progressIndicator.isCanceled())
                 break;
-            progressIndicator.setText2(pageIndex + " / " + issues.paging().pages());
+            final String pagesProgressMessage = pageIndex + " / " + issues.paging().pages();
+            progressIndicator.setText2(pagesProgressMessage);
             progressIndicator.setFraction(pageIndex * 1.0 / issues.paging().pages());
 
             query = IssueQuery.create()
