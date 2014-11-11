@@ -25,6 +25,8 @@ import java.util.Set;
 
 public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
 
+    private static final String SONAR_QUBE = "SonarQube";
+
     /**
      * @see com.intellij.codeInspection.InspectionEP#groupDisplayName
      * @see com.intellij.codeInspection.InspectionEP#groupKey
@@ -79,7 +81,8 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
                     }
                 }).toSet();
 
-        final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(context.getProject());
+        final Optional<IssuesByFileIndexProjectComponent> indexComponent =
+                IssuesByFileIndexProjectComponent.getInstance(context.getProject());
 
         if (indexComponent.isPresent()) {
             final int newIssuesCount = FluentIterable.from(indexComponent.get().getIndex().entrySet())
@@ -102,12 +105,21 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
                         }
                     }).size();
 
-            if (newIssuesCount > 0) {
-                String errorText = String.format("Found %d new SonarQube issues", newIssuesCount);
-                Notifications.Bus.notify(new Notification("SonarQube", "SonarQube", errorText, NotificationType.WARNING), context.getProject());
+            final Notification notification;
+            if (newIssuesCount == 1) {
+                notification = new Notification(SONAR_QUBE, SONAR_QUBE,
+                        "Found 1 new SonarQube issue",
+                        NotificationType.WARNING);
+            } else if (newIssuesCount > 1) {
+                notification = new Notification(SONAR_QUBE, SONAR_QUBE,
+                        String.format("Found %d new SonarQube issues", newIssuesCount),
+                        NotificationType.WARNING);
             } else {
-                Notifications.Bus.notify(new Notification("SonarQube", "SonarQube", "No new SonarQube issues", NotificationType.INFORMATION), context.getProject());
+                notification = new Notification(SONAR_QUBE, SONAR_QUBE,
+                        "No new SonarQube issues",
+                        NotificationType.INFORMATION);
             }
+            Notifications.Bus.notify(notification, context.getProject());
 
         }
     }

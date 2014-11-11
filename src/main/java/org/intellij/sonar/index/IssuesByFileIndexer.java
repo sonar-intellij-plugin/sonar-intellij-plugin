@@ -11,6 +11,7 @@ import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.sonarreport.data.Issue;
+import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
 import org.sonar.wsclient.services.Resource;
@@ -69,16 +70,15 @@ public class IssuesByFileIndexer {
         final int filesCount = files.size();
         int fileIndex = 0;
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-        if (!indicator.isRunning()) indicator.start();
         info(String.format("Start processing %d files and %d issues", filesCount, issues.size()));
         for (PsiFile psiFile : files) {
 
             if (indicator.isCanceled()) break;
             fileIndex++;
-            indicator.setFraction(1.0 * fileIndex / filesCount);
-            indicator.setText(psiFile.getName());
+            ProgressIndicatorUtil.setFraction(indicator, 1.0 * fileIndex / filesCount);
+            ProgressIndicatorUtil.setText2(indicator, psiFile.getName());
             final String filesProgressMessage = String.format("%d / %d files processed", fileIndex, filesCount);
-            indicator.setText2(filesProgressMessage);
+            ProgressIndicatorUtil.setText(indicator, filesProgressMessage);
             if (filesCount % fileIndex == 20) {
                 info(filesProgressMessage);
             }
@@ -100,7 +100,6 @@ public class IssuesByFileIndexer {
             if (!sonarIssues.isEmpty())
                 index.put(fullFilePath, sonarIssues);
         }
-        if (indicator.isRunning()) indicator.stop();
         return index;
     }
 

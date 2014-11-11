@@ -19,6 +19,7 @@ import org.intellij.sonar.persistence.*;
 import org.intellij.sonar.sonarreport.data.Component;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.intellij.sonar.util.DurationUtil;
+import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
 import org.sonar.wsclient.services.Resource;
@@ -89,9 +90,9 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     public void run() {
 
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-        indicator.setText(this.workingDir.getName());
-        indicator.setText2(this.sourceCode);
-        indicator.setIndeterminate(true);
+        ProgressIndicatorUtil.setText(indicator, "Executing SonarQube local analysis");
+        ProgressIndicatorUtil.setText2(indicator, sourceCode);
+        ProgressIndicatorUtil.setIndeterminate(indicator, true);
 
         sonarConsole.info("working dir: " + this.workingDir.getPath());
         sonarConsole.info("run: " + this.sourceCode);
@@ -147,7 +148,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         }
         final SonarReport sonarReport = SonarReport.fromJson(sonarReportContent);
         final int issuesCount = sonarReport != null && sonarReport.getIssues() != null ? sonarReport.getIssues().size() : 0;
-        sonarConsole.info(String.format("Found %d issues in the SonarQube report", issuesCount));
+        if (issuesCount > 0 ) {
+            sonarConsole.info(String.format("Found %d issues in the SonarQube report", issuesCount));
+        } else {
+            sonarConsole.info("Did not find any issues in the SonarQube report");
+        }
 
         if (enrichedSettings.settings.getResources().isEmpty()) {
             createIndexFrom(sonarReport, new Resource());
@@ -166,26 +171,28 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         }
 
         removeFilesAffectedByReportFromIndex(sonarReport, indexComponent);
+        if (sonarReport.getIssues().size() <= 0) return;
+
         sonarConsole.info("Creating index from SonarQube report");
         final long indexCreationStartTime = System.currentTimeMillis();
 
-        final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
-                .withSonarReportIssues(sonarReport.getIssues())
-                .withSonarConsole(sonarConsole)
-                .create();
-
-
-        if (!index.isEmpty()) {
+            final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
+                    .withSonarReportIssues(sonarReport.getIssues())
+                    .withSonarConsole(sonarConsole)
+                    .create();
             final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
                 @Override
                 public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
                     return sonarIssues;
                 }
             }).size();
-            sonarConsole.info(String.format(
-                    "Finished creating index from SonarQube report with %d issues in %s",
-                    issuesCount,
-                    DurationUtil.getDurationBreakdown(System.currentTimeMillis() - indexCreationStartTime)));
+
+        sonarConsole.info(String.format(
+                "Finished creating index from SonarQube report with %d issues in %s",
+                issuesCount,
+                DurationUtil.getDurationBreakdown(System.currentTimeMillis() - indexCreationStartTime)));
+
+        if (!index.isEmpty()) {
             final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(new Function<Set<SonarIssue>, Iterable<SonarIssue>>() {
                 @Override
                 public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {

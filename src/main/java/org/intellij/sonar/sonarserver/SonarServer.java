@@ -11,6 +11,7 @@ import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.util.GuaveStreamUtil;
+import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.ThrowableUtils;
 import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
@@ -283,7 +284,6 @@ public class SonarServer {
     }
 
     public ImmutableList<Issue> getAllIssuesFor(String resourceKey) {
-        ProgressManager.getInstance().getProgressIndicator().setFraction(0.01);
         final ImmutableList.Builder<Issue> builder = ImmutableList.builder();
         IssueQuery query = IssueQuery.create()
                 .componentRoots(resourceKey)
@@ -295,9 +295,9 @@ public class SonarServer {
             final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
             if (progressIndicator.isCanceled())
                 break;
-            final String pagesProgressMessage = pageIndex + " / " + issues.paging().pages();
-            progressIndicator.setText2(pagesProgressMessage);
-            progressIndicator.setFraction(pageIndex * 1.0 / issues.paging().pages());
+            final String pagesProgressMessage = String.format("%d / %d pages downloaded", pageIndex, issues.paging().pages());
+            ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
+            ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / issues.paging().pages());
 
             query = IssueQuery.create()
                     .componentRoots(resourceKey)
