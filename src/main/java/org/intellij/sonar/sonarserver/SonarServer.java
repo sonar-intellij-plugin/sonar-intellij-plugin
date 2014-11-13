@@ -10,9 +10,7 @@ import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.proxy.CommonProxy;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
-import org.intellij.sonar.util.GuaveStreamUtil;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
-import org.intellij.sonar.util.ThrowableUtils;
 import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
@@ -24,8 +22,10 @@ import retrofit.RestAdapter;
 import retrofit.http.GET;
 import retrofit.http.Query;
 
-import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,10 +46,8 @@ public class SonarServer {
         );
     }
 
-    private static final String VERSION_URL = "/api/server/version";
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 10000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 10000;
-    private static final String USER_AGENT = "SonarQube Community Plugin";
 
     private final SonarServerConfig mySonarServerConfig;
     private final Sonar sonar;
@@ -105,15 +103,15 @@ public class SonarServer {
     }
 
     private Sonar createSonar() {
-        Sonar sonar;
+        Sonar newSonar;
         if (mySonarServerConfig.isAnonymous()) {
-            sonar = createSonar(mySonarServerConfig.getHostUrl(), null, null);
+            newSonar = createSonar(mySonarServerConfig.getHostUrl(), null, null);
         } else {
             mySonarServerConfig.loadPassword();
-            sonar = createSonar(mySonarServerConfig.getHostUrl(), mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
+            newSonar = createSonar(mySonarServerConfig.getHostUrl(), mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
             mySonarServerConfig.clearPassword();
         }
-        return sonar;
+        return newSonar;
     }
 
     private Host createHost() {
@@ -130,49 +128,12 @@ public class SonarServer {
     }
 
     private Sonar createSonar(String host, String user, String password) {
-        host = getHostSafe(host);
-        return StringUtils.isEmpty(user) ? Sonar.create(host) : Sonar.create(host, user, password);
+        String safeHost = getHostSafe(host);
+        return StringUtils.isEmpty(user) ? Sonar.create(safeHost) : Sonar.create(safeHost, user, password);
     }
 
     private String getHostSafe(String hostName) {
         return StringUtils.removeEnd(hostName, "/");
-    }
-
-    public SonarServerConfig getSonarServerConfigurationBean() {
-        return mySonarServerConfig;
-    }
-
-    public String verifySonarConnection() throws SonarServerConnectionException {
-        HttpURLConnection httpURLConnection = getHttpConnection();
-
-        try {
-            int statusCode = httpURLConnection.getResponseCode();
-            if (statusCode != HttpURLConnection.HTTP_OK) {
-                throw new SonarServerConnectionException("ResponseCode: %d Url: %s", statusCode, httpURLConnection.getURL());
-            }
-            return GuaveStreamUtil.toString(httpURLConnection.getInputStream());
-        } catch (IOException e) {
-            throw new SonarServerConnectionException("Cannot read data from url: %s\n\n Cause: \n%s", httpURLConnection.getURL(), ThrowableUtils.getPrettyStackTraceAsString(e));
-        }
-    }
-
-    private HttpURLConnection getHttpConnection() throws SonarServerConnectionException {
-        String hostName = mySonarServerConfig.getHostUrl();
-        URL sonarServerUrl = null;
-        try {
-            sonarServerUrl = new URL(getHostSafe(hostName) + VERSION_URL);
-
-            HttpURLConnection connection = (HttpURLConnection) sonarServerUrl.openConnection();
-            connection.setConnectTimeout(CONNECT_TIMEOUT_IN_MILLISECONDS);
-            connection.setReadTimeout(READ_TIMEOUT_IN_MILLISECONDS);
-            connection.setInstanceFollowRedirects(true);
-            connection.setRequestProperty("User-Agent", USER_AGENT);
-            return connection;
-        } catch (MalformedURLException e) {
-            throw new SonarServerConnectionException("Invalid url: %s", e, hostName);
-        } catch (IOException e) {
-            throw new SonarServerConnectionException("Couldn't connect to url: %s", e, sonarServerUrl.toString());
-        }
     }
 
 // GET LANGUAGE AND RULES PROFILE FOR A SONAR RESOURCE
@@ -242,11 +203,19 @@ public class SonarServer {
 
     public List<Resource> getAllProjectsAndModules() {
         List<Resource> allResources = new LinkedList<Resource>();
+        final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+        indicator.setText("Downloading SonarQube projects");
         List<Resource> projects = getAllProjects(sonar);
         projects = FluentIterable.from(projects).toSortedList(new ByResourceName());
 
         if (null != projects) {
+            indicator.setText("Downloading SonarQube modules");
+            int i = 0;
             for (Resource project : projects) {
+                if (indicator.isCanceled()) break;
+                i++;
+                indicator.setFraction(1.0 * i / projects.size());
+                indicator.setText2(project.getName());
                 allResources.add(project);
                 List<Resource> modules = getAllModules(sonar, project.getId());
                 modules = FluentIterable.from(modules).toSortedList(new ByResourceName());
