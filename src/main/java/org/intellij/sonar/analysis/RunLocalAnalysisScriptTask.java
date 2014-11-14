@@ -119,6 +119,13 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         }
 
         try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            sonarConsole.info("Unexpected end of process.\n" + Throwables.getStackTraceAsString(e));
+        }
+
+        try {
+
             int exitCode = process.exitValue();
             sonarConsole.info(String.format("finished with exit code %s in %s",
                     exitCode,
