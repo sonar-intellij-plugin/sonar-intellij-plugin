@@ -19,12 +19,23 @@ public class SonarConsole extends AbstractProjectComponent {
 
     private ConsoleView consoleView;
 
+    private String passwordFiler;
+
     public SonarConsole(Project project) {
         super(project);
     }
 
     public static synchronized SonarConsole get(Project project) {
         return project.getComponent(SonarConsole.class);
+    }
+
+    public SonarConsole withPasswordFilter(String password) {
+        this.passwordFiler = password;
+        return this;
+    }
+
+    public void clearPasswordFilter() {
+        this.passwordFiler = null;
     }
 
     private ConsoleView createConsoleView(Project project) {
@@ -46,21 +57,32 @@ public class SonarConsole extends AbstractProjectComponent {
     }
 
     public void log(String msg, ConsoleLogLevel logLevel) {
-        if (INFO == logLevel) {
-            info(msg);
-        } else if (ERROR == logLevel) {
-            error(msg);
+        msg = applyPasswordFilter(msg);
+        final ConsoleViewContentType consoleViewContentType;
+        if (logLevel == INFO) {
+            consoleViewContentType = ConsoleViewContentType.NORMAL_OUTPUT;
+        } else if (logLevel == ERROR) {
+            consoleViewContentType = ConsoleViewContentType.ERROR_OUTPUT;
         } else {
             throw new IllegalArgumentException(String.format("Unknown log level %s", logLevel));
         }
+
+        getConsoleView().print(String.format("%s %s > %s\n", logLevel, getNowFormatted(), msg), consoleViewContentType);
+    }
+
+    private String applyPasswordFilter(String msg) {
+        if (null != passwordFiler && null != msg && msg.contains(passwordFiler)) {
+            msg = msg.replace(passwordFiler, "●●●●●●●");
+        }
+        return msg;
     }
 
     public void info(String msg) {
-        getConsoleView().print(String.format("%s %s > %s\n", INFO, getNowFormatted(), msg), ConsoleViewContentType.NORMAL_OUTPUT);
+        log(msg, INFO);
     }
 
     public void error(String msg) {
-        getConsoleView().print(String.format("%s %s > %s\n", ERROR, getNowFormatted(), msg), ConsoleViewContentType.ERROR_OUTPUT);
+        log(msg, ERROR);
     }
 
     private String getNowFormatted() {

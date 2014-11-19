@@ -1,8 +1,9 @@
 package org.intellij.sonar.configuration;
 
+import com.google.common.base.Throwables;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.intellij.ide.passwordSafe.PasswordSafeException;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.UIUtil;
 
 public final class PasswordManager {
@@ -15,8 +16,8 @@ public final class PasswordManager {
             public void run() {
                 try {
                     PasswordSafe.getInstance().storePassword(null, PasswordManager.class, key, value);
-                } catch (PasswordSafeException e) {
-                    LOG.error("Cannot store password", e);
+                } catch (Exception e) {
+                    Messages.showErrorDialog("Cannot store password\n" + Throwables.getStackTraceAsString(e), "Error");
                 }
             }
         });
@@ -31,8 +32,8 @@ public final class PasswordManager {
             public void run() {
                 try {
                     password = PasswordSafe.getInstance().getPassword(null, PasswordManager.class, key);
-                } catch (PasswordSafeException e) {
-                    LOG.error("Cannot get password", e);
+                } catch (Exception e) {
+                    Messages.showErrorDialog("Cannot load password\n" + Throwables.getStackTraceAsString(e), "Error");
                 }
             }
         });

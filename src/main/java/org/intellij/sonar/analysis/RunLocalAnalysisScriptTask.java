@@ -9,6 +9,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.configuration.WorkingDirs;
 import org.intellij.sonar.console.SonarConsole;
@@ -88,12 +89,26 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     }
 
     public void run() {
+        try {
+            execute();
+        } finally {
+            sonarConsole.clearPasswordFilter();
+        }
+    }
+
+    private void execute() {
 
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         ProgressIndicatorUtil.setText(indicator, "Executing SonarQube local analysis");
         ProgressIndicatorUtil.setText2(indicator, sourceCode);
         ProgressIndicatorUtil.setIndeterminate(indicator, true);
 
+        final Optional<SonarServerConfig> sonarServerConfig = SonarServers.get(enrichedSettings.settings.getServerName());
+        if (sonarServerConfig.isPresent()
+                && !sonarServerConfig.get().isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.get().getUser())) {
+            final String password = sonarServerConfig.get().loadPassword();
+            sonarConsole.withPasswordFilter(password);
+        }
         sonarConsole.info("working dir: " + this.workingDir.getPath());
         sonarConsole.info("run: " + this.sourceCode);
 

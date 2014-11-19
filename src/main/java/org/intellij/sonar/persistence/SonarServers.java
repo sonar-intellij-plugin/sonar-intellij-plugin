@@ -6,7 +6,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.components.*;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,10 +42,10 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
             throw new IllegalArgumentException("already exists");
         } else {
             sonarServerConfigBeans.add(newSonarServerConfigBean);
-            if (!StringUtil.isEmptyOrSpaces(newSonarServerConfigBean.getPassword())) {
+            if (newSonarServerConfigBean.isPasswordChanged()) {
                 newSonarServerConfigBean.storePassword();
-                newSonarServerConfigBean.clearPassword();
             }
+            newSonarServerConfigBean.clearPassword();
         }
     }
 

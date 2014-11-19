@@ -2,6 +2,7 @@ package org.intellij.sonar.util;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.sonar.persistence.SonarServerConfig;
 
@@ -49,55 +50,82 @@ public class TemplateProcessor {
         if (myTemplate == null)
             throw new IllegalArgumentException("template");
         String template = myTemplate;
-        if (myProject != null) {
-            template = replacePlaceHolders(template, myProject);
-        }
-        if (myModule != null) {
-            template = replacePlaceHolders(template, myModule);
-        }
-        if (mySonarServerConfig != null) {
-            template = replacePlaceHolders(template, mySonarServerConfig);
-        }
-        if (myWorkingDir != null) {
-            template = replacePlaceHolders(template, myWorkingDir);
-        }
+        template = replacePlaceHolders(template, myProject);
+        template = replacePlaceHolders(template, myModule);
+        template = replacePlaceHolders(template, mySonarServerConfig);
+        template = replacePlaceHolders(template, myWorkingDir);
         return template;
     }
 
-    private String replacePlaceHolders(String template, File workingDir) {
+    private static String replacePlaceHolders(String template, File workingDir) {
         String processedTemplate = template;
-        processedTemplate = processedTemplate.replace(WORKING_DIR.getVariableName(), workingDir.getPath());
-        processedTemplate = processedTemplate.replace(WORKING_DIR_NAME.getVariableName(), workingDir.getName());
-        return processedTemplate;
-    }
-
-    private String replacePlaceHolders(String template, Module module) {
-        String processedTemplate = template;
-        processedTemplate = processedTemplate.replace(MODULE_NAME.getVariableName(), module.getName());
-        final VirtualFile moduleFile = module.getModuleFile();
-        if (moduleFile == null) return processedTemplate;
-        final VirtualFile moduleBaseDir = moduleFile.getParent();
-        processedTemplate = processedTemplate.replace(MODULE_BASE_DIR.getVariableName(), moduleBaseDir.getPath());
-        processedTemplate = processedTemplate.replace(MODULE_BASE_DIR_NAME.getVariableName(), moduleBaseDir.getName());
-        return processedTemplate;
-    }
-
-    public static String replacePlaceHolders(String template, Project project) {
-        String processedTemplate = template;
-        processedTemplate = processedTemplate.replace(PROJECT_NAME.getVariableName(), project.getName());
-        processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR.getVariableName(), project.getBasePath());
-        processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR_NAME.getVariableName(), project.getBaseDir().getName());
-        return processedTemplate;
-    }
-
-    public static String replacePlaceHolders(String template, SonarServerConfig sonarServerConfig) {
-        String processedTemplate = template;
-        processedTemplate = processedTemplate.replace(SONAR_HOST_URL.getVariableName(), sonarServerConfig.getHostUrl());
-        processedTemplate = processedTemplate.replace(SONAR_SERVER_NAME.getVariableName(), sonarServerConfig.getName());
-        processedTemplate = processedTemplate.replace(SONAR_USER_NAME.getVariableName(), sonarServerConfig.getUser());
-        if (template.contains(SONAR_USER_PASSWORD.getVariableName())) {
-            processedTemplate = processedTemplate.replace(SONAR_USER_PASSWORD.getVariableName(), sonarServerConfig.loadPassword());
+        String workingDirName = "";
+        String workingDirPath = "";
+        if (null != workingDir) {
+            workingDirName = workingDir.getName();
+            workingDirPath = workingDir.getPath();
         }
+        processedTemplate = processedTemplate.replace(WORKING_DIR_NAME.getVariableName(), workingDirName);
+        processedTemplate = processedTemplate.replace(WORKING_DIR.getVariableName(), workingDirPath);
+        return processedTemplate;
+    }
+
+    private static String replacePlaceHolders(String template, Module module) {
+        String processedTemplate = template;
+        String moduleName = "";
+        String moduleBaseDirPath = "";
+        String moduleBaseDirName = "";
+        if (null != module) {
+            moduleName = module.getName();
+            final VirtualFile moduleFile = module.getModuleFile();
+            if (null != moduleFile) {
+                final VirtualFile moduleBaseDir = moduleFile.getParent();
+                moduleBaseDirPath = moduleBaseDir.getPath();
+                moduleBaseDirName = moduleBaseDir.getName();
+            }
+        }
+
+        processedTemplate = processedTemplate.replace(MODULE_NAME.getVariableName(), moduleName);
+        processedTemplate = processedTemplate.replace(MODULE_BASE_DIR_NAME.getVariableName(), moduleBaseDirName);
+        processedTemplate = processedTemplate.replace(MODULE_BASE_DIR.getVariableName(), moduleBaseDirPath);
+        return processedTemplate;
+    }
+
+    private static String replacePlaceHolders(String template, Project project) {
+        String processedTemplate = template;
+        String projectName = "";
+        String projectBaseDir = "";
+        String projectBaseDirName = "";
+        if (null != project) {
+            projectName = project.getName();
+            projectBaseDir = project.getBasePath();
+            projectBaseDirName = project.getBaseDir().getName();
+        }
+        processedTemplate = processedTemplate.replace(PROJECT_NAME.getVariableName(), projectName);
+        processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR_NAME.getVariableName(), projectBaseDirName);
+        processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR.getVariableName(), projectBaseDir);
+        return processedTemplate;
+    }
+
+    private static String replacePlaceHolders(String template, SonarServerConfig sonarServerConfig) {
+        String processedTemplate = template;
+        String sonarUserPassword = "";
+        String sonarHostUrl = "";
+        String sonarServerName = "";
+        String sonarUserName = "";
+        if (null != sonarServerConfig) {
+            sonarHostUrl = sonarServerConfig.getHostUrl();
+            sonarServerName = sonarServerConfig.getName();
+            sonarUserName = sonarServerConfig.getUser();
+            if (template.contains(SONAR_USER_PASSWORD.getVariableName())
+                    && !sonarServerConfig.isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.getUser())) {
+                sonarUserPassword = sonarServerConfig.loadPassword();
+            }
+        }
+        processedTemplate = processedTemplate.replace(SONAR_HOST_URL.getVariableName(), sonarHostUrl);
+        processedTemplate = processedTemplate.replace(SONAR_SERVER_NAME.getVariableName(), sonarServerName);
+        processedTemplate = processedTemplate.replace(SONAR_USER_NAME.getVariableName(), sonarUserName);
+        processedTemplate = processedTemplate.replace(SONAR_USER_PASSWORD.getVariableName(), sonarUserPassword);
         return processedTemplate;
     }
 }

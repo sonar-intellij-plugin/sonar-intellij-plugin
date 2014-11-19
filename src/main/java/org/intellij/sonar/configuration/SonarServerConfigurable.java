@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -20,10 +22,18 @@ public class SonarServerConfigurable extends DialogWrapper {
     private JTextField myHostUrlTextField;
     private JTextField myUserTextField;
     private JPasswordField myPasswordField;
+    private boolean isPasswordFieldChanged = false;
     private JPanel myRootPanel;
 
     public SonarServerConfigurable(@Nullable Project project) {
         super(project);
+        myPasswordField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent) {
+                super.keyTyped(keyEvent);
+                isPasswordFieldChanged = true;
+            }
+        });
         init();
     }
 
@@ -36,6 +46,10 @@ public class SonarServerConfigurable extends DialogWrapper {
         } else if (!myAnonymousCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(myUserTextField.getText())) {
             Messages.showErrorDialog("User may not be empty", "Empty User");
         } else {
+            if (myAnonymousCheckBox.isSelected()) {
+                myUserTextField.setText("");
+                myPasswordField.setText("");
+            }
             super.doOKAction();
         }
     }
@@ -99,14 +113,15 @@ public class SonarServerConfigurable extends DialogWrapper {
     }
 
     public SonarServerConfig toSonarServerConfigurationBean() {
-        SonarServerConfig bean = SonarServerConfig.of(
+        SonarServerConfig sonarServerConfig = SonarServerConfig.of(
                 myNameTestField.getText(),
                 myHostUrlTextField.getText(),
                 myAnonymousCheckBox.isSelected(),
                 myUserTextField.getText()
         );
-        bean.setPassword(String.valueOf(myPasswordField.getPassword()));
-        return bean;
+        sonarServerConfig.setPassword(String.valueOf(myPasswordField.getPassword()));
+        sonarServerConfig.setPasswordChanged(isPasswordFieldChanged);
+        return sonarServerConfig;
     }
 
     public void setValuesFrom(SonarServerConfig bean) {
@@ -114,7 +129,6 @@ public class SonarServerConfigurable extends DialogWrapper {
         this.myHostUrlTextField.setText(bean.getHostUrl());
         if (!bean.isAnonymous()) {
             this.myUserTextField.setText(bean.getUser());
-
             this.myPasswordField.setText(bean.loadPassword());
             bean.clearPassword();
         }

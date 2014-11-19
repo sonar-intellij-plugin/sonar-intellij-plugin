@@ -11,6 +11,8 @@ public class SonarServerConfig {
     // avoid save password in plain text
     @Transient
     private String password;
+    @Transient
+    private boolean isPasswordChanged = false;
 
     public static SonarServerConfig of(String hostUrl) {
         return SonarServerConfig.of(null, hostUrl, true, null);
@@ -63,6 +65,14 @@ public class SonarServerConfig {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isPasswordChanged() {
+        return isPasswordChanged;
+    }
+
+    public void setPasswordChanged(boolean isPasswordChanged) {
+        this.isPasswordChanged = isPasswordChanged;
     }
 
     @Transient
