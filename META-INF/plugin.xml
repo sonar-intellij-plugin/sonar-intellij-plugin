@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>SNAPSHOT</version>
+    <version>2.0.5</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -14,6 +14,15 @@
 
     <change-notes>
         <![CDATA[
+<p>
+2.0.5
+<ul>
+<li>Fixes #92: perform matching issues to files in parallel</li>
+<li>Fixes #93: Add more verbose information on loading SonarQube resources from server</li>
+<li>Fixes #81: Occurrences of SONAR_USER_PASSWORD should not be displayed</li>
+<li>Fixes #77: $MODULE_NAME is not expanded when analyzing for "Whole project"</li>
+</ul>
+</p>
 <p>
 2.0.4
 <ul>
