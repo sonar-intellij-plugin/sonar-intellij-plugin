@@ -110,7 +110,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
             sonarConsole.withPasswordFilter(password);
         }
         sonarConsole.info("working dir: " + this.workingDir.getPath());
-        sonarConsole.info("run: " + this.sourceCode);
+        sonarConsole.info("executing: " + this.sourceCode);
 
         final long startTime = System.currentTimeMillis();
 
