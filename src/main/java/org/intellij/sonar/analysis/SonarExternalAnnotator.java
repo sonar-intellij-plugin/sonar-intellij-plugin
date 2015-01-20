@@ -177,11 +177,27 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
     }
 
     private static Annotation createAnnotation(AnnotationHolder holder, String message, PsiElement location, HighlightSeverity severity) {
-        return holder.createAnnotation(severity, location.getTextRange(), message);
+        if (HighlightSeverity.ERROR.equals(severity)) {
+            return holder.createErrorAnnotation(location.getTextRange(), message);
+        } else if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+            return holder.createWeakWarningAnnotation(location.getTextRange(), message);
+        } else if (HighlightSeverity.WARNING.equals(severity)) {
+            return holder.createWarningAnnotation(location.getTextRange(), message);
+        } else {
+            throw new IllegalArgumentException("Unhandled severity " + severity);
+        }
     }
 
     private static Annotation createAnnotation(AnnotationHolder holder, String message, TextRange textRange, HighlightSeverity severity) {
-        return holder.createAnnotation(severity, textRange, message);
+        if (HighlightSeverity.ERROR.equals(severity)) {
+            return holder.createErrorAnnotation(textRange, message);
+        } else if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+            return holder.createWeakWarningAnnotation(textRange, message);
+        } else if (HighlightSeverity.WARNING.equals(severity)) {
+            return holder.createWarningAnnotation(textRange, message);
+        } else {
+            throw new IllegalArgumentException("Unhandled severity " + severity);
+        }
     }
 
 }
