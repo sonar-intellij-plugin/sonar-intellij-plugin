@@ -29,6 +29,7 @@ public class SonarComponentToFileMatcher {
 
         // component = "sonar:project:src/main/java/org/sonar/batch/DefaultSensorContext.java";
         // resourceKey = "sonar:project"
+        resourceKeyFromConfiguration = resourceKeyFromConfiguration.substring(0, resourceKeyFromConfiguration.lastIndexOf(':'));
         if (!isEmptyOrSpaces(resourceKeyFromConfiguration) && !componentFromSonar.startsWith(resourceKeyFromConfiguration)) {
             return false;
         }
