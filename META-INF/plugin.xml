@@ -2,7 +2,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>SNAPSHOT</version>
+    <version>2.0.6</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -14,6 +14,13 @@
 
     <change-notes>
         <![CDATA[
+<p>
+2.0.6
+<ul>
+<li>Fixes #105: Annotations not shown in PHPStorm 7.1</li>
+<li>Fixes #106: Annotations in PHPStorm shown twice per File</li>
+</ul>
+</p>
 <p>
 2.0.5
 <ul>
