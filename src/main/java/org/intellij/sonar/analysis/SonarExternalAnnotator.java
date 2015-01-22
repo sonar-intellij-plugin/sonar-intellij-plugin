@@ -18,6 +18,7 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.keymap.Keymap;
 import com.intellij.openapi.keymap.KeymapManager;
 import com.intellij.openapi.keymap.KeymapUtil;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -62,6 +63,17 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
 
     @Override
     public void apply(@NotNull final PsiFile file, final State annotationResult, @NotNull final AnnotationHolder holder) {
+        if (
+                null == file.getVirtualFile() ||
+                null == ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(file.getVirtualFile()) ||
+                (
+                    // Fixes #106: Annotations in PHPStorm shown twice per File
+                    "HTML".equals(file.getFileType().getName()) &&
+                    "php".equals(file.getVirtualFile().getExtension()))
+                ) {
+            return;
+        }
+
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
