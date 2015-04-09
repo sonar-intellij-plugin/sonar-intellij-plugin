@@ -9,6 +9,7 @@ import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
@@ -21,7 +22,6 @@ import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ui.UIUtil;
@@ -39,30 +39,42 @@ import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 
-public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnotator.State, SonarExternalAnnotator.State> {
+public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo, SonarExternalAnnotator.AnnotationResult> {
 
     public static final Key<Set<SonarIssue>> KEY = new Key<Set<SonarIssue>>("issues");
 
-    public static class State {
-        private VirtualFile vfile;
+    public static class InitialInfo {
+        public PsiFile psiFile;
     }
 
     @Nullable
     @Override
-    public State collectInformation(@NotNull PsiFile file) {
-        State state = new State();
-        state.vfile = file.getVirtualFile();
-        return state;
+    public InitialInfo collectInformation(@NotNull PsiFile file) {
+        InitialInfo initialInfo = new InitialInfo();
+        initialInfo.psiFile = file;
+        return initialInfo;
     }
 
     @Nullable
     @Override
-    public State doAnnotate(State collectedInfo) {
-        return collectedInfo;
+    public AnnotationResult doAnnotate(final InitialInfo initialInfo) {
+        final AnnotationResult annotationResult = new AnnotationResult();
+        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
+                annotationResult.sonarIssues = issues;
+            }
+        }, ModalityState.any());
+        return annotationResult;
+    }
+
+    public static class AnnotationResult {
+        public Set<SonarIssue> sonarIssues;
     }
 
     @Override
-    public void apply(@NotNull final PsiFile file, final State annotationResult, @NotNull final AnnotationHolder holder) {
+    public void apply(@NotNull final PsiFile file, final AnnotationResult annotationResult, @NotNull final AnnotationHolder holder) {
         if (
                 null == file.getVirtualFile() ||
                 null == ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(file.getVirtualFile()) ||
@@ -77,7 +89,19 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
         createAnnotations(file, annotationResult, holder);
     }
 
-    private void createAnnotations(@NotNull final PsiFile psiFile, State annotationResult, @NotNull AnnotationHolder holder) {
+    private void createAnnotations(@NotNull final PsiFile psiFile, AnnotationResult annotationResult, @NotNull AnnotationHolder holder) {
+        final Set<SonarIssue> issues = annotationResult.sonarIssues;
+        for (SonarIssue issue : issues) {
+            Optional<Annotation> annotation = createAnnotation(holder, psiFile, issue);
+            if (annotation.isPresent()) {
+                String tooltip = createTooltip(issue);
+                annotation.get().setTooltip(tooltip);
+            }
+        }
+    }
+
+    @NotNull
+    private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
         final Set<SonarIssue> issues;
 
         if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
@@ -102,13 +126,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
 
             issues = issuesFromHighlighters;
         }
-        for (SonarIssue issue : issues) {
-            Optional<Annotation> annotation = createAnnotation(holder, psiFile, issue);
-            if (annotation.isPresent()) {
-                String tooltip = createTooltip(issue);
-                annotation.get().setTooltip(tooltip);
-            }
-        }
+        return issues;
     }
 
     private void createInvisibleHighlighter(PsiFile psiFile, final SonarIssue issue, final TextRange textRange) {
@@ -206,5 +224,4 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
             throw new IllegalArgumentException("Unhandled severity " + severity);
         }
     }
-
 }
