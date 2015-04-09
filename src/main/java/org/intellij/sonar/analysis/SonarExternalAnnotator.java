@@ -74,12 +74,7 @@ public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnot
             return;
         }
 
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                createAnnotations(file, annotationResult, holder);
-            }
-        });
+        createAnnotations(file, annotationResult, holder);
     }
 
     private void createAnnotations(@NotNull final PsiFile psiFile, State annotationResult, @NotNull AnnotationHolder holder) {
