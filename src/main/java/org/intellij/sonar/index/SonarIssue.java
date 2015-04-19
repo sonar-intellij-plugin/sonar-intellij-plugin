@@ -4,109 +4,125 @@ import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
 
 public class SonarIssue implements Comparable {
-    private String key;
-    private String ruleKey;
-    private Integer line;
-    private String message;
-    private String severity;
-    private Boolean isNew;
 
-    public SonarIssue() {
-    }
+  private String key;
+  private String ruleKey;
+  private Integer line;
+  private String message;
+  private String severity;
+  private Boolean isNew;
 
-    public SonarIssue(String key, String ruleKey, Integer line, String message, String severity, Boolean isNew) {
-        this.key = key;
-        this.ruleKey = ruleKey;
-        this.severity = severity;
-        this.message = message;
-        this.line = line;
-        this.isNew = isNew;
-    }
+  public SonarIssue() {
+  }
 
-    @Transient
-    public String formattedMessage() {
-        return String.format("[%s] %s", this.severity, this.message);
-    }
+  public SonarIssue(String key,String ruleKey,Integer line,String message,String severity,Boolean isNew) {
+    this.key = key;
+    this.ruleKey = ruleKey;
+    this.severity = severity;
+    this.message = message;
+    this.line = line;
+    this.isNew = isNew;
+  }
 
-    public String getKey() {
-        return key;
-    }
+  @Transient
+  public String formattedMessage() {
+    return String.format("[%s] %s",this.severity,this.message);
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public String getRuleKey() {
-        return ruleKey;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setRuleKey(String ruleKey) {
-        this.ruleKey = ruleKey;
-    }
+  public String getRuleKey() {
+    return ruleKey;
+  }
 
-    public Integer getLine() {
-        return line;
-    }
+  public void setRuleKey(String ruleKey) {
+    this.ruleKey = ruleKey;
+  }
 
-    public void setLine(Integer line) {
-        this.line = line;
-    }
+  public Integer getLine() {
+    return line;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public void setLine(Integer line) {
+    this.line = line;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public String getSeverity() {
-        return severity;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    public void setSeverity(String severity) {
-        this.severity = severity;
-    }
+  public String getSeverity() {
+    return severity;
+  }
 
-    public Boolean getIsNew() {
-        return isNew;
-    }
+  public void setSeverity(String severity) {
+    this.severity = severity;
+  }
 
-    public void setIsNew(Boolean isNew) {
-        this.isNew = isNew;
-    }
+  public Boolean getIsNew() {
+    return isNew;
+  }
 
-    @SuppressWarnings("RedundantIfStatement")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  public void setIsNew(Boolean isNew) {
+    this.isNew = isNew;
+  }
 
-        SonarIssue that = (SonarIssue) o;
+  @SuppressWarnings("RedundantIfStatement")
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SonarIssue that = (SonarIssue) o;
+    if (isNew != null
+      ? !isNew.equals(that.isNew)
+      : that.isNew != null)
+      return false;
+    if (line != null
+      ? !line.equals(that.line)
+      : that.line != null)
+      return false;
+    if (message != null
+      ? !message.equals(that.message)
+      : that.message != null)
+      return false;
+    if (severity != null
+      ? !severity.equals(that.severity)
+      : that.severity != null)
+      return false;
+    return true;
+  }
 
-        if (isNew != null ? !isNew.equals(that.isNew) : that.isNew != null)
-            return false;
-        if (line != null ? !line.equals(that.line) : that.line != null)
-            return false;
-        if (message != null ? !message.equals(that.message) : that.message != null)
-            return false;
-        if (severity != null ? !severity.equals(that.severity) : that.severity != null)
-            return false;
+  @Override
+  public int hashCode() {
+    int result = line != null
+      ? line.hashCode()
+      : 0;
+    result = 31 * result+(message != null
+      ? message.hashCode()
+      : 0);
+    result = 31 * result+(severity != null
+      ? severity.hashCode()
+      : 0);
+    result = 31 * result+(isNew != null
+      ? isNew.hashCode()
+      : 0);
+    return result;
+  }
 
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = line != null ? line.hashCode() : 0;
-        result = 31 * result + (message != null ? message.hashCode() : 0);
-        result = 31 * result + (severity != null ? severity.hashCode() : 0);
-        result = 31 * result + (isNew != null ? isNew.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public int compareTo(Object that) {
-        return Objects.equal(this, that) ? 0 : -1;
-    }
+  @Override
+  public int compareTo(Object that) {
+    return Objects.equal(this,that)
+      ? 0
+      : -1;
+  }
 }

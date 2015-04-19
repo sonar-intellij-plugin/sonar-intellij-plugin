@@ -8,35 +8,38 @@ import com.intellij.util.ui.UIUtil;
 
 public final class PasswordManager {
 
-    private static final Logger LOG = Logger.getInstance(PasswordManager.class);
+  private static final Logger LOG = Logger.getInstance(PasswordManager.class);
 
-    public static void storePassword(final String key, final String value) {
-        UIUtil.invokeAndWaitIfNeeded(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    PasswordSafe.getInstance().storePassword(null, PasswordManager.class, key, value);
-                } catch (Exception e) {
-                    Messages.showErrorDialog("Cannot store password\n" + Throwables.getStackTraceAsString(e), "Error");
-                }
-            }
-        });
+  public static void storePassword(final String key,final String value) {
+    UIUtil.invokeAndWaitIfNeeded(
+      new Runnable() {
+        @Override
+        public void run() {
+          try {
+            PasswordSafe.getInstance().storePassword(null,PasswordManager.class,key,value);
+          } catch (Exception e) {
+            Messages.showErrorDialog("Cannot store password\n"+Throwables.getStackTraceAsString(e),"Error");
+          }
+        }
+      }
+    );
+  }
 
-    }
+  private static String password;
 
-    private static String password;
-
-    public static String loadPassword(final String key) {
-        UIUtil.invokeAndWaitIfNeeded(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    password = PasswordSafe.getInstance().getPassword(null, PasswordManager.class, key);
-                } catch (Exception e) {
-                    Messages.showErrorDialog("Cannot load password\n" + Throwables.getStackTraceAsString(e), "Error");
-                }
-            }
-        });
-        return password;
-    }
+  public static String loadPassword(final String key) {
+    UIUtil.invokeAndWaitIfNeeded(
+      new Runnable() {
+        @Override
+        public void run() {
+          try {
+            password = PasswordSafe.getInstance().getPassword(null,PasswordManager.class,key);
+          } catch (Exception e) {
+            Messages.showErrorDialog("Cannot load password\n"+Throwables.getStackTraceAsString(e),"Error");
+          }
+        }
+      }
+    );
+    return password;
+  }
 }
