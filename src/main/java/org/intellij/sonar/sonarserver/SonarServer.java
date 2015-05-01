@@ -173,7 +173,7 @@ public class SonarServer {
         Object json = wsUtils.getField(wsUtils.parse(queryResponse), "rule");
         org.sonar.wsclient.rule.Rule wsRule = new org.sonar.wsclient.rule.Rule((Map) json);
         Rule rule = new Rule(wsRule.key(), wsRule.name(), wsUtils.getString(json, "severity"),
-          wsUtils.getString(json, "language"), wsUtils.getString(json, "language"), wsUtils.getString(json, "description"),
+          wsUtils.getString(json, "lang"), wsUtils.getString(json, "langName"), wsUtils.getString(json, "htmlDesc"),
           wsRule.description());
         return rule;
     }
