@@ -227,3 +227,7 @@ Tip: Omit the `sonar.language` parameter if you have multiple languages in your 
 ## License
 
 The project is licensed under Apache Public License 2.0! See the [LICENSE](LICENSE) file for details.
+
+## Love it!
+
+Via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5ZG69XAD2JMVS). Thanks! (-8
