@@ -230,4 +230,4 @@ The project is licensed under Apache Public License 2.0! See the [LICENSE](LICEN
 
 ## Love it!
 
-Via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5ZG69XAD2JMVS). Thanks! (-8
+Via <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5ZG69XAD2JMVS" target="_blank">PayPal</a>. Thanks! (-8
