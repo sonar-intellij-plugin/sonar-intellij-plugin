@@ -12,15 +12,13 @@ import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.sonar.wsclient.Host;
+import org.sonar.wsclient.JdkUtils;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
 import org.sonar.wsclient.services.*;
-import retrofit.RestAdapter;
-import retrofit.http.GET;
-import retrofit.http.Query;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -29,22 +27,11 @@ import java.net.URL;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class SonarServer {
 
     private static final Logger LOG = Logger.getInstance(SonarServer.class);
-
-    public static class RuleWrapper {
-        public Rule rule; // { "rule": {...} }
-    }
-
-    interface Rules {
-        @GET("/api/rules/show")
-        RuleWrapper show(
-                @Query("key") String key,
-                @Query("actives") Boolean actives
-        );
-    }
 
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
@@ -180,24 +167,14 @@ public class SonarServer {
     // https://sonar.corp.mobile.de/sonar/api/rules?language=java&format=json
     // Unfortunately profile query contains neither rule title nor rule description
 
-    /**
-     * @param language like java
-     * @return list of all rules for a language
-     */
-    public List<org.sonar.wsclient.services.Rule> getRules(String language) {
-        RuleQuery query = new RuleQuery(language);
-        query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
-        return sonar.findAll(query);
-    }
-
     public Rule getRule(String key) {
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(mySonarServerConfig.getHostUrl())
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .build();
-
-        final Rules rules = restAdapter.create(Rules.class);
-        final Rule rule = rules.show(key, null).rule;
+        String queryResponse = sonarClient.get("/api/rules/show", "key", key);
+        WSUtils wsUtils = new JdkUtils();
+        Object json = wsUtils.getField(wsUtils.parse(queryResponse), "rule");
+        org.sonar.wsclient.rule.Rule wsRule = new org.sonar.wsclient.rule.Rule((Map) json);
+        Rule rule = new Rule(wsRule.key(), wsRule.name(), wsUtils.getString(json, "severity"),
+          wsUtils.getString(json, "lang"), wsUtils.getString(json, "langName"), wsUtils.getString(json, "htmlDesc"),
+          wsRule.description());
         return rule;
     }
 
