@@ -34,8 +34,19 @@ import java.util.List;
 public class SonarServer {
 
     private static final Logger LOG = Logger.getInstance(SonarServer.class);
-    private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60 * 1000;
-    private static final int READ_TIMEOUT_IN_MILLISECONDS = 60 * 1000;
+    public static class RuleWrapper {
+        public Rule rule; // { "rule": {...} }
+    }
+
+    interface Rules {
+        @GET("/api/rules/show")
+        RuleWrapper show(
+                @Query("key") String key,
+                @Query("actives") Boolean actives
+        );
+    }
+    private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
+    private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private final SonarServerConfig mySonarServerConfig;
     private final Sonar sonar;
     private final SonarClient sonarClient;
@@ -273,18 +284,6 @@ public class SonarServer {
             }
         }
         return builder.build();
-    }
-
-    interface Rules {
-        @GET("/api/rules/show")
-        RuleWrapper show(
-                @Query("key") String key,
-                @Query("actives") Boolean actives
-        );
-    }
-
-    public static class RuleWrapper {
-        public Rule rule; // { "rule": {...} }
     }
 
     private static class ByResourceName implements Comparator<Resource> {
