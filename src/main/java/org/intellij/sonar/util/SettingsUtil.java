@@ -6,52 +6,53 @@ import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.persistence.*;
+import org.intellij.sonar.persistence.LocalAnalysisScripts;
+import org.intellij.sonar.persistence.ModuleSettings;
+import org.intellij.sonar.persistence.ProjectSettings;
+import org.intellij.sonar.persistence.Settings;
+import org.intellij.sonar.persistence.SonarServers;
 
 public class SettingsUtil {
 
-    public static Settings process(Project project, Settings settings) {
-        if (settings == null) return null;
-        Settings processed = Settings.copyOf(settings);
-        final String serverName = settings.getServerName();
-        if (SonarServers.PROJECT.equals(serverName)) {
-            final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
-            if (projectSettings.isPresent()) {
-                processed.setServerName(projectSettings.get().getServerName());
-                if (settings.getResources().isEmpty()) {
-                    processed.setResources(projectSettings.get().getResources());
-                }
-                processed.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
-                processed.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
-                processed.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
-            }
+  public static Settings process(Project project,Settings settings) {
+    if (settings == null) return null;
+    Settings processed = Settings.copyOf(settings);
+    final String serverName = settings.getServerName();
+    if (SonarServers.PROJECT.equals(serverName)) {
+      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
+      if (projectSettings.isPresent()) {
+        processed.setServerName(projectSettings.get().getServerName());
+        if (settings.getResources().isEmpty()) {
+          processed.setResources(projectSettings.get().getResources());
         }
-        final String scripName = settings.getLocalAnalysisScripName();
-        if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
-            final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
-            if (projectSettings.isPresent()) {
-                processed.setLocalAnalysisScripName(projectSettings.get().getLocalAnalysisScripName());
-            }
-        }
-
-        return processed;
+        processed.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
+        processed.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
+        processed.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
+      }
     }
-
-    public static Settings getSettingsFor(PsiFile psiFile) {
-        Settings settings = null;
-        Project project = psiFile.getProject();
-        VirtualFile virtualFile = psiFile.getVirtualFile();
-        if (null != virtualFile) {
-            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
-            if (null != module) {
-                settings = ModuleSettings.getInstance(module).getState();
-            }
-        } else {
-            settings = ProjectSettings.getInstance(project).getState();
-        }
-        settings = process(project, settings);
-
-        return settings;
+    final String scripName = settings.getLocalAnalysisScripName();
+    if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
+      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
+      if (projectSettings.isPresent()) {
+        processed.setLocalAnalysisScripName(projectSettings.get().getLocalAnalysisScripName());
+      }
     }
+    return processed;
+  }
 
+  public static Settings getSettingsFor(PsiFile psiFile) {
+    Settings settings = null;
+    Project project = psiFile.getProject();
+    VirtualFile virtualFile = psiFile.getVirtualFile();
+    if (null != virtualFile) {
+      Module module = ModuleUtil.findModuleForFile(virtualFile,project);
+      if (null != module) {
+        settings = ModuleSettings.getInstance(module).getState();
+      }
+    } else {
+      settings = ProjectSettings.getInstance(project).getState();
+    }
+    settings = process(project,settings);
+    return settings;
+  }
 }

@@ -12,16 +12,16 @@ import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.sonar.wsclient.Host;
+import org.sonar.wsclient.JdkUtils;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
 import org.sonar.wsclient.base.Paging;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
-import org.sonar.wsclient.services.*;
-import retrofit.RestAdapter;
-import retrofit.http.GET;
-import retrofit.http.Query;
+import org.sonar.wsclient.services.Resource;
+import org.sonar.wsclient.services.ResourceQuery;
+import org.sonar.wsclient.services.WSUtils;
 
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -30,21 +30,12 @@ import java.net.URL;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class SonarServer {
 
     private static final Logger LOG = Logger.getInstance(SonarServer.class);
-    public static class RuleWrapper {
-        public Rule rule; // { "rule": {...} }
-    }
 
-    interface Rules {
-        @GET("/api/rules/show")
-        RuleWrapper show(
-                @Query("key") String key,
-                @Query("actives") Boolean actives
-        );
-    }
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private final SonarServerConfig mySonarServerConfig;
@@ -55,10 +46,6 @@ public class SonarServer {
         this.mySonarServerConfig = sonarServerConfigBean;
         this.sonar = createSonar();
         this.sonarClient = createSonarClient(createHost());
-    }
-
-    public static SonarServer create(String hostUrl) {
-        return create(SonarServerConfig.of(hostUrl));
     }
 
     public static SonarServer create(SonarServerConfig sonarServerConfigBean) {
@@ -134,68 +121,14 @@ public class SonarServer {
         return StringUtils.removeEnd(hostName, "/");
     }
 
-// GET LANGUAGE AND RULES PROFILE FOR A SONAR RESOURCE
-//  https://sonar.corp.mobile.de/sonar/api/resources?format=json&resource=autoact:autoact-b2b-api_groovy&metrics=profile
-
-    // Set<language,profile> s= new Set;
-    // for resource in resources:
-    //   s.put( resource.language, resource.profile )
-
-    // for entry in s:
-    //   getRulesFor(entry.language, entry.profile)
-
-    /**
-     * <pre>
-     * Usage: <br>
-     * {@code
-     * Resource resource = getResourceWithProfile(sonar, resourceKey);
-     * String profile = resource.getMeasure("profile").getData();
-     * }
-     * </pre>
-     *
-     * @param resourceKey like sonar:project
-     */
-    public Resource getResourceWithProfile(String resourceKey) {
-        final ResourceQuery query = ResourceQuery.createForMetrics(resourceKey, "profile");
-        query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
-        return sonar.find(query);
-    }
-
-// GET LIST OF RULES FOR A SONAR PROFILE language is mandatory!
-//  https://sonar.corp.mobile.de/sonar/api/profiles?language=java&name=mobile_relaxed&format=json
-
-    /**
-     * @param language    like java
-     * @param profileName like Sonar Way
-     * @return Quality profile containing enabled rules
-     */
-    public Profile getProfile(String language, String profileName) {
-        ProfileQuery query = ProfileQuery.create(language, profileName);
-        query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
-        return sonar.find(query);
-    }
-
-    // https://sonar.corp.mobile.de/sonar/api/rules?language=java&format=json
-    // Unfortunately profile query contains neither rule title nor rule description
-
-    /**
-     * @param language like java
-     * @return list of all rules for a language
-     */
-    public List<org.sonar.wsclient.services.Rule> getRules(String language) {
-        RuleQuery query = new RuleQuery(language);
-        query.setTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS);
-        return sonar.findAll(query);
-    }
-
     public Rule getRule(String key) {
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(mySonarServerConfig.getHostUrl())
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .build();
-
-        final Rules rules = restAdapter.create(Rules.class);
-        final Rule rule = rules.show(key, null).rule;
+        String queryResponse = sonarClient.get("/api/rules/show", "key", key);
+        WSUtils wsUtils = new JdkUtils();
+        Object json = wsUtils.getField(wsUtils.parse(queryResponse), "rule");
+        org.sonar.wsclient.rule.Rule wsRule = new org.sonar.wsclient.rule.Rule((Map) json);
+        Rule rule = new Rule(wsRule.key(), wsRule.name(), wsUtils.getString(json, "severity"),
+        wsUtils.getString(json, "lang"), wsUtils.getString(json, "langName"), wsUtils.getString(json, "htmlDesc"),
+        wsRule.description());
         return rule;
     }
 
@@ -242,14 +175,6 @@ public class SonarServer {
         return sonar.findAll(query);
     }
 
-    public Issues getIssuesFor(String resourceKey) {
-        IssueQuery query = IssueQuery.create()
-                .componentRoots(resourceKey)
-                .resolved(false)
-                .pageSize(-1);
-        return sonarClient.issueClient().find(query);
-    }
-
     public ImmutableList<Issue> getAllIssuesFor(String resourceKey) {
         final ImmutableList.Builder<Issue> builder = ImmutableList.builder();
         IssueQuery query = IssueQuery.create()
@@ -265,23 +190,21 @@ public class SonarServer {
         if (pages == null) {
             pages = total / pageSize + (total % pageSize > 0 ? 1 : 0);
         }
-        if (pages != null) {
-            for (int pageIndex = 2; pageIndex <= pages; pageIndex++) {
-                final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
-                if (progressIndicator.isCanceled())
-                    break;
-                final String pagesProgressMessage = String.format("%d / %d pages downloaded", pageIndex, pages);
-                ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
-                ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / pages);
+        for (int pageIndex = 2; pageIndex <= pages; pageIndex++) {
+            final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
+            if (progressIndicator.isCanceled())
+                break;
+            final String pagesProgressMessage = String.format("%d / %d pages downloaded", pageIndex, pages);
+            ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
+            ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / pages);
 
-                query = IssueQuery.create()
-                        .componentRoots(resourceKey)
-                        .resolved(false)
-                        .pageSize(-1)
-                        .pageIndex(pageIndex);
-                issues = sonarClient.issueClient().find(query);
-                builder.addAll(issues.list());
-            }
+            query = IssueQuery.create()
+                    .componentRoots(resourceKey)
+                    .resolved(false)
+                    .pageSize(-1)
+                    .pageIndex(pageIndex);
+            issues = sonarClient.issueClient().find(query);
+            builder.addAll(issues.list());
         }
         return builder.build();
     }

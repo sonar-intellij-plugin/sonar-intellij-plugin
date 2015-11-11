@@ -6,9 +6,8 @@ import org.intellij.sonar.analysis.OldIssuesGlobalInspectionTool;
 
 public class SonarInspectionToolProvider implements InspectionToolProvider {
 
-    @Override
-    public Class[] getInspectionClasses() {
-        return new Class[]{NewIssuesGlobalInspectionTool.class, OldIssuesGlobalInspectionTool.class};
-    }
-
+  @Override
+  public Class[] getInspectionClasses() {
+    return new Class[]{NewIssuesGlobalInspectionTool.class,OldIssuesGlobalInspectionTool.class};
+  }
 }

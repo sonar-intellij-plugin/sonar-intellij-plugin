@@ -1,5 +1,10 @@
 package org.intellij.sonar.analysis;
 
+import static com.google.common.base.Optional.fromNullable;
+
+import java.util.List;
+import java.util.Set;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonBundle;
@@ -34,194 +39,225 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Set;
+public class SonarExternalAnnotator
+  extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo,SonarExternalAnnotator.AnnotationResult> {
 
-import static com.google.common.base.Optional.fromNullable;
+  public static final Key<Set<SonarIssue>> KEY = new Key<Set<SonarIssue>>("issues");
 
-public class SonarExternalAnnotator extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo, SonarExternalAnnotator.AnnotationResult> {
+  public static class InitialInfo {
 
-    public static final Key<Set<SonarIssue>> KEY = new Key<Set<SonarIssue>>("issues");
+    public PsiFile psiFile;
+  }
 
-    public static class InitialInfo {
-        public PsiFile psiFile;
-    }
+  @Nullable
+  @Override
+  public InitialInfo collectInformation(@NotNull PsiFile file) {
+    InitialInfo initialInfo = new InitialInfo();
+    initialInfo.psiFile = file;
+    return initialInfo;
+  }
 
-    @Nullable
-    @Override
-    public InitialInfo collectInformation(@NotNull PsiFile file) {
-        InitialInfo initialInfo = new InitialInfo();
-        initialInfo.psiFile = file;
-        return initialInfo;
-    }
-
-    @Nullable
-    @Override
-    public AnnotationResult doAnnotate(final InitialInfo initialInfo) {
-        final AnnotationResult annotationResult = new AnnotationResult();
-        ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
-                annotationResult.sonarIssues = issues;
-            }
-        }, ModalityState.any());
-        return annotationResult;
-    }
-
-    public static class AnnotationResult {
-        public Set<SonarIssue> sonarIssues;
-    }
-
-    @Override
-    public void apply(@NotNull final PsiFile file, final AnnotationResult annotationResult, @NotNull final AnnotationHolder holder) {
-        if (
-                null == file.getVirtualFile() ||
-                null == ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(file.getVirtualFile()) ||
-                (
-                    // Fixes #106: Annotations in PHPStorm shown twice per File
-                    "HTML".equals(file.getFileType().getName()) &&
-                    "php".equals(file.getVirtualFile().getExtension()))
-                ) {
-            return;
+  @Nullable
+  @Override
+  public AnnotationResult doAnnotate(final InitialInfo initialInfo) {
+    final AnnotationResult annotationResult = new AnnotationResult();
+    ApplicationManager.getApplication().invokeAndWait(
+      new Runnable() {
+        @Override
+        public void run() {
+          final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
+          annotationResult.sonarIssues = issues;
         }
+      },ModalityState.any()
+    );
+    return annotationResult;
+  }
 
-        createAnnotations(file, annotationResult, holder);
+  public static class AnnotationResult {
+
+    public Set<SonarIssue> sonarIssues;
+  }
+
+  @Override
+  public void apply(
+    @NotNull final PsiFile file,
+    final AnnotationResult annotationResult,
+    @NotNull final AnnotationHolder holder
+  ) {
+    if (
+      null == file.getVirtualFile() ||
+        null == ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(file.getVirtualFile()) ||
+        (
+          // Fixes #106: Annotations in PHPStorm shown twice per File
+          "HTML".equals(file.getFileType().getName()) &&
+            "php".equals(file.getVirtualFile().getExtension()))
+      ) {
+      return;
     }
+    createAnnotations(file,annotationResult,holder);
+  }
 
-    private void createAnnotations(@NotNull final PsiFile psiFile, AnnotationResult annotationResult, @NotNull AnnotationHolder holder) {
-        final Set<SonarIssue> issues = annotationResult.sonarIssues;
-        for (SonarIssue issue : issues) {
-            Optional<Annotation> annotation = createAnnotation(holder, psiFile, issue);
-            if (annotation.isPresent()) {
-                String tooltip = createTooltip(issue);
-                annotation.get().setTooltip(tooltip);
-            }
+  private void createAnnotations(
+    @NotNull final PsiFile psiFile,
+    AnnotationResult annotationResult,
+    @NotNull AnnotationHolder holder
+  ) {
+    final Set<SonarIssue> issues = annotationResult.sonarIssues;
+    for (SonarIssue issue : issues) {
+      Optional<Annotation> annotation = createAnnotation(holder,psiFile,issue);
+      if (annotation.isPresent()) {
+        String tooltip = createTooltip(issue);
+        annotation.get().setTooltip(tooltip);
+      }
+    }
+  }
+
+  @NotNull
+  private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
+    final Set<SonarIssue> issues;
+    if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
+      issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+      for (SonarIssue issue : issues) {
+        final TextRange textRange = Finders.getLineRange(psiFile,issue.getLine());
+        createInvisibleHighlighter(psiFile,issue,textRange);
+      }
+    } else {
+      final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+      Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+      if (document.isPresent()) {
+        Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
+        for (RangeHighlighter highlighter : highlighters) {
+          Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(KEY));
+          if (issuesFromHighlighter.isPresent()) {
+            issuesFromHighlighters.addAll(issuesFromHighlighter.get());
+          }
         }
+      }
+      issues = issuesFromHighlighters;
     }
+    return issues;
+  }
 
-    @NotNull
-    private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
-        final Set<SonarIssue> issues;
-
-        if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
-            issues = IssuesByFileIndex.getIssuesForFile(psiFile);
-            for (SonarIssue issue : issues) {
-                final TextRange textRange = Finders.getLineRange(psiFile, issue.getLine());
-                createInvisibleHighlighter(psiFile, issue, textRange);
-            }
-        } else {
-            final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
-
-            Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
-            if (document.isPresent()) {
-                Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
-                for (RangeHighlighter highlighter : highlighters) {
-                    Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(KEY));
-                    if (issuesFromHighlighter.isPresent()) {
-                        issuesFromHighlighters.addAll(issuesFromHighlighter.get());
-                    }
-                }
-            }
-
-            issues = issuesFromHighlighters;
-        }
-        return issues;
-    }
-
-    private void createInvisibleHighlighter(PsiFile psiFile, final SonarIssue issue, final TextRange textRange) {
-        final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
-        final List<Editor> editors = Finders.findEditorsFrom(document.get());
-        for (final Editor editor : editors) {
-
-            final MarkupModel markupModel = editor.getMarkupModel();
-
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(editor, issue.getLine());
-                    if (rangeHighlighterAtLine.isPresent()) {
-                        final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
-                        if (null != issuesOfHighlighter) {
-                            issuesOfHighlighter.add(issue);
-                        }
-                    } else {
-                        TextAttributes attrs = new TextAttributes();
-                        final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
-                                textRange.getStartOffset(),
-                                textRange.getEndOffset(),
-                                0,
-                                attrs,
-                                HighlighterTargetArea.EXACT_RANGE);
-                        Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
-                        issuesOfHighlighter.add(issue);
-                        rangeHighlighter.putUserData(KEY, issuesOfHighlighter);
-                    }
-                }
-            });
-        }
-    }
-
-    public static Optional<Annotation> createAnnotation(AnnotationHolder holder, PsiFile psiFile, SonarIssue issue) {
-        HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.getSeverity());
-        Annotation annotation;
-        if (issue.getLine() == null) {
-            annotation = createAnnotation(holder, issue.formattedMessage(), psiFile, severity);
-            annotation.setFileLevelAnnotation(true);
-        } else {
-            Optional<PsiElement> startElement = Finders.findFirstElementAtLine(psiFile, issue.getLine());
-            if (!startElement.isPresent()) {
-                // There is no AST element on this line. Maybe a tabulation issue on a blank line?
-                annotation = createAnnotation(holder, issue.formattedMessage(), Finders.getLineRange(psiFile, issue.getLine()), severity);
-            } else if (startElement.get().isValid()) {
-                TextRange lineRange = Finders.getLineRange(startElement.get());
-                annotation = createAnnotation(holder, issue.formattedMessage(), lineRange, severity);
+  private void createInvisibleHighlighter(PsiFile psiFile,final SonarIssue issue,final TextRange textRange) {
+    final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+    final List<Editor> editors = Finders.findEditorsFrom(document.get());
+    for (final Editor editor : editors) {
+      final MarkupModel markupModel = editor.getMarkupModel();
+      ApplicationManager.getApplication().invokeLater(
+        new Runnable() {
+          @Override
+          public void run() {
+            final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
+              editor,
+              issue.getLine()
+            );
+            if (rangeHighlighterAtLine.isPresent()) {
+              final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
+              if (null != issuesOfHighlighter) {
+                issuesOfHighlighter.add(issue);
+              }
             } else {
-                annotation = null;
+              TextAttributes attrs = new TextAttributes();
+              final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
+                textRange.getStartOffset(),
+                textRange.getEndOffset(),
+                0,
+                attrs,
+                HighlighterTargetArea.EXACT_RANGE
+              );
+              Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
+              issuesOfHighlighter.add(issue);
+              rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
             }
+          }
         }
-        return fromNullable(annotation);
-
+      );
     }
+  }
 
-    private static String createTooltip(SonarIssue issue) {
-        String myShortcutText;
-        final KeymapManager keymapManager = KeymapManager.getInstance();
-        if (keymapManager != null) {
-            final Keymap keymap = keymapManager.getActiveKeymap();
-            myShortcutText = keymap == null ? "" : "(" + KeymapUtil.getShortcutsText(keymap.getShortcuts(IdeActions.ACTION_SHOW_ERROR_DESCRIPTION)) + ")";
+  public static Optional<Annotation> createAnnotation(AnnotationHolder holder,PsiFile psiFile,SonarIssue issue) {
+    HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.getSeverity());
+    Annotation annotation;
+    if (issue.getLine() == null) {
+      annotation = createAnnotation(holder,issue.formattedMessage(),psiFile,severity);
+      annotation.setFileLevelAnnotation(true);
+    } else {
+      Optional<PsiElement> startElement = Finders.findFirstElementAtLine(psiFile,issue.getLine());
+      if (!startElement.isPresent()) {
+        // There is no AST element on this line. Maybe a tabulation issue on a blank line?
+        annotation = createAnnotation(
+          holder,
+          issue.formattedMessage(),
+          Finders.getLineRange(psiFile,issue.getLine()),
+          severity
+        );
+      } else
+        if (startElement.get().isValid()) {
+          TextRange lineRange = Finders.getLineRange(startElement.get());
+          annotation = createAnnotation(holder,issue.formattedMessage(),lineRange,severity);
         } else {
-            myShortcutText = "";
+          annotation = null;
         }
-        @NonNls final String link = " <a "
-                + "href=\"#sonarissue/" + issue.getKey() + "\""
-                + (UIUtil.isUnderDarcula() ? " color=\"7AB4C9\" " : "")
-                + ">" + DaemonBundle.message("inspection.extended.description")
-                + "</a> " + myShortcutText;
-        return XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(issue.formattedMessage()) + link);
     }
+    return fromNullable(annotation);
+  }
 
-    private static Annotation createAnnotation(AnnotationHolder holder, String message, PsiElement location, HighlightSeverity severity) {
-        if (HighlightSeverity.ERROR.equals(severity)) {
-            return holder.createErrorAnnotation(location.getTextRange(), message);
-        } else if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-            return holder.createWeakWarningAnnotation(location.getTextRange(), message);
-        } else if (HighlightSeverity.WARNING.equals(severity)) {
-            return holder.createWarningAnnotation(location.getTextRange(), message);
-        } else {
-            throw new IllegalArgumentException("Unhandled severity " + severity);
-        }
+  private static String createTooltip(SonarIssue issue) {
+    String myShortcutText;
+    final KeymapManager keymapManager = KeymapManager.getInstance();
+    if (keymapManager != null) {
+      final Keymap keymap = keymapManager.getActiveKeymap();
+      myShortcutText = keymap == null
+        ? ""
+        : "("+KeymapUtil.getShortcutsText(keymap.getShortcuts(IdeActions.ACTION_SHOW_ERROR_DESCRIPTION))+")";
+    } else {
+      myShortcutText = "";
     }
+    @NonNls final String link = " <a "
+      +"href=\"#sonarissue/"+issue.getKey()+"\""
+      +(UIUtil.isUnderDarcula()
+      ? " color=\"7AB4C9\" "
+      : "")
+      +">"+DaemonBundle.message("inspection.extended.description")
+      +"</a> "+myShortcutText;
+    return XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(issue.formattedMessage())+link);
+  }
 
-    private static Annotation createAnnotation(AnnotationHolder holder, String message, TextRange textRange, HighlightSeverity severity) {
-        if (HighlightSeverity.ERROR.equals(severity)) {
-            return holder.createErrorAnnotation(textRange, message);
-        } else if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-            return holder.createWeakWarningAnnotation(textRange, message);
-        } else if (HighlightSeverity.WARNING.equals(severity)) {
-            return holder.createWarningAnnotation(textRange, message);
+  private static Annotation createAnnotation(
+    AnnotationHolder holder,
+    String message,
+    PsiElement location,
+    HighlightSeverity severity
+  ) {
+    if (HighlightSeverity.ERROR.equals(severity)) {
+      return holder.createErrorAnnotation(location.getTextRange(),message);
+    } else
+      if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+        return holder.createWeakWarningAnnotation(location.getTextRange(),message);
+      } else
+        if (HighlightSeverity.WARNING.equals(severity)) {
+          return holder.createWarningAnnotation(location.getTextRange(),message);
         } else {
-            throw new IllegalArgumentException("Unhandled severity " + severity);
+          throw new IllegalArgumentException("Unhandled severity "+severity);
         }
-    }
+  }
+
+  private static Annotation createAnnotation(
+    AnnotationHolder holder,
+    String message,
+    TextRange textRange,
+    HighlightSeverity severity
+  ) {
+    if (HighlightSeverity.ERROR.equals(severity)) {
+      return holder.createErrorAnnotation(textRange,message);
+    } else
+      if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+        return holder.createWeakWarningAnnotation(textRange,message);
+      } else
+        if (HighlightSeverity.WARNING.equals(severity)) {
+          return holder.createWarningAnnotation(textRange,message);
+        } else {
+          throw new IllegalArgumentException("Unhandled severity "+severity);
+        }
+  }
 }

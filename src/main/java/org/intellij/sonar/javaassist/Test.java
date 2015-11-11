@@ -5,8 +5,10 @@ public class Test {
   /*public static void main(String[] args) throws IllegalAccessException, InstantiationException {
     List<SonarSettingsBean> sonarSettingsBeans = new ArrayList<SonarSettingsBean>(3);
     sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project"));
-    sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:java"));
-    sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin", "java:groovy:project:groovy"));
+    sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin",
+    "java:groovy:project:java"));
+    sonarSettingsBeans.add(new SonarSettingsBean("http://localhost:9000", "admin", "admin",
+    "java:groovy:project:groovy"));
 
     SonarServer sonarServer = new SonarServer();
     Collection<Rule> allRules = sonarServer.getAllRules(sonarSettingsBeans, new CommandLineProgress());
@@ -16,12 +18,14 @@ public class Test {
     }
     for (Class clazz : classes) {
       SonarLocalInspectionTool sonarLocalInspectionTool = (SonarLocalInspectionTool) clazz.newInstance();
-//            System.out.println(sonarLocalInspectionTool.getDisplayName() + " : " + sonarLocalInspectionTool.getShortName() + " : " + sonarLocalInspectionTool.getStaticDescription());
+//            System.out.println(sonarLocalInspectionTool.getDisplayName() + " : " + sonarLocalInspectionTool
+.getShortName() + " : " + sonarLocalInspectionTool.getStaticDescription());
       System.out.println(clazz.getName());
     }
   }
 
-  private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final Rule rule) throws IllegalAccessException, InstantiationException {
+  private static Class<SonarLocalInspectionTool> getSonarLocalInspectionToolForOneRule(final Rule rule) throws
+  IllegalAccessException, InstantiationException {
     ProxyFactory f = new ProxyFactory();
     f.setSuperclass(SonarLocalInspectionTool.class);
     f.setFilter(new MethodFilter() {

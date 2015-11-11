@@ -31,37 +31,36 @@ import org.jetbrains.annotations.Nullable;
 
 public class SonarQubeInspectionExtensionsFactory extends InspectionExtensionsFactory {
 
+  @Override
+  public GlobalInspectionContextExtension createGlobalInspectionContextExtension() {
+    return new SonarQubeInspectionContext();
+  }
 
-    @Override
-    public GlobalInspectionContextExtension createGlobalInspectionContextExtension() {
-        return new SonarQubeInspectionContext();
-    }
+  @Nullable
+  @Override
+  public RefManagerExtension createRefManagerExtension(RefManager refManager) {
+    return null;
+  }
 
-    @Nullable
-    @Override
-    public RefManagerExtension createRefManagerExtension(RefManager refManager) {
-        return null;
-    }
+  @Nullable
+  @Override
+  public HTMLComposerExtension createHTMLComposerExtension(HTMLComposer composer) {
+    return null;
+  }
 
-    @Nullable
-    @Override
-    public HTMLComposerExtension createHTMLComposerExtension(HTMLComposer composer) {
-        return null;
-    }
+  @Override
+  public boolean isToCheckMember(PsiElement element,String id) {
+    return false;
+  }
 
-    @Override
-    public boolean isToCheckMember(PsiElement element, String id) {
-        return false;
-    }
+  @Nullable
+  @Override
+  public String getSuppressedInspectionIdsIn(PsiElement element) {
+    return null;
+  }
 
-    @Nullable
-    @Override
-    public String getSuppressedInspectionIdsIn(PsiElement element) {
-        return null;
-    }
-
-    @Override
-    public boolean isProjectConfiguredToRunInspections(Project project, boolean online) {
-        return true;
-    }
+  @Override
+  public boolean isProjectConfiguredToRunInspections(Project project,boolean online) {
+    return true;
+  }
 }
