@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg)
+
 SonarQube IntelliJ Community Plugin
 ===================================
 
