@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg)
+[![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg?branch=master)](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin)
 
 SonarQube IntelliJ Community Plugin
 ===================================
