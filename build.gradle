@@ -1,3 +1,8 @@
+plugins {
+    id "org.jetbrains.intellij" version "0.0.27"
+}
+
+apply plugin: 'org.jetbrains.intellij'
 apply plugin: 'java'
 apply plugin: 'idea'
 
@@ -6,6 +11,12 @@ sourceCompatibility = 1.6
 
 repositories {
     mavenCentral()
+}
+
+version = '2.0.10-SNAPSHOT'
+
+intellij {
+    version 'IC-143.381.42'
 }
 
 dependencies {
