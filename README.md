@@ -6,7 +6,7 @@ Currently the plugin is build to work in IntelliJ IDEA, RubyMine, WebStorm, PhpS
 
 Two tasks are covered by the plugin: 
 * downloading issues of previously analyzed code from a Sonar server and show them in your IDE
-* running an script to perform a local analysis to find issues in your local code
+* running a script to perform a local analysis to find issues in your local code
 
 We appreciate constructive feedback and contributions of any kind, so please report any issues with the plugin by [filing a new issue](https://github.com/sonar-intellij-plugin/sonar-intellij-plugin/issues/new), get in touch via our [Google Groups mailing list](https://groups.google.com/forum/#!forum/sonarqube-intellij-plugin) or send a pull request whenever you feel things could be done in a better way. We are really grateful for your support.
 
@@ -227,3 +227,7 @@ Tip: Omit the `sonar.language` parameter if you have multiple languages in your 
 ## License
 
 The project is licensed under Apache Public License 2.0! See the [LICENSE](LICENSE) file for details.
+
+## Love it!
+
+Via <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5ZG69XAD2JMVS" target="_blank">PayPal</a>. Thanks! (-8
