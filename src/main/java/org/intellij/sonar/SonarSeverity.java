@@ -1,7 +1,7 @@
 package org.intellij.sonar;
 
 public enum SonarSeverity {
-  BLOCKER,
+  BLOCKER, ;;;
   CRITICAL,
   MAJOR,
   MINOR,
