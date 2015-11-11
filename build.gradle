@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-version = '2.0.10-SNAPSHOT'
+version = '2.0.12-SNAPSHOT'
 
 intellij {
     version 'IC-143.381.42'
