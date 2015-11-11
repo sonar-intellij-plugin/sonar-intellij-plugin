@@ -14,6 +14,7 @@ import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.sonar.wsclient.Host;
 import org.sonar.wsclient.Sonar;
 import org.sonar.wsclient.SonarClient;
+import org.sonar.wsclient.base.Paging;
 import org.sonar.wsclient.issue.Issue;
 import org.sonar.wsclient.issue.IssueQuery;
 import org.sonar.wsclient.issue.Issues;
@@ -33,7 +34,6 @@ import java.util.List;
 public class SonarServer {
 
     private static final Logger LOG = Logger.getInstance(SonarServer.class);
-
     public static class RuleWrapper {
         public Rule rule; // { "rule": {...} }
     }
@@ -45,10 +45,8 @@ public class SonarServer {
                 @Query("actives") Boolean actives
         );
     }
-
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
-
     private final SonarServerConfig mySonarServerConfig;
     private final Sonar sonar;
     private final SonarClient sonarClient;
@@ -260,21 +258,30 @@ public class SonarServer {
                 .pageSize(-1);
         Issues issues = sonarClient.issueClient().find(query);
         builder.addAll(issues.list());
-        for (int pageIndex = 2; pageIndex <= issues.paging().pages(); pageIndex++) {
-            final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
-            if (progressIndicator.isCanceled())
-                break;
-            final String pagesProgressMessage = String.format("%d / %d pages downloaded", pageIndex, issues.paging().pages());
-            ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
-            ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / issues.paging().pages());
+        Paging paging = issues.paging();
+        Integer pages = paging.pages();
+        Integer total = paging.total();
+        Integer pageSize = paging.pageSize();
+        if (pages == null) {
+            pages = total / pageSize + (total % pageSize > 0 ? 1 : 0);
+        }
+        if (pages != null) {
+            for (int pageIndex = 2; pageIndex <= pages; pageIndex++) {
+                final ProgressIndicator progressIndicator = ProgressManager.getInstance().getProgressIndicator();
+                if (progressIndicator.isCanceled())
+                    break;
+                final String pagesProgressMessage = String.format("%d / %d pages downloaded", pageIndex, pages);
+                ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
+                ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / pages);
 
-            query = IssueQuery.create()
-                    .componentRoots(resourceKey)
-                    .resolved(false)
-                    .pageSize(-1)
-                    .pageIndex(pageIndex);
-            issues = sonarClient.issueClient().find(query);
-            builder.addAll(issues.list());
+                query = IssueQuery.create()
+                        .componentRoots(resourceKey)
+                        .resolved(false)
+                        .pageSize(-1)
+                        .pageIndex(pageIndex);
+                issues = sonarClient.issueClient().find(query);
+                builder.addAll(issues.list());
+            }
         }
         return builder.build();
     }
