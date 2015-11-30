@@ -48,10 +48,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
       throw new IllegalArgumentException("already exists");
     } else {
       sonarServerConfigBeans.add(newSonarServerConfigBean);
-      if (newSonarServerConfigBean.isPasswordChanged()) {
-        newSonarServerConfigBean.storePassword();
-      }
-      newSonarServerConfigBean.clearPassword();
+      newSonarServerConfigBean.storePassword();
     }
   }
 
