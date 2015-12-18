@@ -226,6 +226,29 @@ export MAVEN_OPTS="-XX:MaxPermSize=128m"
 
 Tip: Omit the `sonar.language` parameter if you have multiple languages in your project (e.g. Java and Groovy).
 
+## Develop
+
+Hacking the plugin is very easy, just follow the following steps
+
+### Prerequisites
+
+- install IntelliJ (Community Edition is ok) 
+- install Gradle (http://gradle.org/) 
+- configure Plugin SDK (https://www.jetbrains.com/idea/help/configuring-intellij-platform-plugin-sdk.html)
+
+### Starting
+
+- open a terminal
+- clone the repository 
+    - `git clone https://github.com/sonar-intellij-plugin/sonar-intellij-plugin.git`
+- create an IntelliJ project which can be imported to IntelliJ 
+    - `cd  sonar-intellij-plugin` 
+    - `gradle gradle idea`
+- open project in IntelliJ
+    - File->Open-> (Directory sonar-intellij-plugin)
+- run the plugin inside intellij
+    - run gradleTask runIdea  
+
 ## License
 
 The project is licensed under Apache Public License 2.0! See the [LICENSE](LICENSE) file for details.
