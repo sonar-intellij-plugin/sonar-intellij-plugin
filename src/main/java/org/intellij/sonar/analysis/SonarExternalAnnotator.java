@@ -9,6 +9,7 @@ import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
@@ -23,7 +24,6 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.concurrency.Semaphore;
 import com.intellij.util.ui.UIUtil;
 import com.intellij.xml.util.XmlStringUtil;
 import org.intellij.sonar.DocumentChangeListener;
@@ -61,22 +61,15 @@ public class SonarExternalAnnotator
   @Override
   public AnnotationResult doAnnotate(final InitialInfo initialInfo) {
     final AnnotationResult annotationResult = new AnnotationResult();
-    final Semaphore semaphore = new Semaphore();
-    semaphore.down();
-    ApplicationManager.getApplication().invokeLater(
+    ApplicationManager.getApplication().invokeAndWait(
       new Runnable() {
         @Override
         public void run() {
-          try {
-            final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
-            annotationResult.sonarIssues = issues;
-          } finally {
-            semaphore.up();
-          }
+          final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
+          annotationResult.sonarIssues = issues;
         }
-      }
+      },ModalityState.any()
     );
-    semaphore.waitFor();
     return annotationResult;
   }
 
