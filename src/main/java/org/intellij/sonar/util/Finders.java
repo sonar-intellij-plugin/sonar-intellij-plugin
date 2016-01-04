@@ -1,14 +1,10 @@
 package org.intellij.sonar.util;
 
-import static com.google.common.base.Optional.fromNullable;
-
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -21,6 +17,11 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Set;
+
+import static com.google.common.base.Optional.fromNullable;
 
 public class Finders {
 
@@ -83,11 +84,20 @@ public class Finders {
   @NotNull
   public static Set<RangeHighlighter> findAllRangeHighlightersFrom(@NotNull Document document) {
     final Set<RangeHighlighter> highlighters = Sets.newHashSet();
-    for (Editor editor : findEditorsFrom(document)) {
-      final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
-      highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
+    for (final Editor editor : findEditorsFrom(document)) {
+      addHighlightersFromEditor(highlighters, editor);
     }
     return highlighters;
+  }
+
+  private static void addHighlightersFromEditor(final Set<RangeHighlighter> highlighters, final Editor editor) {
+    ApplicationManager.getApplication().invokeAndWait(new Runnable() {
+      @Override
+      public void run() {
+        final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
+        highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
+      }
+    }, ModalityState.any());
   }
 
   public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter,@NotNull Editor editor) {
