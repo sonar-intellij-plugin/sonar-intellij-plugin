@@ -9,7 +9,6 @@ import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.markup.HighlighterTargetArea;
@@ -34,8 +33,10 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Optional.fromNullable;
 
@@ -61,21 +62,27 @@ public class SonarExternalAnnotator
   @Override
   public AnnotationResult doAnnotate(final InitialInfo initialInfo) {
     final AnnotationResult annotationResult = new AnnotationResult();
-    ApplicationManager.getApplication().invokeAndWait(
-      new Runnable() {
-        @Override
-        public void run() {
-          final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
-          annotationResult.sonarIssues = issues;
-        }
-      },ModalityState.any()
-    );
-    return annotationResult;
+      try {
+          ApplicationManager.getApplication().executeOnPooledThread(
+            new Runnable() {
+              @Override
+              public void run() {
+                final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
+                annotationResult.sonarIssues = issues;
+              }
+            }
+          ).get();
+      } catch (InterruptedException e) {
+          throw new IllegalStateException(e);
+      } catch (ExecutionException e) {
+          throw new IllegalStateException(e);
+      }
+      return annotationResult;
   }
 
   public static class AnnotationResult {
 
-    public Set<SonarIssue> sonarIssues;
+    public Set<SonarIssue> sonarIssues = new HashSet<SonarIssue>();
   }
 
   @Override
