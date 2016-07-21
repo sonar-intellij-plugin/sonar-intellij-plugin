@@ -68,14 +68,10 @@ Before configuring the plugin, you need to understand how to run local analysis 
 Go to your preferred console and try to run depending on your project something like:
 
 ```
-mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
 ```
 
-or
-
-```
-sonar-runner -Dsonar.analysis.mode=incremental -Dsonar.issuesReport.html.enable=true -Dsonar.host.url=http://localhost:9000
-```
+**NOTE: `sonar.report.export.path` parameter is mandatory to generate analysis result**
 
 or
 ```
@@ -108,14 +104,14 @@ Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
 Click add and define:
 
 * a unique name, e.g. java-only
-* the script itself, e.g. sonar-runner -Dsonar.analysis.mode=incremental ...
+* the script itself, e.g. mvn sonar:sonar -Dsonar.analysis.mode=preview ...
 * path to the sonar-report.json
 
 A finished configuration can look like:
 ![alt text][localScriptConfigured]
 [localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png "Example local script management"
 
-**NOTE: If command like "mvn" or "sonar-runner" does not work, you can use a full path instead: /path/to/mvn.**
+**NOTE: If command like "mvn" does not work, you can use a full path instead: /path/to/mvn.**
 
 #### Placeholders
 
@@ -141,7 +137,7 @@ For example in a multi module mvn project you can define:
 
 Script
 ```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=$SONAR_HOST_URL
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
 ```
 
 Path to sonar-report.json
@@ -158,7 +154,7 @@ working dir
 
 script
 ```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
 ```
 
 path to sonar-report.json
@@ -175,7 +171,7 @@ working dir
 
 script
 ```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java  -Dsonar.analysis.mode=incremental -Dsonar.host.url=http://localhost:9000
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
 ```
 
 path to sonar-report.json
@@ -221,7 +217,7 @@ possible contents of the `up_to_you.sh` script:
 #!/bin/bash
 export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
 export MAVEN_OPTS="-XX:MaxPermSize=128m"
-/path/to/mvn sonar:sonar -DskipTests=true -Djava.awt.headless=true -Dsonar.language=java -Dsonar.analysis.mode=incremental -Dsonar.host.url=$1 -Dsonar.profile=your_java_profile
+/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$1 -Dsonar.profile=your_java_profile
 ```
 
 Tip: Omit the `sonar.language` parameter if you have multiple languages in your project (e.g. Java and Groovy).
