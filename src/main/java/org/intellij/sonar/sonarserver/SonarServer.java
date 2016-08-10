@@ -1,5 +1,14 @@
 package org.intellij.sonar.sonarserver;
 
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -22,15 +31,6 @@ import org.sonar.wsclient.issue.Issues;
 import org.sonar.wsclient.services.Resource;
 import org.sonar.wsclient.services.ResourceQuery;
 import org.sonar.wsclient.services.WSUtils;
-
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class SonarServer {
 
@@ -65,7 +65,7 @@ public class SonarServer {
             HttpConfigurable proxySettings = HttpConfigurable.getInstance();
             builder.proxy(address.getHostName(), address.getPort());
             if (proxySettings.PROXY_AUTHENTICATION) {
-                builder.proxyLogin(proxySettings.PROXY_LOGIN).proxyPassword(proxySettings.getPlainProxyPassword());
+                builder.proxyLogin(proxySettings.getProxyLogin()).proxyPassword(proxySettings.getPlainProxyPassword());
             }
         }
         return builder.build();
