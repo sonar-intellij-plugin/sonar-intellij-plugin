@@ -68,17 +68,23 @@ Before configuring the plugin, you need to understand how to run local analysis 
 Go to your preferred console and try to run depending on your project something like:
 
 ```
+# With maven
 mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
+# With gradle
+gradle sonarqube -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
 ```
 
 **NOTE: `sonar.report.export.path` parameter is mandatory to generate analysis result**
 
+**NOTE: `sonar.analysis.mode=preview` parameter will not store result in remote SonarQube database, which is what we want for local analysis**
+
 or
+
 ```
 your_custom_script_to_perform_local_analysis.sh # may use gradle, ant, what ever else you prefer
 ```
 
-After the script is done, your should see something like:
+After the script is done, your should see `BUILD SUCCESSFUL` or something like with maven:
 
 ```
 [INFO] [18:29:26.380] Export results to /path/to/your/project/target/sonar/sonar-report.json
@@ -92,7 +98,7 @@ After the script is done, your should see something like:
 
 This tells you where to find sonar-report.json. This file is essential, as it tells the plugin the location of the new issues.
 
-**NOTE: The configuration of the local analysis is out of the scope of the plugin, please read the SonarQube documation about how to perform it**
+**NOTE: The configuration of the local analysis is out of the scope of the plugin, please read the SonarQube documentation about how to perform it**
 
 After you know how to perform local analysis, you need to configure the plugin:
 
@@ -104,7 +110,7 @@ Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
 Click add and define:
 
 * a unique name, e.g. java-only
-* the script itself, e.g. mvn sonar:sonar -Dsonar.analysis.mode=preview ...
+* the script itself, e.g. `mvn sonar:sonar -Dsonar.analysis.mode=preview ...` (or `gradle sonarqube ...` for gradle)
 * path to the sonar-report.json
 
 A finished configuration can look like:
@@ -112,6 +118,8 @@ A finished configuration can look like:
 [localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png "Example local script management"
 
 **NOTE: If command like "mvn" does not work, you can use a full path instead: /path/to/mvn.**
+
+**NOTE: For Gradle, it is recommended to [use a wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html).**
 
 #### Placeholders
 
@@ -133,53 +141,10 @@ placeholder | meaning
 `$SONAR_USER_PASSWORD` | the sonar user password, e.g. pw
 
 Using the placeholders you can define one script and reuse it in several projects. It is also useful if your project is a multi module project.
-For example in a multi module mvn project you can define:
+For example in a multi module project, you will find `sonar-report.json` in following folders:
 
-Script
-```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
-```
-
-Path to sonar-report.json
-```
-$WORKING_DIR/target/sonar/sonar-report.json
-```
-
-If executing full project analysis, the plugin will do:
-
-working dir
-```
-/path/to/project
-```
-
-script
-```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
-```
-
-path to sonar-report.json
-```
-/path/to/project/target/sonar/sonar-report.json
-```
-
-And during analysis of a single module:
-
-working dir
-```
-/path/to/project/module
-```
-
-script
-```
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$SONAR_HOST_URL
-```
-
-path to sonar-report.json
-```
-/path/to/project/mobule/target/sonar/sonar-report.json
-```
-
-**NOTE: `$WORKING_DIR` is replaced by `/path/to/project` for project and by `/path/to/project/module` for a module.**
+- `/path/to/project/target/sonar/sonar-report.json` if executing analysis (see previous maven / gradle command) in project folder (i.e. `/path/to/project`).
+- `/path/to/project/mobule/target/sonar/sonar-report.json` if executing analysis in a module folder (i.e. `/path/to/project/module`).
 
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
@@ -194,6 +159,8 @@ The local analysis script is per default, starting in the module base directory.
 
 #### Example: A multi-module maven project
 
+With maven:
+
 ```
 project
   module1
@@ -201,6 +168,17 @@ project
   module2
     pom.xml
   pom.xml <- parent
+```
+
+With gradle:
+
+```
+project
+  module1
+    build.gradle 
+  module2
+    build.gradle
+  build.gradle <- parent
 ```
 
 When you analyze `module1`, the plugin will download the issues for the sonar resource configured in the module settings for `module1` and start a local analysis script in `project/module1/`.
@@ -217,7 +195,14 @@ possible contents of the `up_to_you.sh` script:
 #!/bin/bash
 export JAVA_HOME="/path/to/jdk1.8.0.jdk/Home/"
 export MAVEN_OPTS="-XX:MaxPermSize=128m"
-/path/to/mvn sonar:sonar -DskipTests=true -Dsonar.language=java -Dsonar.analysis.mode=preview -Dsonar.report.export.path=sonar-report.json -Dsonar.host.url=$1 -Dsonar.profile=your_java_profile
+./gradlew sonarqube \
+                    -DskipTests=true \
+                    -Dsonar.language=java \
+                    -Dsonar.analysis.mode=preview \
+                    -Dsonar.report.export.path=sonar-report.json \
+                    -Dsonar.host.url=${SONARQUBE_HOST_URL} \
+                    -Dsonar.profile=your_java_profile
+                    --info --stacktrace
 ```
 
 Tip: Omit the `sonar.language` parameter if you have multiple languages in your project (e.g. Java and Groovy).
