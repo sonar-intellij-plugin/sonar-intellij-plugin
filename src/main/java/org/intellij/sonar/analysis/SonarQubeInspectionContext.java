@@ -61,7 +61,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SonarQubeInspectionContext implements GlobalInspectionContextExtension<SonarQubeInspectionContext> {
 
-  public static final Key<SonarQubeInspectionContext> KEY = Key.create("SonarQubeInspectionContext");
+  private static final Key<SonarQubeInspectionContext> KEY = Key.create("SonarQubeInspectionContext");
 
   @NotNull
   @Override
