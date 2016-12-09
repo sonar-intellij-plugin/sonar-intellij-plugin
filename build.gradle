@@ -22,7 +22,7 @@ repositories {
 version = '2.1.1-SNAPSHOT'
 
 intellij {
-    version 'IC-162.1121.32'
+    version 'IC-2016.3'
 }
 
 dependencies {
@@ -55,5 +55,3 @@ idea {
     }
 
 }
-
-
