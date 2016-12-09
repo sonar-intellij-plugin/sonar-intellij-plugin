@@ -5,6 +5,7 @@ import static org.intellij.sonar.persistence.SonarServers.NO_SONAR;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -12,8 +13,6 @@ import javax.swing.*;
 
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.AnActionButton;
-import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.TableUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
@@ -68,10 +67,9 @@ public class SonarResourcesTableView {
   private JComponent createJComponent() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable,null).
       setAddAction(
-        new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            final String selectedSonarServerName = mySonarServersView.getSelectedItem();
+          anActionButton -> {
+            final String selectedSonarServerName = Optional.ofNullable(mySonarServersView.getSelectedItem())
+                .orElse(NO_SONAR);
             if (!NO_SONAR.equals(selectedSonarServerName)) {
               ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(
                 myProject,
@@ -79,15 +77,10 @@ public class SonarResourcesTableView {
               );
               dlg.show();
               if (dlg.isOK()) {
-                final java.util.List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
-                final java.util.List<Resource> currentSonarResources = mySonarResourcesTable.getItems();
-                Set<Resource> mergedSonarResourcesAsSet = new TreeSet<Resource>(
-                  new Comparator<Resource>() {
-                    @Override
-                    public int compare(Resource resource,Resource resource2) {
-                      return resource.getKey().compareTo(resource2.getKey());
-                    }
-                  }
+                final List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
+                final List<Resource> currentSonarResources = mySonarResourcesTable.getItems();
+                Set<Resource> mergedSonarResourcesAsSet = new TreeSet<>(
+                    Comparator.comparing(Resource::getKey)
                 );
                 mergedSonarResourcesAsSet.addAll(currentSonarResources);
                 mergedSonarResourcesAsSet.addAll(selectedSonarResources);
@@ -95,18 +88,12 @@ public class SonarResourcesTableView {
               }
             }
           }
-        }
       ).
       setRemoveAction(
-        new AnActionButtonRunnable() {
-          @Override
-          public void run(AnActionButton anActionButton) {
-            TableUtil.removeSelectedItems(mySonarResourcesTable);
-          }
-        }
+          anActionButton -> TableUtil.removeSelectedItems(mySonarResourcesTable)
       )
-      .disableUpDownActions().
-        createPanel();
+      .disableUpDownActions()
+      .createPanel();
     panelForTable.setPreferredSize(new Dimension(-1,100));
     return panelForTable;
   }
