@@ -7,4 +7,4 @@ out
 atlassian-ide-plugin.xml
 classes
 *.zip
-target
+build
