@@ -1,6 +1,11 @@
 package org.intellij.sonar.analysis;
 
-import com.google.common.base.Optional;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonBundle;
 import com.intellij.lang.annotation.Annotation;
@@ -33,13 +38,6 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
-import static com.google.common.base.Optional.fromNullable;
-
 public class SonarExternalAnnotator
   extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo,SonarExternalAnnotator.AnnotationResult> {
 
@@ -64,20 +62,15 @@ public class SonarExternalAnnotator
     final AnnotationResult annotationResult = new AnnotationResult();
       try {
           ApplicationManager.getApplication().executeOnPooledThread(
-            new Runnable() {
-              @Override
-              public void run() {
+              () -> {
                 final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
                 annotationResult.sonarIssues = issues;
               }
-            }
           ).get();
-      } catch (InterruptedException e) {
-          throw new IllegalStateException(e);
-      } catch (ExecutionException e) {
+      } catch (InterruptedException | ExecutionException e) {
           throw new IllegalStateException(e);
       }
-      return annotationResult;
+    return annotationResult;
   }
 
   public static class AnnotationResult {
@@ -134,10 +127,8 @@ public class SonarExternalAnnotator
       if (document.isPresent()) {
         Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
         for (RangeHighlighter highlighter : highlighters) {
-          Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(highlighter.getUserData(KEY));
-          if (issuesFromHighlighter.isPresent()) {
-            issuesFromHighlighters.addAll(issuesFromHighlighter.get());
-          }
+          Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(KEY));
+          issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
         }
       }
       issues = issuesFromHighlighters;
@@ -151,9 +142,7 @@ public class SonarExternalAnnotator
     for (final Editor editor : editors) {
       final MarkupModel markupModel = editor.getMarkupModel();
       ApplicationManager.getApplication().invokeLater(
-        new Runnable() {
-          @Override
-          public void run() {
+          () -> {
             final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
               editor,
               issue.getLine()
@@ -177,7 +166,6 @@ public class SonarExternalAnnotator
               rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
             }
           }
-        }
       );
     }
   }
@@ -206,7 +194,7 @@ public class SonarExternalAnnotator
           annotation = null;
         }
     }
-    return fromNullable(annotation);
+    return Optional.ofNullable(annotation);
   }
 
   private static String createTooltip(SonarIssue issue) {

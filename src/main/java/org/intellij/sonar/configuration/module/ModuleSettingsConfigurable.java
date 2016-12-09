@@ -6,10 +6,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.module.Module;
@@ -212,8 +212,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     UIUtil.selectComboBoxItem(myWorkingDirComboBox,WorkingDirs.withDefaultForModule(settings.getWorkingDirSelection()));
     myAlternativeWorkingDirTextFieldWithBrowseButton.setText(settings.getAlternativeWorkingDirPath());
     myUseAlternativeWorkingDirCheckBox.setSelected(
-      Optional.fromNullable(settings.getUseAlternativeWorkingDir())
-        .or(false)
+        Optional.ofNullable(settings.getUseAlternativeWorkingDir()).orElse(false)
     );
     processAlternativeDirSelections();
   }

@@ -3,12 +3,11 @@ package org.intellij.sonar.persistence;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -36,14 +35,8 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
 
   public static void add(final SonarServerConfig newSonarServerConfigBean) {
     final Collection<SonarServerConfig> sonarServerConfigBeans = SonarServers.getInstance().getState().beans;
-    final boolean alreadyExists = FluentIterable.from(sonarServerConfigBeans).anyMatch(
-      new Predicate<SonarServerConfig>() {
-        @Override
-        public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
-          return sonarServerConfigurationBean.equals(newSonarServerConfigBean);
-        }
-      }
-    );
+    final boolean alreadyExists = sonarServerConfigBeans.stream()
+        .anyMatch(sonarServerConfigurationBean -> sonarServerConfigurationBean.equals(newSonarServerConfigBean));
     if (alreadyExists) {
       throw new IllegalArgumentException("already exists");
     } else {
@@ -58,35 +51,23 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
   public static void remove(@NotNull final String sonarServerName) {
     final Optional<SonarServerConfig> bean = get(sonarServerName);
     Preconditions.checkArgument(bean.isPresent());
-    final ImmutableList<SonarServerConfig> newBeans = FluentIterable.from(getAll().get()).filter(
-      new Predicate<SonarServerConfig>() {
-        @Override
-        public boolean apply(SonarServerConfig sonarServerConfigurationBean) {
-          return !bean.get().equals(sonarServerConfigurationBean);
-        }
-      }
-    ).toList();
+    final List<SonarServerConfig> newBeans = getAll().get().stream()
+        .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
+        .collect(Collectors.toList());
     getInstance().beans = new LinkedList<SonarServerConfig>(newBeans);
   }
 
   public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {
-    Optional<SonarServerConfig> bean = Optional.absent();
+    Optional<SonarServerConfig> bean = Optional.empty();
     final Optional<Collection<SonarServerConfig>> allBeans = getAll();
     if (allBeans.isPresent()) {
-      bean = FluentIterable.from(allBeans.get()).firstMatch(
-        new Predicate<SonarServerConfig>() {
-          @Override
-          public boolean apply(SonarServerConfig sonarServerConfigBean) {
-            return sonarServerName.equals(sonarServerConfigBean.getName());
-          }
-        }
-      );
+      bean = allBeans.get().stream().filter(sonarServerConfigBean -> sonarServerName.equals(sonarServerConfigBean.getName())).findFirst();
     }
     return bean;
   }
 
   public static Optional<Collection<SonarServerConfig>> getAll() {
-    return Optional.fromNullable(SonarServers.getInstance().getState().beans);
+    return Optional.ofNullable(SonarServers.getInstance().getState().beans);
   }
 
   @NotNull

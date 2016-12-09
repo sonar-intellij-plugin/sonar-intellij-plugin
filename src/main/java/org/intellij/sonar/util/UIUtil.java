@@ -1,8 +1,8 @@
 package org.intellij.sonar.util;
 
-import javax.swing.*;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
+import javax.swing.*;
 
 public final class UIUtil {
 
@@ -18,7 +18,7 @@ public final class UIUtil {
   }
 
   public static void selectComboBoxItem(JComboBox jComboBox,String name) {
-    Optional itemToSelect = Optional.absent();
+    Optional itemToSelect = Optional.empty();
     for (int i = 0;i < jComboBox.getItemCount();i++) {
       final Object item = jComboBox.getItemAt(i);
       if (name.equals(item.toString())) {

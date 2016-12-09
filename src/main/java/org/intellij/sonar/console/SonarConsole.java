@@ -42,22 +42,14 @@ public class SonarConsole extends AbstractProjectComponent {
     final ToolWindow toolWindow = ToolWindowManager.getInstance(project)
       .getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
     ApplicationManager.getApplication().invokeLater(
-      new Runnable() {
-        @Override
-        public void run() {
-          toolWindow.show(
-            new Runnable() {
-              @Override
-              public void run() {
-                Content content = toolWindow.getContentManager()
-                  .getFactory()
-                  .createContent(newConsoleView.getComponent(),"SonarQube Console",true);
-                toolWindow.getContentManager().addContent(content);
-              }
+        () -> toolWindow.show(
+            () -> {
+              Content content = toolWindow.getContentManager()
+                .getFactory()
+                .createContent(newConsoleView.getComponent(),"SonarQube Console",true);
+              toolWindow.getContentManager().addContent(content);
             }
-          );
-        }
-      }
+        )
     );
     return newConsoleView;
   }

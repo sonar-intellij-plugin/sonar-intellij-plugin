@@ -2,14 +2,10 @@ package org.intellij.sonar.configuration.partials;
 
 import static org.intellij.sonar.util.UIUtil.makeObj;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -49,17 +45,10 @@ public abstract class LocalAnalysisScriptView {
 
   private void addActionListenersForButtons() {
     myLocalAnalysisScriptComboBox.addItemListener(
-      new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent itemEvent) {
-          disableEditAndRemoveButtonsIfPossible();
-        }
-      }
+        itemEvent -> disableEditAndRemoveButtonsIfPossible()
     );
     myAddLocalAnalysisScriptButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
+        e -> {
           final LocalAnalysisScriptConfigurable dlg = showLocalAnalysisScriptConfigurableDialog();
           if (dlg.isOK()) {
             final LocalAnalysisScript newLocalAnalysisScript = dlg.toLocalAnalysisScript();
@@ -75,12 +64,9 @@ public abstract class LocalAnalysisScriptView {
             }
           }
         }
-      }
     );
     myEditLocalAnalysisScriptButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           final Object selected = myLocalAnalysisScriptComboBox.getSelectedItem();
           final Optional<LocalAnalysisScript> previous = LocalAnalysisScripts.get(selected.toString());
           if (!previous.isPresent()) {
@@ -104,12 +90,9 @@ public abstract class LocalAnalysisScriptView {
             }
           }
         }
-      }
     );
     myRemoveLocalAnalysisScriptButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           final Object selected = myLocalAnalysisScriptComboBox.getSelectedItem();
           int rc = Messages.showOkCancelDialog(
             "Are you sure you want to remove "+selected.toString()+" ?",
@@ -122,7 +105,6 @@ public abstract class LocalAnalysisScriptView {
             disableEditAndRemoveButtonsIfPossible();
           }
         }
-      }
     );
   }
 

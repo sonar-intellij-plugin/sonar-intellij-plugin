@@ -1,14 +1,13 @@
 package org.intellij.sonar.analysis;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
@@ -52,17 +51,11 @@ public class DownloadIssuesTask implements Runnable {
     ImmutableList<PsiFile> psiFiles
   ) {
     final Settings settings = SettingsUtil.process(enrichedSettings.project,enrichedSettings.settings);
-    final Optional<SonarServerConfig> c = SonarServers.get(settings.getServerName());
-    if (!c.isPresent()) return Optional.absent();
-    final ImmutableSet<String> resourceKeys = FluentIterable.from(settings.getResources()).
-      transform(
-        new Function<Resource,String>() {
-          @Override
-          public String apply(Resource resource) {
-            return resource.getKey();
-          }
-        }
-      ).toSet();
+    final String serverName = settings.getServerName();
+    if (serverName == null) return Optional.empty();
+    final Optional<SonarServerConfig> c = SonarServers.get(serverName);
+    if (!c.isPresent()) return Optional.empty();
+    final Set<String> resourceKeys = settings.getResources().stream().map(Resource::getKey).collect(Collectors.toSet());
     return Optional.of(
       new DownloadIssuesTask(
         enrichedSettings,
@@ -88,12 +81,7 @@ public class DownloadIssuesTask implements Runnable {
   private void onSuccess(long downloadStartTime) {
     final int downloadedIssuesCount = FluentIterable.from(downloadedIssuesByResourceKey.values())
       .transformAndConcat(
-        new Function<ImmutableList<Issue>,Iterable<Issue>>() {
-          @Override
-          public Iterable<Issue> apply(ImmutableList<Issue> issues) {
-            return issues;
-          }
-        }
+          issues -> issues
       ).size();
     sonarConsole.info(
       String.format(
@@ -113,16 +101,9 @@ public class DownloadIssuesTask implements Runnable {
         .create();
       final Optional<IssuesByFileIndexProjectComponent> indexComponent =
         IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
-      if (indexComponent.isPresent()) {
-        indexComponent.get().getIndex().putAll(index);
-      }
+      indexComponent.ifPresent(issuesByFileIndexProjectComponent -> issuesByFileIndexProjectComponent.getIndex().putAll(index));
       final int issuesCountInIndex = FluentIterable.from(index.values()).transformAndConcat(
-        new Function<Set<SonarIssue>,Iterable<SonarIssue>>() {
-          @Override
-          public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
-            return sonarIssues;
-          }
-        }
+          sonarIssues -> sonarIssues
       ).size();
       sonarConsole.info(
         String.format(

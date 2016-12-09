@@ -2,14 +2,10 @@ package org.intellij.sonar.configuration.partials;
 
 import static org.intellij.sonar.util.UIUtil.makeObj;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -78,17 +74,10 @@ public abstract class SonarServersView {
   protected void addActionListenersForButtons() {
     final JComboBox sonarServersComboBox = mySonarServersComboBox;
     sonarServersComboBox.addItemListener(
-      new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent itemEvent) {
-          disableEditAndRemoveButtonsIfPossible();
-        }
-      }
+        itemEvent -> disableEditAndRemoveButtonsIfPossible()
     );
     myAddSonarServerButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           final SonarServerConfigurable dlg = showSonarServerConfigurableDialog();
           if (dlg.isOK()) {
             SonarServerConfig newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
@@ -102,12 +91,9 @@ public abstract class SonarServersView {
             }
           }
         }
-      }
     );
     myEditSonarServerButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
           final Optional<SonarServerConfig> oldBean = SonarServers.get(selectedSonarServer.toString());
           if (!oldBean.isPresent()) {
@@ -132,12 +118,9 @@ public abstract class SonarServersView {
             }
           }
         }
-      }
     );
     myRemoveSonarServerButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
           int rc = Messages.showOkCancelDialog(
             "Are you sure you want to remove "+selectedSonarServer.toString()+" ?",
@@ -150,7 +133,6 @@ public abstract class SonarServersView {
             disableEditAndRemoveButtonsIfPossible();
           }
         }
-      }
     );
   }
 

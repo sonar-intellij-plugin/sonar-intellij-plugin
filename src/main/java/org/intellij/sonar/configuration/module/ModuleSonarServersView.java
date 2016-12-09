@@ -5,10 +5,10 @@ import static org.intellij.sonar.persistence.SonarServers.PROJECT;
 import static org.intellij.sonar.util.UIUtil.makeObj;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.intellij.openapi.project.Project;
 import org.intellij.sonar.configuration.partials.SonarServersView;
 import org.intellij.sonar.persistence.ProjectSettings;

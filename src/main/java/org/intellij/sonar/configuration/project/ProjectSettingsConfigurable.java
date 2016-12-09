@@ -3,13 +3,11 @@ package org.intellij.sonar.configuration.project;
 import static org.intellij.sonar.util.UIUtil.makeObj;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.components.ProjectComponent;
@@ -113,12 +111,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     );
     processAlternativeDirSelections();
     myUseAlternativeWorkingDirCheckBox.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          processAlternativeDirSelections();
-        }
-      }
+        e -> processAlternativeDirSelections()
     );
   }
 
@@ -219,8 +212,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
     );
     myAlternativeWorkingDirTextFieldWithBrowseButton.setText(settings.getAlternativeWorkingDirPath());
     myUseAlternativeWorkingDirCheckBox.setSelected(
-      Optional.fromNullable(settings.getUseAlternativeWorkingDir())
-        .or(false)
+        Optional.ofNullable(settings.getUseAlternativeWorkingDir()).orElse(false)
     );
     processAlternativeDirSelections();
   }

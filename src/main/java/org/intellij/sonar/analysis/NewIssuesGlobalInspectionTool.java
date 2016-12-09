@@ -1,15 +1,14 @@
 package org.intellij.sonar.analysis;
 
-import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.intellij.codeInspection.GlobalInspectionContext;
+import com.intellij.codeInspection.InspectionEP;
 import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.ProblemDescriptionsProcessor;
 import com.intellij.notification.Notification;
@@ -28,9 +27,9 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
   private static final String SONAR_QUBE = "SonarQube";
 
   /**
-   @see com.intellij.codeInspection.InspectionEP#groupDisplayName
-   @see com.intellij.codeInspection.InspectionEP#groupKey
-   @see com.intellij.codeInspection.InspectionEP#groupBundle
+   @see InspectionEP#groupDisplayName
+   @see InspectionEP#groupKey
+   @see InspectionEP#groupBundle
    */
   @Nls
   @NotNull
@@ -72,50 +71,22 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
       }
     );
     final ImmutableList<PsiFile> analyzedFiles = pfb.build();
-    final ImmutableSet<String> analyzedPaths = FluentIterable.from(analyzedFiles)
-      .filter(
-        new Predicate<PsiFile>() {
-          @Override
-          public boolean apply(PsiFile psiFile) {
-            return psiFile != null;
-          }
-        }
-      )
-      .transform(
-        new Function<PsiFile,String>() {
-          @Override
-          public String apply(PsiFile psiFile) {
-            return psiFile.getVirtualFile().getPath();
-          }
-        }
-      ).toSet();
+    final Set<String> analyzedPaths = analyzedFiles.stream()
+        .filter(Objects::nonNull)
+        .map(psiFile -> psiFile.getVirtualFile().getPath())
+        .collect(Collectors.toSet());
     final Optional<IssuesByFileIndexProjectComponent> indexComponent =
       IssuesByFileIndexProjectComponent.getInstance(context.getProject());
     if (indexComponent.isPresent()) {
       final int newIssuesCount = FluentIterable.from(indexComponent.get().getIndex().entrySet())
         .filter(
-          new Predicate<Map.Entry<String,Set<SonarIssue>>>() {
-            @Override
-            public boolean apply(Map.Entry<String,Set<SonarIssue>> entry) {
-              return analyzedPaths.contains(entry.getKey());
-            }
-          }
+            entry -> analyzedPaths.contains(entry.getKey())
         )
         .transformAndConcat(
-          new Function<Map.Entry<String,Set<SonarIssue>>,Iterable<SonarIssue>>() {
-            @Override
-            public Iterable<SonarIssue> apply(Map.Entry<String,Set<SonarIssue>> entry) {
-              return entry.getValue();
-            }
-          }
+            entry -> entry.getValue()
         )
         .filter(
-          new Predicate<SonarIssue>() {
-            @Override
-            public boolean apply(SonarIssue sonarIssue) {
-              return sonarIssue.getIsNew();
-            }
-          }
+            sonarIssue -> sonarIssue.getIsNew()
         ).size();
       final Notification notification;
       if (newIssuesCount == 1) {

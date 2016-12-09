@@ -1,14 +1,12 @@
 package org.intellij.sonar.configuration;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.application.ApplicationManager;
@@ -88,9 +86,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     );
     new TableSpeedSearch(myResourcesTable);
     myDownloadResourcesButton.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
+        actionEvent -> {
           DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable();
           ProgressManager.getInstance()
             .runProcessWithProgressSynchronously(
@@ -100,7 +96,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
               myProject
             );
         }
-      }
     );
     return myRootJPanel;
   }
@@ -128,30 +123,20 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
             ImmutableList.copyOf(myAllProjectsAndModules)
           );
           ApplicationManager.getApplication().invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                myResourcesTable.setModelAndUpdateColumns(
-                  new ListTableModel<Resource>(
-                    new ColumnInfo[]{
-                      NAME_COLUMN,
-                      KEY_COLUMN
-                    },myAllProjectsAndModules,0
-                  )
-                );
-              }
-            }
+              () -> myResourcesTable.setModelAndUpdateColumns(
+                new ListTableModel<Resource>(
+                  new ColumnInfo[]{
+                    NAME_COLUMN,
+                    KEY_COLUMN
+                  },myAllProjectsAndModules,0
+                )
+              )
           );
         } catch (Exception e) {
           final String message = "Cannot fetch SonarQube project and modules from "+mySonarServerName
             +"\n\n"+Throwables.getStackTraceAsString(e);
           ApplicationManager.getApplication().invokeLater(
-            new Runnable() {
-              @Override
-              public void run() {
-                Messages.showErrorDialog(message,"SonarQube Server Error");
-              }
-            }
+              () -> Messages.showErrorDialog(message,"SonarQube Server Error")
           );
         }
       }

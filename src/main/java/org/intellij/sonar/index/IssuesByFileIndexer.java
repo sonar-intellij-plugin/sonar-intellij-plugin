@@ -55,21 +55,16 @@ public class IssuesByFileIndexer {
     setIssues(
       FluentIterable.from(issues)
         .transform(
-          new Function<org.sonar.wsclient.issue.Issue,Issue>() {
-            @Override
-            public Issue apply(org.sonar.wsclient.issue.Issue issue) {
-              return new Issue(
-                issue.key(),
-                issue.componentKey(),
-                issue.line(),
-                issue.message(),
-                issue.severity(),
-                issue.ruleKey(),
-                issue.status(),
-                false // issues from sonar server cannot be new
-              );
-            }
-          }
+            issue -> new Issue(
+              issue.key(),
+              issue.componentKey(),
+              issue.line(),
+              issue.message(),
+              issue.severity(),
+              issue.ruleKey(),
+              issue.status(),
+              false // issues from sonar server cannot be new
+            )
         ).toList()
     );
     return this;
@@ -93,9 +88,7 @@ public class IssuesByFileIndexer {
     final Iterable<List<PsiFile>> filePartitions = Iterables.partition(files,availableProcessors);
     for (final List<PsiFile> partition : filePartitions) {
       executorService.execute(
-        new Runnable() {
-          @Override
-          public void run() {
+          () -> {
             for (PsiFile psiFile : partition) {
               if (indicator.isCanceled()) break;
               final int currentFileIndex = fileIndex.incrementAndGet();
@@ -123,7 +116,6 @@ public class IssuesByFileIndexer {
                 index.put(fullFilePath,sonarIssues);
             }
           }
-        }
       );
     }
     executorService.shutdown();

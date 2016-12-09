@@ -1,6 +1,9 @@
 package org.intellij.sonar.util;
 
-import com.google.common.base.Optional;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
@@ -18,36 +21,31 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Set;
-
-import static com.google.common.base.Optional.fromNullable;
-
 public class Finders {
 
   public static Optional<PsiElement> findFirstElementAtLine(@NotNull final PsiFile file,Integer line) {
-    if (line == null) return Optional.absent();
+    if (line == null) return Optional.empty();
     int ijLine = line-1;
     final Document document = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
     Optional<PsiElement> element = getFirstSiblingFrom(file,ijLine,document);
     while (element.isPresent() && element.get().getTextLength() == 0) {
-      element = fromNullable(element.get().getNextSibling());
+      element = Optional.ofNullable(element.get().getNextSibling());
     }
     if (document != null && element.isPresent()
       && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
-      element = Optional.absent();
+      element = Optional.empty();
     }
     return element;
   }
 
   private static Optional<PsiElement> getFirstSiblingFrom(PsiFile file,int ijLine,Document document) {
-    if (document == null) return Optional.absent();
-    Optional<PsiElement> element = Optional.absent();
+    if (document == null) return Optional.empty();
+    Optional<PsiElement> element = Optional.empty();
     try {
       final int offset = document.getLineStartOffset(ijLine);
-      element = fromNullable(file.getViewProvider().findElementAt(offset));
+      element = Optional.ofNullable(file.getViewProvider().findElementAt(offset));
       if (element.isPresent() && document.getLineNumber(element.get().getTextOffset()) != ijLine) {
-        element = fromNullable(element.get().getNextSibling());
+        element = Optional.ofNullable(element.get().getNextSibling());
       }
     } catch (@NotNull final IndexOutOfBoundsException ignore) { //NOSONAR
       // element keeps to be absent
@@ -56,9 +54,9 @@ public class Finders {
   }
 
   public static Optional<Document> findDocumentFromPsiFile(PsiFile psiFile) {
-    final Optional<Project> project = fromNullable(psiFile.getProject());
-    if (!project.isPresent()) return Optional.absent();
-    return fromNullable(PsiDocumentManager.getInstance(project.get()).getDocument(psiFile));
+    final Optional<Project> project = Optional.ofNullable(psiFile.getProject());
+    if (!project.isPresent()) return Optional.empty();
+    return Optional.ofNullable(PsiDocumentManager.getInstance(project.get()).getDocument(psiFile));
   }
 
   @NotNull
@@ -68,7 +66,7 @@ public class Finders {
 
   @NotNull
   public static Optional<RangeHighlighter> findRangeHighlighterAtLine(final Editor editor,final Integer line) {
-    if (line == null) return Optional.absent();
+    if (line == null) return Optional.empty();
     final MarkupModel markupModel = editor.getMarkupModel();
     final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
     for (RangeHighlighter highlighter : highlighters) {
@@ -78,7 +76,7 @@ public class Finders {
         return Optional.of(highlighter);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @NotNull
@@ -91,57 +89,15 @@ public class Finders {
   }
 
   private static void addHighlightersFromEditor(final Set<RangeHighlighter> highlighters, final Editor editor) {
-    ApplicationManager.getApplication().invokeAndWait(new Runnable() {
-      @Override
-      public void run() {
-        final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
-        highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
-      }
+    ApplicationManager.getApplication().invokeAndWait(() -> {
+      final RangeHighlighter[] highlightersFromCurrentEditor = editor.getMarkupModel().getAllHighlighters();
+      highlighters.addAll(Sets.newHashSet(highlightersFromCurrentEditor));
     }, ModalityState.any());
   }
 
   public static int findLineOfRangeHighlighter(@NotNull RangeHighlighter highlighter,@NotNull Editor editor) {
     final LogicalPosition logicalPosition = editor.offsetToLogicalPosition(highlighter.getStartOffset());
     return logicalPosition.line;
-  }
-
-  private static class HighlighterLineFinder implements Runnable {
-
-    private final MarkupModel markupModel;
-    private final Editor editor;
-    private final int line;
-    private RangeHighlighter foundHighlighter;
-
-    public HighlighterLineFinder(Editor editor,int line) {
-      this.markupModel = editor.getMarkupModel();
-      this.editor = editor;
-      this.line = line;
-    }
-
-    @Override
-    public void run() {
-      ApplicationManager.getApplication().runReadAction(
-        new Runnable() {
-          @Override
-          public void run() {
-            final RangeHighlighter[] highlighters = markupModel.getAllHighlighters();
-            for (RangeHighlighter highlighter : highlighters) {
-              final LogicalPosition logicalPosition =
-                editor.offsetToLogicalPosition(highlighter.getStartOffset());
-              final int lineOfHighlighter = logicalPosition.line;
-              if (lineOfHighlighter == line) {
-                foundHighlighter = highlighter;
-                break;
-              }
-            }
-          }
-        }
-      );
-    }
-
-    public RangeHighlighter getFoundHighlighter() {
-      return foundHighlighter;
-    }
   }
 
   @NotNull

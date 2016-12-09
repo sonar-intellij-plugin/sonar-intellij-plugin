@@ -1,9 +1,9 @@
 package org.intellij.sonar.persistence;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.base.Optional;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
@@ -30,7 +30,7 @@ public class SonarRules implements PersistentStateComponent<SonarRules>, Project
   private Map<String,Rule> sonarRulesByRuleKey = new ConcurrentHashMap<String,Rule>();
 
   public static Optional<SonarRules> getInstance(Project project) {
-    return Optional.fromNullable(project.getComponent(SonarRules.class));
+    return Optional.ofNullable(project.getComponent(SonarRules.class));
   }
 
   @Nullable

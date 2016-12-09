@@ -1,6 +1,7 @@
 package org.intellij.sonar.util;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
@@ -19,7 +20,7 @@ public class SettingsUtil {
     Settings processed = Settings.copyOf(settings);
     final String serverName = settings.getServerName();
     if (SonarServers.PROJECT.equals(serverName)) {
-      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
+      final Optional<Settings> projectSettings = Optional.ofNullable(ProjectSettings.getInstance(project).getState());
       if (projectSettings.isPresent()) {
         processed.setServerName(projectSettings.get().getServerName());
         if (settings.getResources().isEmpty()) {
@@ -32,10 +33,8 @@ public class SettingsUtil {
     }
     final String scripName = settings.getLocalAnalysisScripName();
     if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
-      final Optional<Settings> projectSettings = Optional.fromNullable(ProjectSettings.getInstance(project).getState());
-      if (projectSettings.isPresent()) {
-        processed.setLocalAnalysisScripName(projectSettings.get().getLocalAnalysisScripName());
-      }
+      final Optional<Settings> projectSettings = Optional.ofNullable(ProjectSettings.getInstance(project).getState());
+      projectSettings.ifPresent(it -> processed.setLocalAnalysisScripName(it.getLocalAnalysisScripName()));
     }
     return processed;
   }

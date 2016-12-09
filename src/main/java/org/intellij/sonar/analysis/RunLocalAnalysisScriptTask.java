@@ -6,13 +6,11 @@ import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -73,11 +71,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project,enrichedSettings.settings);
     final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
     if (scripName == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
     final Optional<LocalAnalysisScript> localAnalysisScript = LocalAnalysisScripts.get(scripName);
     if (!localAnalysisScript.isPresent())
-      return Optional.absent();
+      return Optional.empty();
     final String sourceCodeTemplate = localAnalysisScript.get().getSourceCode();
     final String serverName = enrichedSettings.settings.getServerName();
     final Optional<SonarServerConfig> serverConfiguration = SonarServers.get(serverName);
@@ -217,12 +215,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       .withSonarConsole(sonarConsole)
       .create();
     final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(
-      new Function<Set<SonarIssue>,Iterable<SonarIssue>>() {
-        @Override
-        public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
-          return sonarIssues;
-        }
-      }
+        sonarIssues -> sonarIssues
     ).size();
     sonarConsole.info(
       String.format(
@@ -233,19 +226,9 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     );
     if (!index.isEmpty()) {
       final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(
-        new Function<Set<SonarIssue>,Iterable<SonarIssue>>() {
-          @Override
-          public Iterable<SonarIssue> apply(Set<SonarIssue> sonarIssues) {
-            return sonarIssues;
-          }
-        }
+          sonarIssues -> sonarIssues
       ).filter(
-        new Predicate<SonarIssue>() {
-          @Override
-          public boolean apply(SonarIssue sonarIssue) {
-            return sonarIssue.getIsNew();
-          }
-        }
+          sonarIssue -> sonarIssue.getIsNew()
       ).size();
       if (newIssuesCount == 1) {
         sonarConsole.info("1 issue is new!");

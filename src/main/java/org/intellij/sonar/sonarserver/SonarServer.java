@@ -8,9 +8,9 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -77,14 +77,14 @@ public class SonarServer {
             proxies = CommonProxy.getInstance().select(new URL(server.getHost()));
         } catch (MalformedURLException e) {
             LOG.error("Unable to configure proxy", e);
-            return Optional.absent();
+            return Optional.empty();
         }
         for (Proxy proxy : proxies) {
             if (proxy.type() == Proxy.Type.HTTP) {
                 return Optional.of(proxy);
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
     private Sonar createSonar() {
@@ -137,7 +137,7 @@ public class SonarServer {
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         indicator.setText("Downloading SonarQube projects");
         List<Resource> projects = getAllProjects(sonar);
-        projects = FluentIterable.from(projects).toSortedList(new ByResourceName());
+        projects = projects.stream().sorted(new ByResourceName()).collect(Collectors.toList());
 
         if (null != projects) {
             indicator.setText("Downloading SonarQube modules");
@@ -149,7 +149,7 @@ public class SonarServer {
                 indicator.setText2(project.getName());
                 allResources.add(project);
                 List<Resource> modules = getAllModules(sonar, project.getId());
-                modules = FluentIterable.from(modules).toSortedList(new ByResourceName());
+                modules = modules.stream().sorted(new ByResourceName()).collect(Collectors.toList());
                 if (null != modules) {
                     for (Resource module : modules) {
                         allResources.add(module);

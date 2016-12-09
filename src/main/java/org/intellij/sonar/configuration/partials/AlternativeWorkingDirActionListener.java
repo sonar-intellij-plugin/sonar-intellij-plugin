@@ -3,8 +3,8 @@ package org.intellij.sonar.configuration.partials;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Optional;
 
-import com.google.common.base.Optional;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooser;
@@ -55,7 +55,7 @@ public final class AlternativeWorkingDirActionListener implements ActionListener
     FileChooser.chooseFiles(
       fileDescriptor,
       project,
-      Optional.fromNullable(previous).or(dirToSelect),
+        Optional.ofNullable(previous).orElse(dirToSelect),
       new Consumer<List<VirtualFile>>() {
         @Override
         public void consume(final List<VirtualFile> files) {

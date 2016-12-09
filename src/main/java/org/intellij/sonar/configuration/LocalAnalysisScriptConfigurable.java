@@ -4,10 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Optional;
 
 import javax.swing.*;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.Application;
@@ -23,7 +23,6 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.Consumer;
 import com.intellij.util.ui.ColumnInfo;
 import org.intellij.sonar.persistence.LocalAnalysisScript;
 import org.jetbrains.annotations.Nullable;
@@ -131,14 +130,11 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
       FileChooser.chooseFiles(
         fileDescriptor,
         myProject,
-        Optional.fromNullable(previous).or(myProject.getBaseDir()),
-        new Consumer<java.util.List<VirtualFile>>() {
-          @Override
-          public void consume(final java.util.List<VirtualFile> files) {
+          Optional.ofNullable(previous).orElse(myProject.getBaseDir()),
+          files -> {
             String path = files.get(0).getPath();
             myPathToSonarReportTextFieldWithBrowseButton.setText(path);
           }
-        }
       );
     }
   }

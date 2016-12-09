@@ -2,12 +2,11 @@ package org.intellij.sonar.persistence;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -35,14 +34,8 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
 
   public static void add(final LocalAnalysisScript newLocalAnalysisScript) {
     final Collection<LocalAnalysisScript> localAnalysisScripts = LocalAnalysisScripts.getInstance().getState().beans;
-    final boolean alreadyExists = FluentIterable.from(localAnalysisScripts).anyMatch(
-      new Predicate<LocalAnalysisScript>() {
-        @Override
-        public boolean apply(LocalAnalysisScript localAnalysisScript) {
-          return localAnalysisScript.equals(newLocalAnalysisScript);
-        }
-      }
-    );
+    final boolean alreadyExists = localAnalysisScripts.stream()
+        .anyMatch(localAnalysisScript -> localAnalysisScript.equals(newLocalAnalysisScript));
     if (alreadyExists) {
       throw new IllegalArgumentException("already exists");
     } else {
@@ -53,27 +46,15 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
   public static void remove(@NotNull final String name) {
     final Optional<LocalAnalysisScript> bean = get(name);
     Preconditions.checkArgument(bean.isPresent());
-    final ImmutableList<LocalAnalysisScript> newBeans = FluentIterable.from(getAll()).filter(
-      new Predicate<LocalAnalysisScript>() {
-        @Override
-        public boolean apply(LocalAnalysisScript localAnalysisScript) {
-          return !bean.get().equals(localAnalysisScript);
-        }
-      }
-    ).toList();
-    getInstance().beans = new ArrayList<LocalAnalysisScript>(newBeans);
+    final List<LocalAnalysisScript> newBeans = getAll().stream()
+        .filter(localAnalysisScript -> !bean.get().equals(localAnalysisScript))
+        .collect(Collectors.toList());
+    getInstance().beans = new ArrayList<>(newBeans);
   }
 
   public static Optional<LocalAnalysisScript> get(@NotNull final String name) {
     final Collection<LocalAnalysisScript> allBeans = getAll();
-    return FluentIterable.from(allBeans).firstMatch(
-      new Predicate<LocalAnalysisScript>() {
-        @Override
-        public boolean apply(LocalAnalysisScript localAnalysisScript) {
-          return name.equals(localAnalysisScript.getName());
-        }
-      }
-    );
+    return allBeans.stream().filter(localAnalysisScript -> name.equals(localAnalysisScript.getName())).findFirst();
   }
 
   public static Collection<LocalAnalysisScript> getAll() {

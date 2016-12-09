@@ -1,11 +1,9 @@
 package org.intellij.sonar.analysis;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.intellij.codeInsight.highlighting.TooltipLinkHandler;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -48,14 +46,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
     final Map<String,Set<SonarIssue>> index = state.getIndex();
     final String path = psiFile.getVirtualFile().getPath();
     final Set<SonarIssue> issues = index.get(path);
-    final Optional<SonarIssue> issue = FluentIterable.from(issues).firstMatch(
-      new Predicate<SonarIssue>() {
-        @Override
-        public boolean apply(SonarIssue sonarIssue) {
-          return sonarIssueKey.equals(sonarIssue.getKey());
-        }
-      }
-    );
+    final Optional<SonarIssue> issue = issues.stream().filter(sonarIssue -> sonarIssueKey.equals(sonarIssue.getKey())).findFirst();
     if (!issue.isPresent()) return null;
     // try to get desc from already fetched rules
     final Optional<SonarRules> sonarRules = SonarRules.getInstance(project);

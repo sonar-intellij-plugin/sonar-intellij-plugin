@@ -1,13 +1,11 @@
 package org.intellij.sonar;
 
-import static com.google.common.base.Optional.fromNullable;
-
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.application.ApplicationManager;
@@ -58,28 +56,23 @@ public class DocumentChangeListener extends AbstractProjectComponent {
   }
 
   private void updateIssuesPositions(final DocumentEvent e,final Project project) {
-    final Optional<Document> document = fromNullable(e.getDocument());
+    final Optional<Document> document = Optional.ofNullable(e.getDocument());
     final List<Editor> editors = Finders.findEditorsFrom(document.get());
     for (final Editor editor : editors) {
       ApplicationManager.getApplication().invokeLater(
-        new Runnable() {
-          @Override
-          public void run() {
+          () -> {
             updateIssueLines(document,editor);
             final Optional<VirtualFile> file = removeIssuesDeletedInEditor(e,project);
             updateHighlightingFor(file,project);
           }
-        }
       );
     }
   }
 
   private void updateHighlightingFor(Optional<VirtualFile> file,Project project) {
     if (file.isPresent() && !project.isDisposed() && project.isInitialized()) {
-      Optional<PsiFile> psiFile = fromNullable(PsiManager.getInstance(project).findFile(file.get()));
-      if (psiFile.isPresent()) {
-        DaemonCodeAnalyzer.getInstance(project).restart(psiFile.get());
-      }
+      Optional<PsiFile> psiFile = Optional.ofNullable(PsiManager.getInstance(project).findFile(file.get()));
+      psiFile.ifPresent(psiFile1 -> DaemonCodeAnalyzer.getInstance(project).restart(psiFile1));
     }
   }
 
@@ -93,11 +86,9 @@ public class DocumentChangeListener extends AbstractProjectComponent {
    the document belongs to
    */
   private Optional<VirtualFile> removeIssuesDeletedInEditor(DocumentEvent documentEvent,Project project) {
-    final Optional<VirtualFile> file = Optional.fromNullable(
-      FileDocumentManager.getInstance().getFile(
+    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(
         documentEvent.getDocument()
-      )
-    );
+    ));
     if (file.isPresent()) {
       Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
       Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(documentEvent.getDocument());
@@ -117,12 +108,8 @@ public class DocumentChangeListener extends AbstractProjectComponent {
     Set<RangeHighlighter> highlighters
   ) {
     for (RangeHighlighter highlighter : highlighters) {
-      Optional<Set<SonarIssue>> issuesFromHighlighter = fromNullable(
-        highlighter.getUserData(SonarExternalAnnotator.KEY)
-      );
-      if (issuesFromHighlighter.isPresent()) {
-        issuesFromHighlighters.addAll(issuesFromHighlighter.get());
-      }
+      Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+      issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
     }
   }
 
@@ -142,7 +129,7 @@ public class DocumentChangeListener extends AbstractProjectComponent {
   }
 
   private void updateLineForAllIssuesFrom(Editor editor,RangeHighlighter highlighter) {
-    Optional<Set<SonarIssue>> issues = fromNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+    Optional<Set<SonarIssue>> issues = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
     if (!issues.isPresent()) return;
     int ijLine = Finders.findLineOfRangeHighlighter(highlighter,editor);
     int rhLine = ijLine+1;
@@ -156,26 +143,14 @@ public class DocumentChangeListener extends AbstractProjectComponent {
 
   private void rememberChangedFile(final DocumentEvent e) {
     ApplicationManager.getApplication().invokeLater(
-      new Runnable() {
-        @Override
-        public void run() {
-          ApplicationManager.getApplication().runReadAction(
-            new Runnable() {
-              @Override
-              public void run() {
-                addFileFromEventToChangedFiles(e);
-              }
-            }
-          );
-        }
-      }
+        () -> ApplicationManager.getApplication().runReadAction(
+            () -> addFileFromEventToChangedFiles(e)
+        )
     );
   }
 
   private void addFileFromEventToChangedFiles(DocumentEvent e) {
-    final Optional<VirtualFile> file = fromNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
-    if (file.isPresent()) {
-      CHANGED_FILES.add(file.get());
-    }
+    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
+    file.ifPresent(CHANGED_FILES::add);
   }
 }

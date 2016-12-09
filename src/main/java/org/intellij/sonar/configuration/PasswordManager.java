@@ -12,16 +12,13 @@ public final class PasswordManager {
 
   public static void storePassword(final String key,final String value) {
     UIUtil.invokeAndWaitIfNeeded(
-      new Runnable() {
-        @Override
-        public void run() {
+        (Runnable) () -> {
           try {
             PasswordSafe.getInstance().storePassword(null,PasswordManager.class,key,value);
           } catch (Exception e) {
             Messages.showErrorDialog("Cannot store password\n"+Throwables.getStackTraceAsString(e),"Error");
           }
         }
-      }
     );
   }
 
@@ -29,16 +26,13 @@ public final class PasswordManager {
 
   public static String loadPassword(final String key) {
     UIUtil.invokeAndWaitIfNeeded(
-      new Runnable() {
-        @Override
-        public void run() {
+        (Runnable) () -> {
           try {
             password = PasswordSafe.getInstance().getPassword(null,PasswordManager.class,key);
           } catch (Exception e) {
             Messages.showErrorDialog("Cannot load password\n"+Throwables.getStackTraceAsString(e),"Error");
           }
         }
-      }
     );
     return password;
   }

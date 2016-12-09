@@ -1,12 +1,10 @@
 package org.intellij.sonar.persistence;
 
-import static com.google.common.base.Optional.fromNullable;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Optional;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
@@ -37,8 +35,8 @@ public class IssuesByFileIndexProjectComponent
   }
 
   public static Optional<IssuesByFileIndexProjectComponent> getInstance(@NotNull Project project) {
-    if (project.isDisposed()) return Optional.absent();
-    return fromNullable(project.getComponent(IssuesByFileIndexProjectComponent.class));
+    if (project.isDisposed()) return Optional.empty();
+    return Optional.ofNullable(project.getComponent(IssuesByFileIndexProjectComponent.class));
   }
 
   @Nullable

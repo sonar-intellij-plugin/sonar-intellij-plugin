@@ -20,12 +20,9 @@
 package org.intellij.sonar.analysis;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.intellij.analysis.AnalysisScope;
@@ -85,22 +82,9 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   private boolean isInspectionToolEnabled(final String toolName,final GlobalInspectionContext context) {
     final InspectionProfileImpl currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
     final Project project = context.getProject();
-    return FluentIterable.from(currentProfile.getAllEnabledInspectionTools(project))
-      .transform(
-        new Function<Tools,String>() {
-          @Override
-          public String apply(Tools tools) {
-            return tools.getShortName();
-          }
-        }
-      ).firstMatch(
-        new Predicate<String>() {
-          @Override
-          public boolean apply(String shortName) {
-            return toolName.equals(shortName);
-          }
-        }
-      ).isPresent();
+    return currentProfile.getAllEnabledInspectionTools(project).stream()
+        .map(Tools::getShortName)
+        .anyMatch(toolName::equals);
   }
 
   @Override
@@ -150,9 +134,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     if (oldIssuesGlobalInspectionToolEnabled) {
       for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
         final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings,psiFiles);
-        if (downloadTask.isPresent()) {
-          downloadTask.get().run();
-        }
+        downloadTask.ifPresent(DownloadIssuesTask::run);
       }
     }
     if (newIssuesGlobalInspectionToolEnabled) {
@@ -161,9 +143,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
           enrichedSettings,
           psiFiles
         );
-        if (scriptTask.isPresent()) {
-          scriptTask.get().run();
-        }
+        scriptTask.ifPresent(RunLocalAnalysisScriptTask::run);
       }
     }
   }
@@ -177,14 +157,11 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   private void showSonarQubeToolWindowIfNeeded(final Project project) {
     if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
       ApplicationManager.getApplication().invokeLater(
-        new Runnable() {
-          @Override
-          public void run() {
+          () -> {
             final ToolWindow toolWindow = ToolWindowManager.getInstance(project)
               .getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
             toolWindow.show(null);
           }
-        }
       );
     }
   }
@@ -203,15 +180,12 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
   private static void removeAllHighlighters() {
     ApplicationManager.getApplication().invokeLater(
-      new Runnable() {
-        @Override
-        public void run() {
+        () -> {
           Editor[] allEditors = EditorFactory.getInstance().getAllEditors();
           for (Editor editor : allEditors) {
             editor.getMarkupModel().removeAllHighlighters();
           }
         }
-      }
     );
   }
 
