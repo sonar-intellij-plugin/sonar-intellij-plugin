@@ -31,12 +31,13 @@ import com.google.common.collect.Sets;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
-import com.intellij.codeInspection.InspectionProfile;
 import com.intellij.codeInspection.ex.GlobalInspectionContextBase;
+import com.intellij.codeInspection.ex.InspectionProfileImpl;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.TransactionGuard;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -48,7 +49,6 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.ui.UIUtil;
 import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.SonarToolWindowFactory;
@@ -83,7 +83,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   }
 
   private boolean isInspectionToolEnabled(final String toolName,final GlobalInspectionContext context) {
-    final InspectionProfile currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
+    final InspectionProfileImpl currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
     final Project project = context.getProject();
     return FluentIterable.from(currentProfile.getAllEnabledInspectionTools(project))
       .transform(
@@ -169,19 +169,8 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   }
 
   private void saveAllDocuments() {
-    UIUtil.invokeAndWaitIfNeeded(
-      new Runnable() {
-        @Override
-        public void run() {
-          ApplicationManager.getApplication().runWriteAction(
-            new Runnable() {
-              public void run() {
-                FileDocumentManager.getInstance().saveAllDocuments();
-              }
-            }
-          );
-        }
-      }
+    TransactionGuard.getInstance().submitTransactionAndWait(
+        () -> FileDocumentManager.getInstance().saveAllDocuments()
     );
   }
 
