@@ -72,6 +72,9 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   ) {
     enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project,enrichedSettings.settings);
     final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
+    if (scripName == null) {
+      return Optional.absent();
+    }
     final Optional<LocalAnalysisScript> localAnalysisScript = LocalAnalysisScripts.get(scripName);
     if (!localAnalysisScript.isPresent())
       return Optional.absent();
