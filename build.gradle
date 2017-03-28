@@ -19,10 +19,10 @@ repositories {
     mavenCentral()
 }
 
-version = '2.1.1'
+version = '2.1.2-SNAPSHOT'
 
 intellij {
-    version 'IC-2016.3'
+    version '2017.1'
 }
 
 dependencies {
@@ -53,5 +53,4 @@ idea {
         it.node.@type = 'PLUGIN_MODULE'
         it.node.appendNode('component', [name: 'DevKit.ModuleBuildProperties', url: 'file://$MODULE_DIR$/META-INF/plugin.xml'])
     }
-
 }
