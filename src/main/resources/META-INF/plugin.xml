@@ -130,7 +130,7 @@
     <!--<idea-version since-build="111.69" until-build="123.0"/> &lt;!&ndash; Intellij 11 &ndash;&gt;-->
     <!--<idea-version since-build="123.0"/>--> <!-- Intellij 12+ -->
     <!--<idea-version since-build="163" /> &lt;!&ndash; Intellij 2016.3 &ndash;&gt;-->
-    <idea-version since-build="171" /> <!-- IntelliJ IDEA v.2017.1 -->
+    <idea-version since-build="163" until-build="179.*" /> <!-- IntelliJ IDEA v.2017.1 -->
 
 
     <depends>com.intellij.modules.lang</depends>
