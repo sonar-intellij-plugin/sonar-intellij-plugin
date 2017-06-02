@@ -16,6 +16,13 @@
         <![CDATA[
 
 <p>
+2.1.2
+<ul>
+<li>Fixes #177: implement compatibility with IDEA v.2017.1</li>
+</ul>
+</p>
+<p>
+<p>
 2.1.1
 <ul>
 <li>Fixes #166: NullPointerException after viewing Sonar options in Project Structure</li>
