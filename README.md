@@ -27,20 +27,16 @@ In your IDE go to `Preferences -> SonarQube`.
 
 Click Add, enter the address of your Sonar server and the credentials (if needed) and click `OK`.
 
-![alt text][serverConfiguration]
-[serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration.png "Example server configuration"
+![Example server configuration](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration.png)
 
 
 Back on the previous screen, find the `Sonar resources` section and click the `+` button to select the Sonar resource for this project:
 
-![alt text][resourceSelection]
-[resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/resource_selection.png "Example resource selection"
+![Example resource selection](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/resource_selection.png )
 
 Your final SonarQube Server configuration should now look like the following:
 
-![alt text][serverConfigurationComplete]
-[serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration_complete.png "Example resource selection"
-
+![Example resource selection](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration_complete.png)
 
 ### Code inspection
 
@@ -53,12 +49,10 @@ Go to `Analyze -> Inspect code`.
 Select whole project. It is recommended that you create a Sonar Inspection profile, with Sonar inspections only, but you can also use the default profile or any other self defined inspection profile.
 
 After the execution the inspection result should look like:
-![alt text][analysisResults]
-[analysisResults]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/analysis_results.png "Example resource selection"
+![Example resource selection](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/analysis_results.png)
 
 As the Sonar analysis process is prone to errors, it is essential to see what happened during the analysis. You can use the Sonar console for error analysis, especially during initial configuration:
-![alt text][sonarConsole]
-[sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/sonar_console2.png "Example resource selection"
+![Example resource selection](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/sonar_console2.png)
 
 ### Local analysis configuration
 
@@ -114,8 +108,7 @@ Click add and define:
 * path to the sonar-report.json
 
 A finished configuration can look like:
-![alt text][localScriptConfigured]
-[localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png "Example local script management"
+![Example local script management](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png)
 
 **NOTE: If command like "mvn" does not work, you can use a full path instead: /path/to/mvn.**
 
