@@ -22,7 +22,7 @@ repositories {
 version = '2.1.2-SNAPSHOT'
 
 intellij {
-    version '2017.1'
+    version '2017.2'
 }
 
 dependencies {
