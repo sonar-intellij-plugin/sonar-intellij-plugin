@@ -118,7 +118,7 @@ public class DownloadIssuesTask implements Runnable {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return Objects.toStringHelper(this.getClass().getName())
       .add("sonarServerConfig",sonarServerConfig)
       .add("resourceKeys",resourceKeys)
       .add("psiFiles",psiFiles)

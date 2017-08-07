@@ -173,7 +173,7 @@ public class Settings {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return Objects.toStringHelper(this.getClass().getName())
       .add("serverName",serverName)
       .add("resources",resources)
       .add("localAnalysisScripName",localAnalysisScripName)
