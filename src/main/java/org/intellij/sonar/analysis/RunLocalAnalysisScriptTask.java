@@ -257,7 +257,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return Objects.toStringHelper(RunLocalAnalysisScriptTask.class.getName())
       .add("sourceCode",sourceCode)
       .add("pathToSonarReport",pathToSonarReport)
       .toString();
