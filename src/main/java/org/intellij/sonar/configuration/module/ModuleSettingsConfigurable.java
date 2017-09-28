@@ -23,6 +23,7 @@ import org.intellij.sonar.configuration.WorkingDirs;
 import org.intellij.sonar.configuration.partials.AlternativeWorkingDirActionListener;
 import org.intellij.sonar.configuration.partials.SonarResourcesTableView;
 import org.intellij.sonar.persistence.ModuleSettings;
+import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.util.LocalAnalysisScriptsUtil;
 import org.intellij.sonar.util.SonarServersUtil;
@@ -30,7 +31,6 @@ import org.intellij.sonar.util.UIUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.services.Resource;
 
 public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
 

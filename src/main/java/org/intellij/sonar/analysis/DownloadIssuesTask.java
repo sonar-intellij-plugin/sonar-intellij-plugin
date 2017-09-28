@@ -15,14 +15,14 @@ import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.IssuesByFileIndexer;
 import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.SettingsUtil;
-import org.sonar.wsclient.issue.Issue;
-import org.sonar.wsclient.services.Resource;
+import org.sonarqube.ws.Issues.Issue;
 
 public class DownloadIssuesTask implements Runnable {
 

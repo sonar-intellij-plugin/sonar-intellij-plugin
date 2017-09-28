@@ -1,18 +1,32 @@
 package org.intellij.sonar.configuration;
 
-import org.sonar.wsclient.services.Resource;
+import static java.util.Arrays.stream;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+
+import java.util.Map;
+import java.util.Optional;
 
 public enum SonarQualifier {
-  PROJECT,MODULE;
+    PROJECT("TRK"), MODULE("BRC");
 
-  public static SonarQualifier valueFrom(String qualifier) {
-    if (Resource.QUALIFIER_PROJECT.equals(qualifier)) {
-      return PROJECT;
-    } else
-      if (Resource.QUALIFIER_MODULE.equals(qualifier)) {
-        return MODULE;
-      } else {
-        throw new IllegalArgumentException(qualifier);
-      }
-  }
+    private static final Map<String, SonarQualifier> INSTANCE_BY_QUALIFIER = stream(values()).collect(toMap(SonarQualifier::getQualifier, identity()));
+
+    private String qualifier;
+
+    SonarQualifier(String qualifier) {
+        this.qualifier = qualifier;
+    }
+
+    public String getQualifier() {
+        return qualifier;
+    }
+
+    public static SonarQualifier valueFrom(String qualifier) {
+        return Optional.ofNullable(INSTANCE_BY_QUALIFIER.get(qualifier)).orElseThrow(() -> new IllegalArgumentException(qualifier));
+    }
+
+    public static boolean isValidQualifier(String qualifier) {
+        return INSTANCE_BY_QUALIFIER.containsKey(qualifier);
+    }
 }

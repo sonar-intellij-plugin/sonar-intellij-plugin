@@ -55,7 +55,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       if (sonarRulesState != null) {
         final Rule rule = sonarRulesState.getSonarRulesByRuleKey().get(issue.get().getRuleKey());
         if (rule != null && !rule.isEmpty())
-          return rule.getDesc();
+          return rule.getHtmlDesc();
       }
     }
     // fetch and persist rule
@@ -80,6 +80,6 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
         sonarRulesState.getSonarRulesByRuleKey().put(issue.get().getRuleKey(),rule);
       }
     }
-    return rule.getDesc();
+    return rule.getHtmlDesc();
   }
 }

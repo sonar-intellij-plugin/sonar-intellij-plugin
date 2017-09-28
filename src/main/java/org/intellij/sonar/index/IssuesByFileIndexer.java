@@ -9,7 +9,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -20,12 +19,13 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
+import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.sonarreport.data.Issue;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
-import org.sonar.wsclient.services.Resource;
+import org.sonarqube.ws.Issues;
 
 public class IssuesByFileIndexer {
 
@@ -51,18 +51,18 @@ public class IssuesByFileIndexer {
     return this;
   }
 
-  public IssuesByFileIndexer withSonarServerIssues(ImmutableList<org.sonar.wsclient.issue.Issue> issues) {
+  public IssuesByFileIndexer withSonarServerIssues(ImmutableList<Issues.Issue> issues) {
     setIssues(
       FluentIterable.from(issues)
         .transform(
             issue -> new Issue(
-              issue.key(),
-              issue.componentKey(),
-              issue.line(),
-              issue.message(),
-              issue.severity(),
-              issue.ruleKey(),
-              issue.status(),
+              issue.getKey(),
+              issue.getComponent(),
+              issue.getLine(),
+              issue.getMessage(),
+              issue.getSeverity().name(),
+              issue.getRule(),
+              issue.getStatus(),
               false // issues from sonar server cannot be new
             )
         ).toList()
@@ -105,10 +105,10 @@ public class IssuesByFileIndexer {
               if (settings == null) continue;
               final Collection<Resource> resources = settings.getResources();
               if (resources == null || resources.isEmpty()) {
-                matchFileByResource(fullFilePath,entriesBuilder,new Resource());
+                matchFileByResource(fullFilePath,entriesBuilder,null);
               } else {
                 for (Resource resource : resources) {
-                  matchFileByResource(fullFilePath,entriesBuilder,resource);
+                  matchFileByResource(fullFilePath,entriesBuilder,resource.getKey());
                 }
               }
               final ImmutableSet<SonarIssue> sonarIssues = entriesBuilder.build();
@@ -136,9 +136,8 @@ public class IssuesByFileIndexer {
   private void matchFileByResource(
     String fullFilePath,
     ImmutableSet.Builder<SonarIssue> entriesBuilder,
-    Resource resource
+    String resourceKey
   ) {
-    final String resourceKey = resource.getKey();
     for (Issue issue : issues) {
       String component = issue.getComponent();
       if (SonarComponentToFileMatcher.match(component,resourceKey,fullFilePath)) {

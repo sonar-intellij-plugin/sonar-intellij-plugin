@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.google.common.base.Objects;
-import org.sonar.wsclient.services.Resource;
 
 public class Settings {
 
   private String serverName;
-  private Collection<Resource> resources = new ArrayList<Resource>();
+  private Collection<Resource> resources = new ArrayList<>();
   private String localAnalysisScripName;
   private String workingDirSelection;
   private String alternativeWorkingDirPath;

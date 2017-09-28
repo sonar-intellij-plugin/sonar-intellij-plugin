@@ -38,7 +38,6 @@ import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
-import org.sonar.wsclient.services.Resource;
 
 public class RunLocalAnalysisScriptTask implements Runnable {
 
@@ -190,16 +189,10 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     } else {
       sonarConsole.info("Did not find any issues in the SonarQube report");
     }
-    if (enrichedSettings.settings.getResources().isEmpty()) {
-      createIndexFrom(sonarReport,new Resource());
-    } else {
-      for (Resource resource : enrichedSettings.settings.getResources()) {
-        createIndexFrom(sonarReport,resource);
-      }
-    }
+    createIndexFrom(sonarReport);
   }
 
-  private void createIndexFrom(SonarReport sonarReport,Resource resource) {
+  private void createIndexFrom(SonarReport sonarReport) {
     final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(
       enrichedSettings.project
     );

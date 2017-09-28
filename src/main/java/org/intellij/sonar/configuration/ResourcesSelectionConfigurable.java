@@ -19,6 +19,7 @@ import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
+import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.SonarResource;
 import org.intellij.sonar.persistence.SonarResourcesComponent;
 import org.intellij.sonar.persistence.SonarServerConfig;
@@ -26,7 +27,6 @@ import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.services.Resource;
 
 public class ResourcesSelectionConfigurable extends DialogWrapper {
 
@@ -46,7 +46,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   };
   private Project myProject;
   private String mySonarServerName;
-  private TableView<Resource> myResourcesTable = new TableView<Resource>();
+  private TableView<Resource> myResourcesTable = new TableView<>();
   private JButton myDownloadResourcesButton;
   private JPanel myRootJPanel;
   private JLabel mySelectSonarResourcesFrom;
@@ -76,9 +76,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       mySonarServerName
     );
     if (null == myAllProjectsAndModules)
-      myAllProjectsAndModules = new ArrayList<Resource>();
+      myAllProjectsAndModules = new ArrayList<>();
     myResourcesTable.setModelAndUpdateColumns(
-      new ListTableModel<Resource>(
+      new ListTableModel<>(
         new ColumnInfo[]{NAME_COLUMN,KEY_COLUMN},
         myAllProjectsAndModules,
         0
@@ -124,7 +124,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
           );
           ApplicationManager.getApplication().invokeLater(
               () -> myResourcesTable.setModelAndUpdateColumns(
-                new ListTableModel<Resource>(
+                new ListTableModel<>(
                   new ColumnInfo[]{
                     NAME_COLUMN,
                     KEY_COLUMN
@@ -146,7 +146,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   @Override
   protected void doOKAction() {
     final int[] selectedRowsIndex = myResourcesTable.getSelectedRows();
-    selectedSonarResources = new ArrayList<Resource>(selectedRowsIndex.length);
+    selectedSonarResources = new ArrayList<>(selectedRowsIndex.length);
     for (int i : selectedRowsIndex) {
       Resource sonarResource = myAllProjectsAndModules.get(i);
       selectedSonarResources.add(sonarResource);

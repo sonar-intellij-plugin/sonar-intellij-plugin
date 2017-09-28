@@ -1,6 +1,6 @@
 package org.intellij.sonar.configuration;
 
-import org.sonar.wsclient.services.Resource;
+import org.intellij.sonar.persistence.Resource;
 
 public class SonarResourceBean {
 
@@ -18,6 +18,7 @@ public class SonarResourceBean {
   public void setValuesFromResource(Resource resource) {
     this.key = resource.getKey();
     this.name = resource.getName();
-    this.qualifier = SonarQualifier.valueFrom(resource.getQualifier());
+    String resourceQualifier = resource.getQualifier();
+    this.qualifier = SonarQualifier.isValidQualifier(resourceQualifier) ? SonarQualifier.valueFrom(resourceQualifier) : null;
   }
 }
