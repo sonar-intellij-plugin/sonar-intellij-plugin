@@ -1,4 +1,18 @@
 language: java
 sudo: false
+install: true
+addons:
+  sonarcloud:
+    organization: "sonar-intellij-plugin"
+    token:
+      secure: "ff9e2abb0a2ab57c79101fd1cc23e62cfeee2a8d"
 jdk:
 - oraclejdk8
+script:
+  - ./gradlew sonarqube
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
+    - '$HOME/.gradle'
+    - '.gradle'
