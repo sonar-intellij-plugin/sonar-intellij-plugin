@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg?branch=master)](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin)
+[![Quality Gate](https://sonarcloud.io/api/badges/gate?key=sonar-intellij-plugin)](https://sonarcloud.io/api/badges/gate?key=sonar-intellij-plugin)
 
 SonarQube IntelliJ Community Plugin
 ===================================
