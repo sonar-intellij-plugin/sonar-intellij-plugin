@@ -1,6 +1,6 @@
 package org.intellij.sonar.persistence;
 
-import org.sonar.wsclient.services.Resource;
+import org.intellij.sonar.configuration.SonarQualifier;
 
 public class SonarResource {
 
@@ -9,7 +9,7 @@ public class SonarResource {
 
   public static SonarResource of(Resource resource) {
     SonarResource sonarResource = new SonarResource();
-    if (resource.getQualifier().equals(Resource.QUALIFIER_MODULE)) {
+    if (SonarQualifier.MODULE.getQualifier().equals(resource.getQualifier())) {
       sonarResource.name = String.format("    %s",resource.getName());
     } else {
       sonarResource.name = resource.getName();

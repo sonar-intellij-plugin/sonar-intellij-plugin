@@ -27,7 +27,7 @@ intellij {
 }
 
 dependencies {
-    compile 'org.codehaus.sonar:sonar-ws-client:4.5'
+    compile 'org.sonarsource.sonarqube:sonar-ws:6.5'
     compile 'org.javassist:javassist:3.17.1-GA'
     compile 'com.google.code.gson:gson:2.2.4'
     compile 'joda-time:joda-time:2.3'

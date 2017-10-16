@@ -1,16 +1,20 @@
 package org.intellij.sonar.configuration.partials;
 
+import static org.intellij.sonar.configuration.SonarQualifier.MODULE;
+import static org.intellij.sonar.configuration.SonarQualifier.PROJECT;
 import static org.intellij.sonar.persistence.SonarServers.NO_SONAR;
 
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.*;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.TableUtil;
@@ -19,37 +23,30 @@ import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
+import org.intellij.sonar.persistence.Resource;
 import org.jetbrains.annotations.Nullable;
-import org.sonar.wsclient.services.Resource;
 
 public class SonarResourcesTableView {
-
-  private final TableView<Resource> mySonarResourcesTable;
-  private final JComponent myJComponent;
-  private final SonarServersView mySonarServersView;
-  private final Project myProject;
-  private static final ColumnInfo<Resource,String> TYPE_COLUMN = new ColumnInfo<Resource,String>("Type") {
+  private static final Map<String, String> TYPE_BY_QUALIFIER = ImmutableMap.<String, String>builder()
+          .put(PROJECT.getQualifier(), "Project")
+          .put(MODULE.getQualifier(), "Module")
+          .build();
+  private static final ColumnInfo<Resource, String> TYPE_COLUMN = new ColumnInfo<Resource, String>("Type") {
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
-      if (Resource.QUALIFIER_PROJECT.equals(sonarResource.getQualifier())) {
-        return "Project";
-      } else
-        if (Resource.QUALIFIER_MODULE.equals(sonarResource.getQualifier())) {
-          return "Module";
-        } else {
-          return sonarResource.getQualifier();
-        }
+      String qualifier = sonarResource.getQualifier();
+      return Optional.ofNullable(TYPE_BY_QUALIFIER.get(qualifier)).orElse(qualifier);
     }
   };
-  private static final ColumnInfo<Resource,String> NAME_COLUMN = new ColumnInfo<Resource,String>("Name") {
+  private static final ColumnInfo<Resource, String> NAME_COLUMN = new ColumnInfo<Resource, String>("Name") {
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
       return sonarResource.getName();
     }
   };
-  private static final ColumnInfo<Resource,String> KEY_COLUMN = new ColumnInfo<Resource,String>("Key") {
+  private static final ColumnInfo<Resource, String> KEY_COLUMN = new ColumnInfo<Resource, String>("Key") {
     @Nullable
     @Override
     public String valueOf(Resource sonarResource) {
@@ -57,15 +54,20 @@ public class SonarResourcesTableView {
     }
   };
 
-  public SonarResourcesTableView(Project project,SonarServersView sonarServersView) {
+  private final TableView<Resource> mySonarResourcesTable;
+  private final JComponent myJComponent;
+  private final SonarServersView mySonarServersView;
+  private final Project myProject;
+
+  public SonarResourcesTableView(Project project, SonarServersView sonarServersView) {
     this.mySonarServersView = sonarServersView;
-    this.mySonarResourcesTable = new TableView<Resource>();
+    this.mySonarResourcesTable = new TableView<>();
     this.myJComponent = createJComponent();
     this.myProject = project;
   }
 
   private JComponent createJComponent() {
-    JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable,null).
+    JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
       setAddAction(
           anActionButton -> {
             final String selectedSonarServerName = Optional.ofNullable(mySonarServersView.getSelectedItem())
@@ -94,18 +96,18 @@ public class SonarResourcesTableView {
       )
       .disableUpDownActions()
       .createPanel();
-    panelForTable.setPreferredSize(new Dimension(-1,100));
+    panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
   }
 
   public void setModel(List<Resource> sonarResources) {
     mySonarResourcesTable.setModelAndUpdateColumns(
-      new ListTableModel<Resource>(
+      new ListTableModel<>(
         new ColumnInfo[]{
           NAME_COLUMN,
           KEY_COLUMN,
           TYPE_COLUMN
-        },sonarResources,0
+        }, sonarResources, 0
       )
     );
   }

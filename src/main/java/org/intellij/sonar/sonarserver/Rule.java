@@ -1,7 +1,6 @@
 package org.intellij.sonar.sonarserver;
 
 import com.google.common.base.Objects;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.apache.commons.lang.StringUtils;
 
@@ -13,19 +12,17 @@ public class Rule implements Comparable {
   private String lan; // java
   private String langName; // Java
   private String htmlDesc; // <p>very long explanation of the rule in html</p>
-  private String description; // very long explanation of rules like pmd in a non html format
 
   public Rule() {
   }
 
-  public Rule(String key,String name,String severity,String lan,String langName,String htmlDesc,String description) {
+  public Rule(String key,String name,String severity,String lan,String langName,String htmlDesc) {
     this.key = key;
     this.name = name;
     this.severity = severity;
     this.lan = lan;
     this.langName = langName;
     this.htmlDesc = htmlDesc;
-    this.description = description;
   }
 
   public String getKey() {
@@ -76,19 +73,6 @@ public class Rule implements Comparable {
     this.htmlDesc = htmlDesc;
   }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getDesc() {
-    if (!StringUtil.isEmpty(this.htmlDesc)) return this.htmlDesc;
-    return this.description;
-  }
-
   @Transient
   public boolean isEmpty() {
     return StringUtils.isEmpty(key) || StringUtils.isEmpty(htmlDesc);
@@ -100,10 +84,6 @@ public class Rule implements Comparable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Rule rule = (Rule) o;
-    if (description != null
-      ? !description.equals(rule.description)
-      : rule.description != null)
-      return false;
     if (htmlDesc != null
       ? !htmlDesc.equals(rule.htmlDesc)
       : rule.htmlDesc != null)
@@ -150,9 +130,6 @@ public class Rule implements Comparable {
       : 0);
     result = 31 * result+(htmlDesc != null
       ? htmlDesc.hashCode()
-      : 0);
-    result = 31 * result+(description != null
-      ? description.hashCode()
       : 0);
     return result;
   }
