@@ -34,6 +34,10 @@ dependencies {
     testCompile 'org.easytesting:fest-assert:1.4'
 }
 
+tasks.withType(JavaCompile) {
+   it.options.encoding = 'UTF-8'
+}
+
 idea {
     project.ipr.beforeMerged { project ->
         project.modulePaths.clear()
