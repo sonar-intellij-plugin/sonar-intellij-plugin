@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -250,7 +251,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(RunLocalAnalysisScriptTask.class.getName())
+    return MoreObjects.toStringHelper(RunLocalAnalysisScriptTask.class.getName())
       .add("sourceCode",sourceCode)
       .add("pathToSonarReport",pathToSonarReport)
       .toString();

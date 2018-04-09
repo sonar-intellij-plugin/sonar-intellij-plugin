@@ -79,8 +79,8 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
   }
 
-  private boolean isInspectionToolEnabled(final String toolName,final GlobalInspectionContext context) {
-    final InspectionProfileImpl currentProfile = ((GlobalInspectionContextBase) context).getCurrentProfile();
+  private boolean isInspectionToolEnabled(final String toolName,final GlobalInspectionContextBase context) {
+    final InspectionProfileImpl currentProfile = context.getCurrentProfile();
     final Project project = context.getProject();
     return currentProfile.getAllEnabledInspectionTools(project).stream()
         .map(Tools::getShortName)
@@ -95,11 +95,11 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
   ) {
     final boolean newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
       NewIssuesGlobalInspectionTool.class.getSimpleName(),
-      context
+      (GlobalInspectionContextBase) context
     );
     final boolean oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
       OldIssuesGlobalInspectionTool.class.getSimpleName(),
-      context
+      (GlobalInspectionContextBase)context
     );
     if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled)
       return;

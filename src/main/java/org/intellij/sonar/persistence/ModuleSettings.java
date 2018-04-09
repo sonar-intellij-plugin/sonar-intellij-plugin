@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "sonarModuleSettings",
   storages = {
-    @Storage(id = "default", file = "$MODULE_FILE$")
+    @Storage("$MODULE_FILE$")
   }
 )
 public class ModuleSettings implements PersistentStateComponent<Settings>, ModuleComponent {

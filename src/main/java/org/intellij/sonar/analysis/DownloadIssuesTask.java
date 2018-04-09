@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -118,7 +119,7 @@ public class DownloadIssuesTask implements Runnable {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(DownloadIssuesTask.class.getName())
+    return MoreObjects.toStringHelper(DownloadIssuesTask.class.getName())
       .add("sonarServerConfig",sonarServerConfig)
       .add("resourceKeys",resourceKeys)
       .add("psiFiles",psiFiles)

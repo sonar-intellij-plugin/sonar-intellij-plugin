@@ -11,14 +11,13 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 
 @State(
   name = "localAnalysisScripts",
   storages = {
-    @Storage(id = "localAnalysisScripts", file = StoragePathMacros.APP_CONFIG+"/sonarSettings.xml")
+    @Storage("/sonarSettings.xml")
   }
 )
 public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnalysisScripts> {
