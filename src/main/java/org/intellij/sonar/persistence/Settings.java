@@ -3,6 +3,7 @@ package org.intellij.sonar.persistence;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class Settings {
@@ -172,7 +173,7 @@ public class Settings {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(Settings.class.getName())
+    return MoreObjects.toStringHelper(Settings.class.getName())
       .add("serverName",serverName)
       .add("resources",resources)
       .add("localAnalysisScripName",localAnalysisScripName)

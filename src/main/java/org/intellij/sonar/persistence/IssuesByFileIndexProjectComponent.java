@@ -9,8 +9,6 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.openapi.components.StorageScheme;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.intellij.sonar.index.SonarIssue;
@@ -20,10 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "issues",
   storages = {
-    @Storage(id = "issues", file = StoragePathMacros.PROJECT_FILE),
-    @Storage(id = "issuesDir",
-             file = StoragePathMacros.PROJECT_CONFIG_DIR+"/sonarIssues.xml",
-             scheme = StorageScheme.DIRECTORY_BASED)
+    @Storage("/sonarIssues.xml")
   }
 )
 public class IssuesByFileIndexProjectComponent

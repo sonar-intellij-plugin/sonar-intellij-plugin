@@ -8,8 +8,6 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.openapi.components.StorageScheme;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.intellij.sonar.sonarserver.Rule;
@@ -19,10 +17,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "rules",
   storages = {
-    @Storage(id = "rules", file = StoragePathMacros.PROJECT_FILE),
-    @Storage(id = "rulesDir",
-             file = StoragePathMacros.PROJECT_CONFIG_DIR+"/sonarRules.xml",
-             scheme = StorageScheme.DIRECTORY_BASED)
+    @Storage("/sonarRules.xml")
   }
 )
 public class SonarRules implements PersistentStateComponent<SonarRules>, ProjectComponent {

@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.intellij" version "0.1.10"
+    id "org.jetbrains.intellij" version "0.3.0"
     id "org.sonarqube" version "2.5"
 }
 
@@ -23,7 +23,7 @@ repositories {
 version = '2.2.0'
 
 intellij {
-    version '2017.3'
+    version '2018.1'
 }
 
 dependencies {
