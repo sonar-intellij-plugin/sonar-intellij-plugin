@@ -1,4 +1,6 @@
-<idea-plugin>
+<!DOCTYPE idea-plugin PUBLIC "Plugin/DTD" "http://plugins.jetbrains.com/plugin.dtd">
+<idea-plugin url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin" version="2"
+             xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
@@ -172,7 +174,7 @@
     <!--<idea-version since-build="163" until-build="179.*" />  IntelliJ IDEA v.2017.1 -->
     <!-- <idea-version since-build="172.*" />  IntelliJ IDEA v.2017.2 -->
     <!-- <idea-version since-build="173.*" /> IntelliJ IDEA v.2017.3 -->
-    <!--<idea-version since-build="181.*" /> <!-- IntelliJ IDEA v.2018.1 -->
+    <!-- <idea-version since-build="181.*" /> IntelliJ IDEA v.2018.1 -->
     <idea-version since-build="182.*" /> <!-- IntelliJ IDEA v.2018.1 -->
 
 
