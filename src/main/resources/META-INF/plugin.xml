@@ -19,7 +19,7 @@
 <p>
 2.4.0
 <ul>
-<li>Fixes #204: Make compatible with IDEA 2018.4</li>
+<li>Fixes #204: Make compatible with IDEA 2018.2</li>
 </ul>
 </p>
 <p>
@@ -175,7 +175,7 @@
     <!-- <idea-version since-build="172.*" />  IntelliJ IDEA v.2017.2 -->
     <!-- <idea-version since-build="173.*" /> IntelliJ IDEA v.2017.3 -->
     <!-- <idea-version since-build="181.*" /> IntelliJ IDEA v.2018.1 -->
-    <idea-version since-build="182.*" /> <!-- IntelliJ IDEA v.2018.1 -->
+    <idea-version since-build="182.*" /> <!-- IntelliJ IDEA v.2018.2 -->
 
 
     <depends>com.intellij.modules.lang</depends>
