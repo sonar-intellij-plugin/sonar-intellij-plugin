@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg?branch=master)](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin)
-[![Quality Gate](https://sonarcloud.io/api/badges/gate?key=sonar-intellij-plugin)](https://sonarcloud.io/dashboard?id=sonar-intellij-plugin)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=sonar-intellij-plugin)
+
 
 SonarQube IntelliJ Community Plugin
 ===================================
@@ -22,25 +23,21 @@ You can install the "SonarQube Community Plugin" via the plugin manager inside y
 
 In your IDE go to `Preferences -> SonarQube`. 
 
-![alt text][serverSelection]
-[serverSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_selection.png "Example server selection"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_selection.png "Example server selection")
 
 
 Click Add, enter the address of your Sonar server and the credentials (if needed) and click `OK`.
 
-![alt text][serverConfiguration]
-[serverConfiguration]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration.png "Example server configuration"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration.png "Example server configuration")
 
 
 Back on the previous screen, find the `Sonar resources` section and click the `+` button to select the Sonar resource for this project:
 
-![alt text][resourceSelection]
-[resourceSelection]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/resource_selection.png "Example resource selection"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/resource_selection.png "Example resource selection")
 
 Your final SonarQube Server configuration should now look like the following:
 
-![alt text][serverConfigurationComplete]
-[serverConfigurationComplete]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration_complete.png "Example resource selection"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration_complete.png "Example resource selection")
 
 
 ### Code inspection
@@ -54,12 +51,10 @@ Go to `Analyze -> Inspect code`.
 Select whole project. It is recommended that you create a Sonar Inspection profile, with Sonar inspections only, but you can also use the default profile or any other self defined inspection profile.
 
 After the execution the inspection result should look like:
-![alt text][analysisResults]
-[analysisResults]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/analysis_results.png "Example resource selection"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/analysis_results.png "Example resource selection")
 
 As the Sonar analysis process is prone to errors, it is essential to see what happened during the analysis. You can use the Sonar console for error analysis, especially during initial configuration:
-![alt text][sonarConsole]
-[sonarConsole]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/sonar_console2.png "Example resource selection"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/sonar_console2.png "Example resource selection")
 
 ### Local analysis configuration
 
@@ -105,8 +100,7 @@ After you know how to perform local analysis, you need to configure the plugin:
 
 Go to `File -> Settings (Ctrl+Alt+S)-> SonarQube`.
 
-![alt text][localScriptManagement]
-[localScriptManagement]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_management.png "Example local script management"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_management.png "Example local script management")
 
 Click add and define:
 
@@ -115,8 +109,7 @@ Click add and define:
 * path to the sonar-report.json
 
 A finished configuration can look like:
-![alt text][localScriptConfigured]
-[localScriptConfigured]: https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png "Example local script management"
+![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/local_script_configured.png "Example local script management")
 
 **NOTE: If command like "mvn" does not work, you can use a full path instead: /path/to/mvn.**
 
