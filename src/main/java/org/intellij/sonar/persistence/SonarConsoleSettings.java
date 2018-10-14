@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "sonarConsoleSettings",
   storages = {
-    @Storage("/sonarSettings.xml")
+    @Storage("sonarSettings.xml")
   }
 )
 public class SonarConsoleSettings implements PersistentStateComponent<SonarConsoleSettings> {
