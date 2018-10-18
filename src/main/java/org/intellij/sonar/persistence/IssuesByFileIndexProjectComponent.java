@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
   name = "issues",
   storages = {
-    @Storage("/sonarIssues.xml")
+    @Storage("sonarIssues.xml")
   }
 )
 public class IssuesByFileIndexProjectComponent
