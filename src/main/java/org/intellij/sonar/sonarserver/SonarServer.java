@@ -20,6 +20,8 @@ import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.net.ssl.CertificateManager;
 import com.intellij.util.net.ssl.ConfirmingTrustManager;
 import com.intellij.util.proxy.CommonProxy;
+
+import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.configuration.SonarQualifier;
 import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.SonarServerConfig;
@@ -65,9 +67,15 @@ public class SonarServer {
                 .setTrustManager(ConfirmingTrustManager.createForStorage(certificateManager.getCacertsPath(), certificateManager.getPassword()));
 
         if (!mySonarServerConfig.isAnonymous()) {
-            mySonarServerConfig.loadPassword();
-            connectorBuilder.credentials(mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
-            mySonarServerConfig.clearPassword();
+            if (StringUtils.isNotBlank(mySonarServerConfig.loadToken())) {
+                // https://sonarqube.com/api/user_tokens/search
+                connectorBuilder.token(mySonarServerConfig.getToken());
+                mySonarServerConfig.clearToken();
+            } else {
+                mySonarServerConfig.loadPassword();
+                connectorBuilder.credentials(mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
+                mySonarServerConfig.clearPassword();
+            }
         }
 
         Optional<Proxy> proxy = getIntelliJProxyFor(hostUrl);

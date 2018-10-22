@@ -6,6 +6,7 @@ import static org.intellij.sonar.util.Placeholder.MODULE_NAME;
 import static org.intellij.sonar.util.Placeholder.PROJECT_BASE_DIR;
 import static org.intellij.sonar.util.Placeholder.PROJECT_BASE_DIR_NAME;
 import static org.intellij.sonar.util.Placeholder.PROJECT_NAME;
+import static org.intellij.sonar.util.Placeholder.SONAR_ACCESS_TOKEN;
 import static org.intellij.sonar.util.Placeholder.SONAR_HOST_URL;
 import static org.intellij.sonar.util.Placeholder.SONAR_SERVER_NAME;
 import static org.intellij.sonar.util.Placeholder.SONAR_USER_NAME;
@@ -19,6 +20,8 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+
+import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
 
 public class TemplateProcessor {
@@ -123,6 +126,7 @@ public class TemplateProcessor {
     String sonarHostUrl = "";
     String sonarServerName = "";
     String sonarUserName = "";
+    String sonarAccessToken = "";
     if (null != sonarServerConfig) {
       sonarHostUrl = sonarServerConfig.getHostUrl();
       sonarServerName = sonarServerConfig.getName();
@@ -131,11 +135,15 @@ public class TemplateProcessor {
         && !sonarServerConfig.isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.getUser())) {
         sonarUserPassword = sonarServerConfig.loadPassword();
       }
+      if (!sonarServerConfig.isAnonymous() && StringUtils.isNotBlank(sonarServerConfig.loadToken())) {
+        sonarAccessToken = sonarServerConfig.getToken();
+      }
     }
     processedTemplate = processedTemplate.replace(SONAR_HOST_URL.getVariableName(),sonarHostUrl);
     processedTemplate = processedTemplate.replace(SONAR_SERVER_NAME.getVariableName(),sonarServerName);
     processedTemplate = processedTemplate.replace(SONAR_USER_NAME.getVariableName(),sonarUserName);
     processedTemplate = processedTemplate.replace(SONAR_USER_PASSWORD.getVariableName(),sonarUserPassword);
+    processedTemplate = processedTemplate.replace(SONAR_ACCESS_TOKEN.getVariableName(),sonarAccessToken);
     return processedTemplate;
   }
 }

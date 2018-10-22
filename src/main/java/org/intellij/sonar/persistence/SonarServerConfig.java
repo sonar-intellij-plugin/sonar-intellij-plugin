@@ -15,16 +15,20 @@ public class SonarServerConfig {
   @Transient
   private boolean isPasswordChanged = false;
 
+  @Transient
+  private String token;
+
   public static SonarServerConfig of(String hostUrl) {
-    return SonarServerConfig.of(null,hostUrl,true,null);
+    return SonarServerConfig.of(null,hostUrl,true,null, null);
   }
 
-  public static SonarServerConfig of(String name,String hostUrl,boolean anonymous,String user) {
+  public static SonarServerConfig of(String name,String hostUrl,boolean anonymous,String user, String token ) {
     SonarServerConfig bean = new SonarServerConfig();
     bean.name = name;
     bean.hostUrl = hostUrl;
     bean.anonymous = anonymous;
     bean.user = user;
+    bean.token = token;
     return bean;
   }
 
@@ -110,5 +114,30 @@ public class SonarServerConfig {
     return name != null
       ? name.hashCode()
       : 0;
+  }
+
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  @Transient
+  public String loadToken() {
+    this.token = PasswordManager.loadPassword(this.name + "_token");
+    return this.token;
+  }
+
+  @Transient
+  public void clearToken() {
+    this.token = null;
+  }
+
+
+  @Transient
+  public void storeToken() {
+    PasswordManager.storePassword(this.name + "_token",this.token);
   }
 }
