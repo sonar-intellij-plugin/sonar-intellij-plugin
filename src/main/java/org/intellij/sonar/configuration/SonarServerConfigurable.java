@@ -1,7 +1,5 @@
 package org.intellij.sonar.configuration;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
@@ -13,6 +11,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
+
+import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +26,9 @@ public class SonarServerConfigurable extends DialogWrapper {
   private JPasswordField myPasswordField;
   private boolean isPasswordFieldChanged = false;
   private JPanel myRootPanel;
+  private JRadioButton tokenRadioButton;
+  private JRadioButton credentialsRadioButton;
+  private JTextField tokenText;
 
   public SonarServerConfigurable(@Nullable Project project) {
     super(project);
@@ -52,12 +55,17 @@ public class SonarServerConfigurable extends DialogWrapper {
           "Malformed Host Url"
         );
       } else
-        if (!myAnonymousCheckBox.isSelected() && StringUtil.isEmptyOrSpaces(myUserTextField.getText())) {
-          Messages.showErrorDialog("User may not be empty","Empty User");
+        if (!myAnonymousCheckBox.isSelected()) {
+          if (credentialsRadioButton.isSelected() && StringUtils.isBlank(myUserTextField.getText()))
+            Messages.showErrorDialog("User may not be empty","Empty User");
+          if (tokenRadioButton.isSelected() && StringUtils.isBlank(tokenText.getText()))
+            Messages.showErrorDialog("Access Token may not be empty","Empty Token");
+          super.doOKAction();
         } else {
           if (myAnonymousCheckBox.isSelected()) {
             myUserTextField.setText("");
             myPasswordField.setText("");
+            tokenText.setText("");
           }
           super.doOKAction();
         }
@@ -76,22 +84,10 @@ public class SonarServerConfigurable extends DialogWrapper {
   @Override
   protected JComponent createCenterPanel() {
     initCheckboxes();
-    myAnonymousCheckBox.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-          setEnabledForCredentialsTextFields();
-        }
-      }
-    );
-    myShowPasswordCheckBox.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-          setPasswordVisibility();
-        }
-      }
-    );
+    myAnonymousCheckBox.addActionListener(event -> setEnabledForCredentialsTextFields());
+    tokenRadioButton.addActionListener(event -> setEnabledForCredentialsTextFields());
+    credentialsRadioButton.addActionListener(event -> setEnabledForCredentialsTextFields());
+    myShowPasswordCheckBox.addActionListener(event -> setPasswordVisibility());
     return myRootPanel;
   }
 
@@ -110,8 +106,19 @@ public class SonarServerConfigurable extends DialogWrapper {
 
   private void setEnabledForCredentialsTextFields() {
     final boolean isAnonymousCheckBoxSelected = myAnonymousCheckBox.isSelected();
-    myUserTextField.setEnabled(!isAnonymousCheckBoxSelected);
-    myPasswordField.setEnabled(!isAnonymousCheckBoxSelected);
+    tokenRadioButton.setEnabled(!isAnonymousCheckBoxSelected);
+    final boolean useToken = tokenRadioButton.isSelected();
+    credentialsRadioButton.setEnabled(!isAnonymousCheckBoxSelected);
+    myUserTextField.setEnabled(!isAnonymousCheckBoxSelected && !useToken);
+    myPasswordField.setEnabled(!isAnonymousCheckBoxSelected && !useToken);
+    tokenText.setEnabled(!isAnonymousCheckBoxSelected && useToken);
+    if (useToken) {
+      myUserTextField.setText("");
+      myPasswordField.setText("");
+    } else {
+      tokenText.setText("");
+    }
+
   }
 
   private void makePasswordInvisible() {
@@ -127,10 +134,13 @@ public class SonarServerConfigurable extends DialogWrapper {
       myNameTestField.getText(),
       myHostUrlTextField.getText(),
       myAnonymousCheckBox.isSelected(),
-      myUserTextField.getText()
+      myUserTextField.getText(),
+      tokenText.getText()
     );
-    sonarServerConfig.setPassword(String.valueOf(myPasswordField.getPassword()));
-    sonarServerConfig.setPasswordChanged(isPasswordFieldChanged);
+    if (credentialsRadioButton.isSelected()) {
+      sonarServerConfig.setPassword(String.valueOf(myPasswordField.getPassword()));
+      sonarServerConfig.setPasswordChanged(isPasswordFieldChanged);
+    }
     return sonarServerConfig;
   }
 
@@ -138,9 +148,16 @@ public class SonarServerConfigurable extends DialogWrapper {
     this.myNameTestField.setText(bean.getName());
     this.myHostUrlTextField.setText(bean.getHostUrl());
     if (!bean.isAnonymous()) {
-      this.myUserTextField.setText(bean.getUser());
-      this.myPasswordField.setText(bean.loadPassword());
-      bean.clearPassword();
+      if (StringUtils.isNotBlank(bean.loadToken())){
+        tokenText.setText(bean.loadToken());
+        bean.clearToken();
+        tokenRadioButton.setSelected(true);
+      } else {
+        this.myUserTextField.setText(bean.getUser());
+        this.myPasswordField.setText(bean.loadPassword());
+        bean.clearPassword();
+        credentialsRadioButton.setSelected(true);
+      }
     }
     this.myAnonymousCheckBox.setSelected(bean.isAnonymous());
     initCheckboxes();

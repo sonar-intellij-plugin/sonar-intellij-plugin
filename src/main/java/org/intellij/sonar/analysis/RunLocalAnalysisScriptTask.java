@@ -123,6 +123,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       final String password = sonarServerConfig.get().loadPassword();
       sonarConsole.withPasswordFilter(password);
     }
+    if (sonarServerConfig.isPresent()
+      && !sonarServerConfig.get().isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.get().loadToken())) {
+      final String token = sonarServerConfig.get().getToken();
+      sonarConsole.withPasswordFilter(token);
+    }
     sonarConsole.info("working dir: "+this.workingDir.getPath());
     sonarConsole.info("executing: "+this.sourceCode);
     final long startTime = System.currentTimeMillis();

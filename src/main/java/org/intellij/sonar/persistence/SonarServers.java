@@ -13,6 +13,8 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @State(
@@ -43,6 +45,10 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
       if (newSonarServerConfigBean.isPasswordChanged()) {
         newSonarServerConfigBean.storePassword();
       }
+      if (StringUtils.isNotBlank(newSonarServerConfigBean.getToken())) {
+        newSonarServerConfigBean.storeToken();
+      }
+      newSonarServerConfigBean.clearToken();
       newSonarServerConfigBean.clearPassword();
     }
   }

@@ -133,6 +133,7 @@ placeholder | meaning
 `$SONAR_SERVER_NAME` | the sonar server name, e.g. my server
 `$SONAR_USER_NAME` | the sonar user name, e.g. my_user
 `$SONAR_USER_PASSWORD` | the sonar user password, e.g. pw
+`SONAR_ACCESS_TOKEN` | the sonar access Token, e.g. 3088a92e431a655030fe2244916ddc9ec172e33d
 
 Using the placeholders you can define one script and reuse it in several projects. It is also useful if your project is a multi module project.
 For example in a multi module project, you will find `sonar-report.json` in following folders:
