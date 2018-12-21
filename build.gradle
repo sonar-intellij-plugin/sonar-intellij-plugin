@@ -1,11 +1,5 @@
-buildscript {
-    repositories {
-        maven { url 'http://dl.bintray.com/jetbrains/intellij-plugin-service' }
-    }
-}
-
 plugins {
-    id "org.jetbrains.intellij" version "0.3.6"
+    id "org.jetbrains.intellij" version "0.3.12"
     id "org.sonarqube" version "2.5"
 }
 
@@ -20,7 +14,7 @@ repositories {
     mavenCentral()
 }
 
-version = '2.5'
+version = '2.5.1'
 
 intellij {
     version '2018.2'
