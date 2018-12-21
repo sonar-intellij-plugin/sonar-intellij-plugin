@@ -8,3 +8,4 @@ atlassian-ide-plugin.xml
 classes
 *.zip
 build
+gradle.properties
