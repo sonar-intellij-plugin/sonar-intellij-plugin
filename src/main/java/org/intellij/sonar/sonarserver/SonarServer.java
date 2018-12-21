@@ -141,7 +141,8 @@ public class SonarServer {
 
     public List<Component> getAllProjects(WsClient sonarClient) {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
-                .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()));
+                .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
+                .setPageSize(10000); //-1 is not allowed, neither int max. The limit is 10000.
         return sonarClient.components().search(query).getComponentsList();
     }
 
