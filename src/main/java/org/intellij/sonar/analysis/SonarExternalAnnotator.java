@@ -41,11 +41,14 @@ import org.jetbrains.annotations.Nullable;
 public class SonarExternalAnnotator
   extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo,SonarExternalAnnotator.AnnotationResult> {
 
-  public static final Key<Set<SonarIssue>> KEY = new Key<Set<SonarIssue>>("issues");
+  public static final Key<Set<SonarIssue>> KEY = new Key<>("issues");
 
   public static class InitialInfo {
-
     public PsiFile psiFile;
+  }
+
+  public static class AnnotationResult {
+    public Set<SonarIssue> sonarIssues = new HashSet<>();
   }
 
   @Nullable
@@ -63,8 +66,7 @@ public class SonarExternalAnnotator
       try {
           ApplicationManager.getApplication().executeOnPooledThread(
               () -> {
-                final Set<SonarIssue> issues = createSonarIssues(initialInfo.psiFile);
-                annotationResult.sonarIssues = issues;
+                annotationResult.sonarIssues = createSonarIssues(initialInfo.psiFile);
               }
           ).get();
       } catch (InterruptedException | ExecutionException e) {
@@ -73,9 +75,62 @@ public class SonarExternalAnnotator
     return annotationResult;
   }
 
-  public static class AnnotationResult {
+  @NotNull
+  private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
+    final Set<SonarIssue> issues;
+    if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
+      issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+      for (SonarIssue issue : issues) {
+        final TextRange textRange = Finders.getLineRange(psiFile,issue.getLine());
+        createInvisibleHighlighter(psiFile,issue,textRange);
+      }
+    } else {
+      final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+      Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+      if (document.isPresent()) {
+        Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
+        for (RangeHighlighter highlighter : highlighters) {
+          Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(KEY));
+          issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
+        }
+      }
+      issues = issuesFromHighlighters;
+    }
+    return issues;
+  }
 
-    public Set<SonarIssue> sonarIssues = new HashSet<SonarIssue>();
+  private void createInvisibleHighlighter(PsiFile psiFile,final SonarIssue issue,final TextRange textRange) {
+    final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+    final List<Editor> editors = Finders.findEditorsFrom(document.get());
+    for (final Editor editor : editors) {
+      final MarkupModel markupModel = editor.getMarkupModel();
+      ApplicationManager.getApplication().invokeLater(
+              () -> {
+                final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
+                        editor,
+                        issue.getLine()
+                );
+                if (rangeHighlighterAtLine.isPresent()) {
+                  final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
+                  if (null != issuesOfHighlighter) {
+                    issuesOfHighlighter.add(issue);
+                  }
+                } else {
+                  TextAttributes attrs = new TextAttributes();
+                  final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
+                          textRange.getStartOffset(),
+                          textRange.getEndOffset(),
+                          0,
+                          attrs,
+                          HighlighterTargetArea.EXACT_RANGE
+                  );
+                  Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
+                  issuesOfHighlighter.add(issue);
+                  rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
+                }
+              }
+      );
+    }
   }
 
   @Override
@@ -112,64 +167,6 @@ public class SonarExternalAnnotator
     }
   }
 
-  @NotNull
-  private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
-    final Set<SonarIssue> issues;
-    if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
-      issues = IssuesByFileIndex.getIssuesForFile(psiFile);
-      for (SonarIssue issue : issues) {
-        final TextRange textRange = Finders.getLineRange(psiFile,issue.getLine());
-        createInvisibleHighlighter(psiFile,issue,textRange);
-      }
-    } else {
-      final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
-      Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
-      if (document.isPresent()) {
-        Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
-        for (RangeHighlighter highlighter : highlighters) {
-          Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(KEY));
-          issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
-        }
-      }
-      issues = issuesFromHighlighters;
-    }
-    return issues;
-  }
-
-  private void createInvisibleHighlighter(PsiFile psiFile,final SonarIssue issue,final TextRange textRange) {
-    final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
-    final List<Editor> editors = Finders.findEditorsFrom(document.get());
-    for (final Editor editor : editors) {
-      final MarkupModel markupModel = editor.getMarkupModel();
-      ApplicationManager.getApplication().invokeLater(
-          () -> {
-            final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
-              editor,
-              issue.getLine()
-            );
-            if (rangeHighlighterAtLine.isPresent()) {
-              final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
-              if (null != issuesOfHighlighter) {
-                issuesOfHighlighter.add(issue);
-              }
-            } else {
-              TextAttributes attrs = new TextAttributes();
-              final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
-                textRange.getStartOffset(),
-                textRange.getEndOffset(),
-                0,
-                attrs,
-                HighlighterTargetArea.EXACT_RANGE
-              );
-              Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
-              issuesOfHighlighter.add(issue);
-              rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
-            }
-          }
-      );
-    }
-  }
-
   public static Optional<Annotation> createAnnotation(AnnotationHolder holder,PsiFile psiFile,SonarIssue issue) {
     HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.getSeverity());
     Annotation annotation;
@@ -197,6 +194,44 @@ public class SonarExternalAnnotator
     return Optional.ofNullable(annotation);
   }
 
+  private static Annotation createAnnotation(
+          AnnotationHolder holder,
+          String message,
+          PsiElement location,
+          HighlightSeverity severity
+  ) {
+    if (HighlightSeverity.ERROR.equals(severity)) {
+      return holder.createErrorAnnotation(location.getTextRange(),message);
+    } else
+    if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+      return holder.createWeakWarningAnnotation(location.getTextRange(),message);
+    } else
+    if (HighlightSeverity.WARNING.equals(severity)) {
+      return holder.createWarningAnnotation(location.getTextRange(),message);
+    } else {
+      throw new IllegalArgumentException("Unhandled severity "+severity);
+    }
+  }
+
+  private static Annotation createAnnotation(
+          AnnotationHolder holder,
+          String message,
+          TextRange textRange,
+          HighlightSeverity severity
+  ) {
+    if (HighlightSeverity.ERROR.equals(severity)) {
+      return holder.createErrorAnnotation(textRange,message);
+    } else
+    if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
+      return holder.createWeakWarningAnnotation(textRange,message);
+    } else
+    if (HighlightSeverity.WARNING.equals(severity)) {
+      return holder.createWarningAnnotation(textRange,message);
+    } else {
+      throw new IllegalArgumentException("Unhandled severity "+severity);
+    }
+  }
+
   private static String createTooltip(SonarIssue issue) {
     String myShortcutText;
     final KeymapManager keymapManager = KeymapManager.getInstance();
@@ -216,43 +251,5 @@ public class SonarExternalAnnotator
       +">"+DaemonBundle.message("inspection.extended.description")
       +"</a> "+myShortcutText;
     return XmlStringUtil.wrapInHtml(XmlStringUtil.escapeString(issue.formattedMessage())+link);
-  }
-
-  private static Annotation createAnnotation(
-    AnnotationHolder holder,
-    String message,
-    PsiElement location,
-    HighlightSeverity severity
-  ) {
-    if (HighlightSeverity.ERROR.equals(severity)) {
-      return holder.createErrorAnnotation(location.getTextRange(),message);
-    } else
-      if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-        return holder.createWeakWarningAnnotation(location.getTextRange(),message);
-      } else
-        if (HighlightSeverity.WARNING.equals(severity)) {
-          return holder.createWarningAnnotation(location.getTextRange(),message);
-        } else {
-          throw new IllegalArgumentException("Unhandled severity "+severity);
-        }
-  }
-
-  private static Annotation createAnnotation(
-    AnnotationHolder holder,
-    String message,
-    TextRange textRange,
-    HighlightSeverity severity
-  ) {
-    if (HighlightSeverity.ERROR.equals(severity)) {
-      return holder.createErrorAnnotation(textRange,message);
-    } else
-      if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-        return holder.createWeakWarningAnnotation(textRange,message);
-      } else
-        if (HighlightSeverity.WARNING.equals(severity)) {
-          return holder.createWarningAnnotation(textRange,message);
-        } else {
-          throw new IllegalArgumentException("Unhandled severity "+severity);
-        }
   }
 }
