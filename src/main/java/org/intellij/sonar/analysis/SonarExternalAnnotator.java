@@ -144,8 +144,8 @@ public class SonarExternalAnnotator
         null == ProjectFileIndex.SERVICE.getInstance(file.getProject()).getContentRootForFile(file.getVirtualFile()) ||
         (
           // Fixes #106: Annotations in PHPStorm shown twice per File
-          "HTML".equals(file.getFileType().getName()) &&
-            "php".equals(file.getVirtualFile().getExtension()))
+          "html".equalsIgnoreCase(file.getFileType().getName()) &&
+            "php".equalsIgnoreCase(file.getVirtualFile().getExtension()))
       ) {
       return;
     }

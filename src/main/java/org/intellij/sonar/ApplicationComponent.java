@@ -22,9 +22,26 @@ public class ApplicationComponent implements com.intellij.openapi.components.App
   }
 
   private void registerExternalAnnotatorForAllLanguages() {
-    for (Language language : Language.getRegisteredLanguages()) {
-      registerExternalAnnotatorFor(language);
+    // filters fix #212: displaying annotations three times
+    Language.getRegisteredLanguages().stream()
+            .filter(ApplicationComponent::doesNotImplementMetaLanguage)
+            .filter(ApplicationComponent::doesNotHaveBaseLanguage)
+            .forEach(this::registerExternalAnnotatorFor);
+  }
+
+  private static boolean doesNotImplementMetaLanguage(Language lang) {
+    Class<?> superclass = lang.getClass().getSuperclass();
+    while (superclass != null) {
+      if ("com.intellij.lang.MetaLanguage".equals(superclass.getName())) {
+        return false;
+      }
+      superclass = superclass.getSuperclass();
     }
+    return true;
+  }
+
+  private static boolean doesNotHaveBaseLanguage(Language lang) {
+    return lang.getBaseLanguage() == null;
   }
 
   private void registerExternalAnnotatorFor(Language language) {
