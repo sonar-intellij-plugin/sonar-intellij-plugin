@@ -4,7 +4,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>2.6</version>
+    <version>2.6.2</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -16,6 +16,18 @@
 
     <change-notes>
         <![CDATA[
+<p>
+2.6.2
+<ul>
+<li>Fixes #225: Download Resources (for Projects) fails with > 500 projects</li>
+</ul>
+</p>
+<p>
+2.6.1
+<ul>
+<li>Fixes #212: Errors displayed three times</li>
+</ul>
+</p>
 <p>
 2.6
 <ul>
