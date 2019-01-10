@@ -8,6 +8,8 @@ import static org.apache.commons.lang.StringUtils.removeEnd;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,7 @@ import org.sonarqube.ws.Common;
 import org.sonarqube.ws.Issues.Issue;
 import org.sonarqube.ws.Issues.SearchWsResponse;
 import org.sonarqube.ws.Rules;
+import org.sonarqube.ws.WsComponents;
 import org.sonarqube.ws.WsComponents.Component;
 import org.sonarqube.ws.client.HttpConnector;
 import org.sonarqube.ws.client.WsClient;
@@ -142,8 +145,28 @@ public class SonarServer {
     public List<Component> getAllProjects(WsClient sonarClient) {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
-                .setPageSize(10000); //-1 is not allowed, neither int max. The limit is 10000.
-        return sonarClient.components().search(query).getComponentsList();
+                .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
+
+        List<WsComponents.Component> components = new ArrayList<>();
+
+        WsComponents.SearchWsResponse response = sonarClient.components().search(query);
+        Common.Paging paging = response.getPaging();
+        int total = paging.getTotal();
+        int pageSize = paging.getPageSize();
+        int pages = total / pageSize + (total % pageSize > 0 ? 1 : 0);
+
+        if (total > 0)
+        {
+            components.addAll(response.getComponentsList());
+            for (int pageIndex = 2; pageIndex <= pages; pageIndex++)
+            {
+                query.setPage(pageIndex);
+                response = sonarClient.components().search(query);
+                components.addAll(response.getComponentsList());
+            }
+        }
+
+        return Collections.unmodifiableList(components);
     }
 
     public List<Component> getAllModules(WsClient sonarClient, String projectResourceId) {
