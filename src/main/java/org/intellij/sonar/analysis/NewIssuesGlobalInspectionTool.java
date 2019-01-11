@@ -1,11 +1,5 @@
 package org.intellij.sonar.analysis;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.intellij.codeInspection.GlobalInspectionContext;
 import com.intellij.codeInspection.InspectionEP;
@@ -21,6 +15,11 @@ import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
 
@@ -78,16 +77,11 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
     final Optional<IssuesByFileIndexProjectComponent> indexComponent =
       IssuesByFileIndexProjectComponent.getInstance(context.getProject());
     if (indexComponent.isPresent()) {
-      final int newIssuesCount = FluentIterable.from(indexComponent.get().getIndex().entrySet())
-        .filter(
-            entry -> analyzedPaths.contains(entry.getKey())
-        )
-        .transformAndConcat(
-            entry -> entry.getValue()
-        )
-        .filter(
-            sonarIssue -> sonarIssue.getIsNew()
-        ).size();
+      long newIssuesCount = indexComponent.get().getIndex().entrySet().stream()
+              .filter(entry -> analyzedPaths.contains(entry.getKey()))
+              .flatMap(entry -> entry.getValue().stream())
+              .filter(SonarIssue::getIsNew)
+              .count();
       final Notification notification;
       if (newIssuesCount == 1) {
         notification = new Notification(
