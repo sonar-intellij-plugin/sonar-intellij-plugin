@@ -52,11 +52,6 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   private JLabel mySelectSonarResourcesFrom;
   private JPanel myPanelForSonarResources;
   private List<Resource> myAllProjectsAndModules;
-
-  public List<Resource> getSelectedSonarResources() {
-    return selectedSonarResources;
-  }
-
   private List<Resource> selectedSonarResources;
 
   public ResourcesSelectionConfigurable(@Nullable Project project,@NotNull String sonarServerName) {
@@ -141,8 +136,8 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
         }
       }
     }
-  }
 
+  }
   @Override
   protected void doOKAction() {
     final int[] selectedRowsIndex = myResourcesTable.getSelectedRows();
@@ -152,5 +147,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       selectedSonarResources.add(sonarResource);
     }
     super.doOKAction();
+  }
+
+  public List<Resource> getSelectedSonarResources() {
+    return selectedSonarResources;
   }
 }
