@@ -205,7 +205,4 @@ public class ResourceWithProfile {
     return msr;
   }
 
-  public static final Gson gson = new GsonBuilder()
-    .registerTypeAdapter(DateTime.class,new DateTimeTypeConverter())
-    .create();
 }

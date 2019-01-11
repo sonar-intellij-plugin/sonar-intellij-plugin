@@ -51,5 +51,4 @@ public class Profile {
     return rules;
   }
 
-  public static final Gson gson = new Gson();
 }
