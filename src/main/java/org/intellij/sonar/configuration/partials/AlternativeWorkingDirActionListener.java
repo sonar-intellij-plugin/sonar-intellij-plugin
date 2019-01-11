@@ -2,7 +2,6 @@ package org.intellij.sonar.configuration.partials;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 import java.util.Optional;
 
 import com.intellij.openapi.application.Application;
@@ -16,7 +15,6 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.Consumer;
 
 public final class AlternativeWorkingDirActionListener implements ActionListener {
 
@@ -36,18 +34,6 @@ public final class AlternativeWorkingDirActionListener implements ActionListener
 
   public void actionPerformed(ActionEvent e) {
     Application application = ApplicationManager.getApplication();
-    VirtualFile previous = application.runWriteAction(
-      new NullableComputable<VirtualFile>() {
-        public VirtualFile compute() {
-          final String path = FileUtil.toSystemIndependentName(textFieldWithBrowseButton.getText());
-          return
-            !StringUtil.isEmptyOrSpaces(path)
-              ?
-              LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
-              : null;
-        }
-      }
-    );
     FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false,true,false,false,false,false);
     fileDescriptor.setShowFileSystemRoots(true);
     fileDescriptor.setTitle("Configure Path");
@@ -55,14 +41,24 @@ public final class AlternativeWorkingDirActionListener implements ActionListener
     FileChooser.chooseFiles(
       fileDescriptor,
       project,
-        Optional.ofNullable(previous).orElse(dirToSelect),
-      new Consumer<List<VirtualFile>>() {
-        @Override
-        public void consume(final List<VirtualFile> files) {
-          String path = files.get(0).getPath();
-          textFieldWithBrowseButton.setText(path);
-        }
-      }
+        Optional.ofNullable(previousVirtualFile(application)).orElse(dirToSelect),
+            files -> {
+              String path = files.get(0).getPath();
+              textFieldWithBrowseButton.setText(path);
+            }
+    );
+  }
+
+  private VirtualFile previousVirtualFile(Application application) {
+    return application.runWriteAction(
+            (NullableComputable<VirtualFile>) () -> {
+              final String path = FileUtil.toSystemIndependentName(textFieldWithBrowseButton.getText());
+              return
+                !StringUtil.isEmptyOrSpaces(path)
+                  ?
+                  LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
+                  : null;
+            }
     );
   }
 }
