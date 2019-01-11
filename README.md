@@ -1,6 +1,9 @@
 [![Build Status](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin.svg?branch=master)](https://travis-ci.org/sonar-intellij-plugin/sonar-intellij-plugin)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=sonar-intellij-plugin)
-
+[![Code smells](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=code_smells)](https://sonarcloud.io/component_measures?id=sonar-intellij-plugin&metric=code_smells)
+[![Technical debt](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=sqale_index)](https://sonarcloud.io/component_measures?id=sonar-intellij-plugin&metric=sqale_index)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=bugs)](https://sonarcloud.io/component_measures?id=sonar-intellij-plugin&metric=bugs)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=sonar-intellij-plugin&metric=coverage)](https://sonarcloud.io/component_measures?id=sonar-intellij-plugin&metric=coverage)
 
 SonarQube IntelliJ Community Plugin
 ===================================
