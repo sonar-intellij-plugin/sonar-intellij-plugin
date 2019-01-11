@@ -1,6 +1,5 @@
 plugins {
     id "org.jetbrains.intellij" version "0.3.12"
-    id "org.sonarqube" version "2.5"
 }
 
 apply plugin: 'org.jetbrains.intellij'
@@ -30,26 +29,4 @@ dependencies {
 
 tasks.withType(JavaCompile) {
    it.options.encoding = 'UTF-8'
-}
-
-idea {
-    project.ipr.beforeMerged { project ->
-        project.modulePaths.clear()
-    }
-
-    workspace.iws.withXml {
-        def runManagerComponent = it.node.component.find {
-            it.@name == 'RunManager'
-        }
-        runManagerComponent.@selected = 'Plugin.run-sonar-plugin'
-        def configuration = runManagerComponent.appendNode("configuration", [default: "false", name: "run-sonar-plugin", type: "#org.jetbrains.idea.devkit.run.PluginConfigurationType", factoryName: "Plugin", singleton: "true"])
-        configuration.appendNode("module", [name: 'sonar-intellij-plugin'])
-        configuration.appendNode("option", [name: "VM_PARAMETERS", value: "-Xms128m -Xmx750m -XX:MaxPermSize=350m -XX:ReservedCodeCacheSize=96m -XX:+UseCompressedOops"])
-        configuration.appendNode("option", [name: "PROGRAM_PARAMETERS", value: ""])
-        configuration.appendNode("method")
-    }
-    module.iml.withXml {
-        it.node.@type = 'PLUGIN_MODULE'
-        it.node.appendNode('component', [name: 'DevKit.ModuleBuildProperties', url: 'file://$MODULE_DIR$/META-INF/plugin.xml'])
-    }
 }

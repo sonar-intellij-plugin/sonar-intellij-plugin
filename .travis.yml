@@ -9,7 +9,7 @@ addons:
 jdk:
 - oraclejdk8
 script:
-  - ./gradlew sonarqube
+  - ./gradlew clean buildPlugin
 cache:
   directories:
     - '$HOME/.m2/repository'
