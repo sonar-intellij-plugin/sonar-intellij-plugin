@@ -1,13 +1,7 @@
 package org.intellij.sonar.analysis;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.intellij.openapi.progress.ProgressManager;
@@ -24,6 +18,13 @@ import org.intellij.sonar.sonarserver.SonarServer;
 import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.sonarqube.ws.Issues.Issue;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DownloadIssuesTask implements Runnable {
 
@@ -80,10 +81,9 @@ public class DownloadIssuesTask implements Runnable {
   }
 
   private void onSuccess(long downloadStartTime) {
-    final int downloadedIssuesCount = FluentIterable.from(downloadedIssuesByResourceKey.values())
-      .transformAndConcat(
-          issues -> issues
-      ).size();
+    final long downloadedIssuesCount = downloadedIssuesByResourceKey.values().stream()
+            .flatMap((Function<ImmutableList<Issue>, Stream<?>>) Collection::stream)
+            .count();
     sonarConsole.info(
       String.format(
         "Downloaded %d issues in %s",
@@ -91,21 +91,25 @@ public class DownloadIssuesTask implements Runnable {
         DurationUtil.getDurationBreakdown(System.currentTimeMillis()-downloadStartTime)
       )
     );
-    for (Map.Entry<String,ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
+    createIssuesIndex();
+  }
+
+  private void createIssuesIndex() {
+    for (Map.Entry<String, ImmutableList<Issue>> entry : downloadedIssuesByResourceKey.entrySet()) {
       if (ProgressManager.getInstance().getProgressIndicator().isCanceled()) break;
       sonarConsole.info(String.format("Creating index for SonarQube resource %s",entry.getKey()));
       long indexCreationStartTime = System.currentTimeMillis();
       final ImmutableList<Issue> issues = entry.getValue();
-      final Map<String,Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
+      final Map<String, Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
         .withSonarServerIssues(issues)
         .withSonarConsole(sonarConsole)
         .create();
       final Optional<IssuesByFileIndexProjectComponent> indexComponent =
         IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
       indexComponent.ifPresent(issuesByFileIndexProjectComponent -> issuesByFileIndexProjectComponent.getIndex().putAll(index));
-      final int issuesCountInIndex = FluentIterable.from(index.values()).transformAndConcat(
-          sonarIssues -> sonarIssues
-      ).size();
+      final int issuesCountInIndex = (int) index.values().stream()
+              .flatMap((Function<Set<SonarIssue>, Stream<?>>) Collection::stream)
+              .count();
       sonarConsole.info(
         String.format(
           "Finished creating index with %d issues for SonarQube resource %s in %s",
