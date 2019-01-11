@@ -6,7 +6,6 @@ import java.util.Date;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -21,8 +20,7 @@ public class DateTimeTypeConverter
   }
 
   @Override
-  public DateTime deserialize(JsonElement json,Type type,JsonDeserializationContext context)
-    throws JsonParseException {
+  public DateTime deserialize(JsonElement json,Type type,JsonDeserializationContext context) {
     try {
       return new DateTime(json.getAsString());
     } catch (IllegalArgumentException ignore) { //NOSONAR
