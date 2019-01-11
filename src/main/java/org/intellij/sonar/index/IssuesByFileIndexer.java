@@ -1,16 +1,6 @@
 package org.intellij.sonar.index;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -27,17 +17,27 @@ import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
 import org.sonarqube.ws.Issues;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 public class IssuesByFileIndexer {
 
   private final ImmutableList<PsiFile> files;
-  private ImmutableList<Issue> issues;
+  private List<Issue> issues;
   private SonarConsole sonarConsole;
 
   public IssuesByFileIndexer(ImmutableList<PsiFile> files) {
     this.files = files;
   }
 
-  public void setIssues(ImmutableList<Issue> issues) {
+  public void setIssues(List<Issue> issues) {
     this.issues = issues;
   }
 
@@ -53,19 +53,16 @@ public class IssuesByFileIndexer {
 
   public IssuesByFileIndexer withSonarServerIssues(ImmutableList<Issues.Issue> issues) {
     setIssues(
-      FluentIterable.from(issues)
-        .transform(
-            issue -> new Issue(
-              issue.getKey(),
-              issue.getComponent(),
-              issue.getLine(),
-              issue.getMessage(),
-              issue.getSeverity().name(),
-              issue.getRule(),
-              issue.getStatus(),
-              false // issues from sonar server cannot be new
-            )
-        ).toList()
+            issues.stream().map(issue -> new Issue(
+                    issue.getKey(),
+                    issue.getComponent(),
+                    issue.getLine(),
+                    issue.getMessage(),
+                    issue.getSeverity().name(),
+                    issue.getRule(),
+                    issue.getStatus(),
+                    false // issues from sonar server cannot be new
+            )).collect(Collectors.toList())
     );
     return this;
   }
