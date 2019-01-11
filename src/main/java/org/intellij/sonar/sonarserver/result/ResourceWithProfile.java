@@ -2,8 +2,6 @@ package org.intellij.sonar.sonarserver.result;
 
 import java.util.List;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import org.joda.time.DateTime;
 
