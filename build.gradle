@@ -1,10 +1,11 @@
 plugins {
     id "org.jetbrains.intellij" version "0.3.12"
+    id "org.sonarqube" version "2.7"
 }
 
 apply plugin: 'org.jetbrains.intellij'
 apply plugin: 'java'
-apply plugin: 'idea'
+apply plugin: 'jacoco'
 
 targetCompatibility = 1.8
 sourceCompatibility = 1.8
@@ -25,6 +26,14 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.4'
     compile 'joda-time:joda-time:2.3'
     testCompile 'org.easytesting:fest-assert:1.4'
+    testCompile 'junit:junit:4.12'
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectName", "SonarQube Community Plugin for Intellij"
+        property "sonar.projectKey", "sonar-intellij-plugin"
+    }
 }
 
 tasks.withType(JavaCompile) {
