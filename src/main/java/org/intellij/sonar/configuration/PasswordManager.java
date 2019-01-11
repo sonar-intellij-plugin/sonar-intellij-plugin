@@ -2,13 +2,12 @@ package org.intellij.sonar.configuration;
 
 import com.google.common.base.Throwables;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.util.ui.UIUtil;
 
 public final class PasswordManager {
 
-  private static final Logger LOG = Logger.getInstance(PasswordManager.class);
+  private static String password;
 
   public static void storePassword(final String key,final String value) {
     UIUtil.invokeAndWaitIfNeeded(
@@ -21,8 +20,6 @@ public final class PasswordManager {
         }
     );
   }
-
-  private static String password;
 
   public static String loadPassword(final String key) {
     UIUtil.invokeAndWaitIfNeeded(
