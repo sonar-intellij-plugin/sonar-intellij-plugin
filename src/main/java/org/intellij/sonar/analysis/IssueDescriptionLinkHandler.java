@@ -33,53 +33,138 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
     @NotNull final String sonarIssueKey,
     @NotNull final Editor editor
   ) {
-    // retrieve sonar issue data
-    final Project project = editor.getProject();
-    if (project == null || project.isDisposed()) return null;
-    final PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
-    if (psiFile == null) return null;
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent =
-      IssuesByFileIndexProjectComponent.getInstance(project);
-    if (!indexComponent.isPresent()) return null;
-    final IssuesByFileIndexProjectComponent state = indexComponent.get().getState();
-    if (state == null) return null;
-    final Map<String,Set<SonarIssue>> index = state.getIndex();
-    final String path = psiFile.getVirtualFile().getPath();
-    final Set<SonarIssue> issues = index.get(path);
-    final Optional<SonarIssue> issue = issues.stream().filter(sonarIssue -> sonarIssueKey.equals(sonarIssue.getKey())).findFirst();
-    if (!issue.isPresent()) return null;
-    // try to get desc from already fetched rules
-    final Optional<SonarRules> sonarRules = SonarRules.getInstance(project);
-    if (sonarRules.isPresent()) {
-      final SonarRules sonarRulesState = sonarRules.get().getState();
-      if (sonarRulesState != null) {
-        final Rule rule = sonarRulesState.getSonarRulesByRuleKey().get(issue.get().getRuleKey());
-        if (rule != null && !rule.isEmpty())
-          return rule.getHtmlDesc();
+      return new SonarIssueDescription()
+              .buildFrom(sonarIssueKey, editor)
+              .getDescription();
+  }
+
+  private static class SonarIssueDescription {
+
+    private String sonarIssueKey;
+    private Editor editor;
+    private Project project;
+    private PsiFile psiFile;
+    private IssuesByFileIndexProjectComponent state;
+    private SonarIssue sonarIssue;
+    private SonarRules sonarRules;
+    private Settings settings;
+    private boolean processing;
+    private String description;
+    private SonarServerConfig serverConfig;
+    private Rule persistedRule;
+
+    SonarIssueDescription() {
+      this.processing = false;
+    }
+
+    SonarIssueDescription buildFrom(String sonarIssueKey, Editor editor) {
+      this.sonarIssueKey = sonarIssueKey;
+      this.editor = editor;
+      this.description = null;
+      this.processing = true;
+      getProject();
+      if (processing) getPsiFile();
+      if (processing) getIssuesByFileIndexProjectComponent();
+      if (processing) getSonarIssue();
+      if (processing) getDescriptionFromFetchedRules();
+      if (processing) getSettings();
+      if (processing) getServerConfig();
+      if (processing) persistRule();
+      if (processing) getDescriptionFromPersistedRule();
+      return this;
+    }
+
+    private void getProject() {
+      project = editor.getProject();
+      if (project == null || project.isDisposed()) {
+        processing = false;
       }
     }
-    // fetch and persist rule
-    Settings settings;
-    final Module moduleForFile = ModuleUtil.findModuleForFile(psiFile.getVirtualFile(),project);
-    if (moduleForFile != null) {
-      settings = ModuleSettings.getInstance(moduleForFile).getState();
-      settings = SettingsUtil.process(project,settings);
-    } else {
-      settings = ProjectSettings.getInstance(project).getState();
-    }
-    if (settings == null) return null;
-    final String serverName = settings.getServerName();
-    final Optional<SonarServerConfig> serverConfig = SonarServers.get(serverName);
-    if (!serverConfig.isPresent()) return null;
-    final SonarServer sonarServer = SonarServer.create(serverConfig.get());
-    final Rule rule = sonarServer.getRule(issue.get().getRuleKey());
-    // persist rule
-    if (sonarRules.isPresent()) {
-      final SonarRules sonarRulesState = sonarRules.get().getState();
-      if (sonarRulesState != null && !rule.isEmpty()) {
-        sonarRulesState.getSonarRulesByRuleKey().put(issue.get().getRuleKey(),rule);
+
+    private void getPsiFile() {
+      psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+      if (psiFile == null) {
+        processing = false;
       }
     }
-    return rule.getHtmlDesc();
+
+    private void getIssuesByFileIndexProjectComponent() {
+      Optional<IssuesByFileIndexProjectComponent> issuesByFileIndexProjectComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+      if (!issuesByFileIndexProjectComponent.isPresent()) {
+        processing = false;
+        return;
+      }
+      state = issuesByFileIndexProjectComponent.get().getState();
+      if (state == null) {
+        processing = false;
+      }
+    }
+
+    private void getSonarIssue() {
+      final Map<String, Set<SonarIssue>> index = state.getIndex();
+      final String path = psiFile.getVirtualFile().getPath();
+      final Set<SonarIssue> issues = index.get(path);
+      sonarIssue = issues.stream()
+              .filter(issue -> sonarIssueKey.equals(issue.getKey()))
+              .findFirst().orElse(null);
+      if (sonarIssue == null) processing = false;
+    }
+
+    private void getDescriptionFromFetchedRules() {
+      sonarRules = SonarRules.getInstance(project).orElse(null);
+      if (sonarRules != null) {
+        final SonarRules rules = sonarRules.getState();
+        if (rules != null) {
+          final Rule rule = rules.getSonarRulesByRuleKey().get(sonarIssue.getRuleKey());
+          getDescriptionFromRule(rule);
+        }
+      }
+    }
+
+    private void getDescriptionFromRule(Rule rule) {
+      if (rule != null && !rule.isEmpty()) {
+        description = rule.getHtmlDesc();
+        if (description != null) {
+          processing = false;
+        }
+      }
+    }
+
+    private void getSettings() {
+      final Module moduleForFile = ModuleUtil.findModuleForFile(psiFile.getVirtualFile(), project);
+      if (moduleForFile != null) {
+        settings = ModuleSettings.getInstance(moduleForFile).getState();
+        settings = SettingsUtil.process(project, settings);
+      } else {
+        settings = ProjectSettings.getInstance(project).getState();
+      }
+      if (settings == null) processing = false;
+    }
+
+    private void getServerConfig() {
+      final String serverName = settings.getServerName();
+      serverConfig = SonarServers.get(serverName).orElse(null);
+      if (serverConfig == null) processing = false;
+    }
+
+
+    private void persistRule() {
+      final SonarServer sonarServer = SonarServer.create(serverConfig);
+      persistedRule = sonarServer.getRule(sonarIssue.getRuleKey());
+      if (sonarRules != null) {
+        final SonarRules sonarRulesState = sonarRules.getState();
+        if (sonarRulesState != null && !persistedRule.isEmpty()) {
+          sonarRulesState.getSonarRulesByRuleKey().put(sonarIssue.getRuleKey(), persistedRule);
+        }
+      }
+    }
+
+    private void getDescriptionFromPersistedRule() {
+      description = persistedRule.getHtmlDesc();
+    }
+
+    String getDescription() {
+      return description;
+    }
   }
 }
