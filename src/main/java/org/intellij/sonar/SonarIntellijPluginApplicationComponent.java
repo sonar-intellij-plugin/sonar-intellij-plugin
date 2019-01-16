@@ -9,7 +9,7 @@ import com.intellij.openapi.extensions.PluginId;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.jetbrains.annotations.NotNull;
 
-public class ApplicationComponent implements com.intellij.openapi.components.ApplicationComponent {
+public class SonarIntellijPluginApplicationComponent implements com.intellij.openapi.components.ApplicationComponent {
 
   private IdeaPluginDescriptor plugin;
 
@@ -24,8 +24,8 @@ public class ApplicationComponent implements com.intellij.openapi.components.App
   private void registerExternalAnnotatorForAllLanguages() {
     // filters fix #212: displaying annotations three times
     Language.getRegisteredLanguages().stream()
-            .filter(ApplicationComponent::doesNotImplementMetaLanguage)
-            .filter(ApplicationComponent::doesNotHaveBaseLanguage)
+            .filter(SonarIntellijPluginApplicationComponent::doesNotImplementMetaLanguage)
+            .filter(SonarIntellijPluginApplicationComponent::doesNotHaveBaseLanguage)
             .forEach(this::registerExternalAnnotatorFor);
   }
 
