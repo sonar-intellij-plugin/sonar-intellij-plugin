@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 public class Settings {
 
@@ -114,60 +115,23 @@ public class Settings {
     this.useAlternativeWorkingDir = useAlternativeWorkingDir;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Settings settings = (Settings) o;
-    if (alternativeWorkingDirPath != null
-      ? !alternativeWorkingDirPath.equals(settings.alternativeWorkingDirPath)
-      : settings.alternativeWorkingDirPath != null)
-      return false;
-    if (localAnalysisScripName != null
-      ? !localAnalysisScripName.equals(settings.localAnalysisScripName)
-      : settings.localAnalysisScripName != null)
-      return false;
-    if (resources != null
-      ? !resources.equals(settings.resources)
-      : settings.resources != null)
-      return false;
-    if (serverName != null
-      ? !serverName.equals(settings.serverName)
-      : settings.serverName != null)
-      return false;
-    if (useAlternativeWorkingDir != null
-      ? !useAlternativeWorkingDir.equals(settings.useAlternativeWorkingDir)
-      : settings.useAlternativeWorkingDir != null)
-      return false;
-    if (workingDirSelection != null
-      ? !workingDirSelection.equals(settings.workingDirSelection)
-      : settings.workingDirSelection != null)
-      return false;
-    return true;
+    return Objects.equal(serverName, settings.serverName) &&
+            Objects.equal(resources, settings.resources) &&
+            Objects.equal(localAnalysisScripName, settings.localAnalysisScripName) &&
+            Objects.equal(workingDirSelection, settings.workingDirSelection) &&
+            Objects.equal(alternativeWorkingDirPath, settings.alternativeWorkingDirPath) &&
+            Objects.equal(useAlternativeWorkingDir, settings.useAlternativeWorkingDir);
   }
 
   @Override
   public int hashCode() {
-    int result = serverName != null
-      ? serverName.hashCode()
-      : 0;
-    result = 31 * result+(resources != null
-      ? resources.hashCode()
-      : 0);
-    result = 31 * result+(localAnalysisScripName != null
-      ? localAnalysisScripName.hashCode()
-      : 0);
-    result = 31 * result+(workingDirSelection != null
-      ? workingDirSelection.hashCode()
-      : 0);
-    result = 31 * result+(alternativeWorkingDirPath != null
-      ? alternativeWorkingDirPath.hashCode()
-      : 0);
-    result = 31 * result+(useAlternativeWorkingDir != null
-      ? useAlternativeWorkingDir.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(serverName, resources, localAnalysisScripName, workingDirSelection, alternativeWorkingDirPath, useAlternativeWorkingDir);
   }
 
   @Override

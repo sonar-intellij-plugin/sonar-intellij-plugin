@@ -1,5 +1,7 @@
 package org.intellij.sonar.sonarreport.data;
 
+import com.google.common.base.Objects;
+
 public class Issue {
 
   private String key;
@@ -63,74 +65,24 @@ public class Issue {
     return isNew;
   }
 
-  @SuppressWarnings("RedundantIfStatement") //NOSONAR
   @Override
-  public boolean equals(Object o) { //NOSONAR
+  public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Issue issue = (Issue) o;
-    if (component != null
-      ? !component.equals(issue.component)
-      : issue.component != null)
-      return false;
-    if (isNew != null
-      ? !isNew.equals(issue.isNew)
-      : issue.isNew != null)
-      return false;
-    if (key != null
-      ? !key.equals(issue.key)
-      : issue.key != null)
-      return false;
-    if (line != null
-      ? !line.equals(issue.line)
-      : issue.line != null)
-      return false;
-    if (message != null
-      ? !message.equals(issue.message)
-      : issue.message != null)
-      return false;
-    if (rule != null
-      ? !rule.equals(issue.rule)
-      : issue.rule != null)
-      return false;
-    if (severity != null
-      ? !severity.equals(issue.severity)
-      : issue.severity != null)
-      return false;
-    if (status != null
-      ? !status.equals(issue.status)
-      : issue.status != null)
-      return false;
-    return true;
+    return Objects.equal(key, issue.key) &&
+            Objects.equal(component, issue.component) &&
+            Objects.equal(line, issue.line) &&
+            Objects.equal(message, issue.message) &&
+            Objects.equal(severity, issue.severity) &&
+            Objects.equal(rule, issue.rule) &&
+            Objects.equal(status, issue.status) &&
+            Objects.equal(isNew, issue.isNew);
   }
 
   @Override
   public int hashCode() {
-    int result = key != null
-      ? key.hashCode()
-      : 0;
-    result = 31 * result+(component != null
-      ? component.hashCode()
-      : 0);
-    result = 31 * result+(line != null
-      ? line.hashCode()
-      : 0);
-    result = 31 * result+(message != null
-      ? message.hashCode()
-      : 0);
-    result = 31 * result+(severity != null
-      ? severity.hashCode()
-      : 0);
-    result = 31 * result+(rule != null
-      ? rule.hashCode()
-      : 0);
-    result = 31 * result+(status != null
-      ? status.hashCode()
-      : 0);
-    result = 31 * result+(isNew != null
-      ? isNew.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(key, component, line, message, severity, rule, status, isNew);
   }
 
   @Override

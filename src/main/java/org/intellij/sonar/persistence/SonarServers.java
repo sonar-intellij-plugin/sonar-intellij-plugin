@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
@@ -86,23 +87,16 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
     XmlSerializerUtil.copyBean(state,this);
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     SonarServers that = (SonarServers) o;
-    if (beans != null
-      ? !beans.equals(that.beans)
-      : that.beans != null)
-      return false;
-    return true;
+    return Objects.equal(beans, that.beans);
   }
 
   @Override
   public int hashCode() {
-    return beans != null
-      ? beans.hashCode()
-      : 0;
+    return Objects.hashCode(beans);
   }
 }

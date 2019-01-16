@@ -1,5 +1,6 @@
 package org.intellij.sonar.persistence;
 
+import com.google.common.base.Objects;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -53,15 +54,11 @@ public class SonarConsoleSettings implements PersistentStateComponent<SonarConso
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     SonarConsoleSettings that = (SonarConsoleSettings) o;
-    if (showSonarConsoleOnAnalysis != that.showSonarConsoleOnAnalysis)
-      return false;
-    return true;
+    return showSonarConsoleOnAnalysis == that.showSonarConsoleOnAnalysis;
   }
 
   @Override
   public int hashCode() {
-    return (showSonarConsoleOnAnalysis
-      ? 1
-      : 0);
+    return Objects.hashCode(showSonarConsoleOnAnalysis);
   }
 }

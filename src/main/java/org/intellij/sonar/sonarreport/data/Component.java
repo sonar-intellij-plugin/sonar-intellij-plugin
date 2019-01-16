@@ -1,5 +1,7 @@
 package org.intellij.sonar.sonarreport.data;
 
+import com.google.common.base.Objects;
+
 public class Component {
 
   private final String key;
@@ -19,37 +21,25 @@ public class Component {
   }
 
   @Override
-  public boolean equals(Object o) { //NOSONAR
+  public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Component component = (Component) o;
-    if (key != null
-      ? !key.equals(component.key)
-      : component.key != null)
-      return false;
-    if (path != null
-      ? !path.equals(component.path)
-      : component.path != null)
-      return false;
-    return true;
+    return Objects.equal(key, component.key) &&
+            Objects.equal(path, component.path);
   }
 
   @Override
   public int hashCode() {
-    int result = key != null
-      ? key.hashCode()
-      : 0;
-    result = 31 * result+(path != null
-      ? path.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(key, path);
   }
 
   @Override
   public String toString() {
-    return "Component{"+
-      "key='"+key+'\''+
-      ", path='"+path+'\''+
-      '}';
+    return "Component{" +
+            "key='" + key + '\'' +
+            ", path='" + path + '\'' +
+            '}';
   }
+
 }

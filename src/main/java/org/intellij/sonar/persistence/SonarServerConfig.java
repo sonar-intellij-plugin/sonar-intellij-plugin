@@ -1,5 +1,6 @@
 package org.intellij.sonar.persistence;
 
+import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.intellij.sonar.configuration.PasswordManager;
 
@@ -96,26 +97,6 @@ public class SonarServerConfig {
     PasswordManager.storePassword(this.name,this.password);
   }
 
-  @SuppressWarnings("RedundantIfStatement")
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    SonarServerConfig that = (SonarServerConfig) o;
-    if (name != null
-      ? !name.equals(that.name)
-      : that.name != null)
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return name != null
-      ? name.hashCode()
-      : 0;
-  }
-
   public String getToken() {
     return token;
   }
@@ -140,4 +121,18 @@ public class SonarServerConfig {
   public void storeToken() {
     PasswordManager.storePassword(this.name + "_token",this.token);
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SonarServerConfig that = (SonarServerConfig) o;
+    return Objects.equal(name, that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(name);
+  }
+
 }

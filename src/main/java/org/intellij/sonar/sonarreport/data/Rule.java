@@ -1,5 +1,7 @@
 package org.intellij.sonar.sonarreport.data;
 
+import com.google.common.base.Objects;
+
 public class Rule {
 
   private String key;
@@ -30,46 +32,20 @@ public class Rule {
     this.name = name;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Rule rule1 = (Rule) o;
-    if (key != null
-      ? !key.equals(rule1.key)
-      : rule1.key != null)
-      return false;
-    if (name != null
-      ? !name.equals(rule1.name)
-      : rule1.name != null)
-      return false;
-    if (repository != null
-      ? !repository.equals(rule1.repository)
-      : rule1.repository != null)
-      return false;
-    if (rule != null
-      ? !rule.equals(rule1.rule)
-      : rule1.rule != null)
-      return false;
-    return true;
+    return Objects.equal(key, rule1.key) &&
+            Objects.equal(rule, rule1.rule) &&
+            Objects.equal(repository, rule1.repository) &&
+            Objects.equal(name, rule1.name);
   }
 
   @Override
   public int hashCode() {
-    int result = key != null
-      ? key.hashCode()
-      : 0;
-    result = 31 * result+(rule != null
-      ? rule.hashCode()
-      : 0);
-    result = 31 * result+(repository != null
-      ? repository.hashCode()
-      : 0);
-    result = 31 * result+(name != null
-      ? name.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(key, rule, repository, name);
   }
 
   @Override

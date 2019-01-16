@@ -2,6 +2,7 @@ package org.intellij.sonar.sonarreport.data;
 
 import java.util.List;
 
+import com.google.common.base.Objects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.intellij.sonar.sonarserver.result.DateTimeTypeConverter;
@@ -46,53 +47,21 @@ public class SonarReport {
     return users;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     SonarReport that = (SonarReport) o;
-    if (components != null
-      ? !components.equals(that.components)
-      : that.components != null)
-      return false;
-    if (issues != null
-      ? !issues.equals(that.issues)
-      : that.issues != null)
-      return false;
-    if (rules != null
-      ? !rules.equals(that.rules)
-      : that.rules != null)
-      return false;
-    if (users != null
-      ? !users.equals(that.users)
-      : that.users != null)
-      return false;
-    if (version != null
-      ? !version.equals(that.version)
-      : that.version != null)
-      return false;
-    return true;
+    return Objects.equal(version, that.version) &&
+            Objects.equal(issues, that.issues) &&
+            Objects.equal(components, that.components) &&
+            Objects.equal(rules, that.rules) &&
+            Objects.equal(users, that.users);
   }
 
   @Override
   public int hashCode() {
-    int result = version != null
-      ? version.hashCode()
-      : 0;
-    result = 31 * result+(issues != null
-      ? issues.hashCode()
-      : 0);
-    result = 31 * result+(components != null
-      ? components.hashCode()
-      : 0);
-    result = 31 * result+(rules != null
-      ? rules.hashCode()
-      : 0);
-    result = 31 * result+(users != null
-      ? users.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(version, issues, components, rules, users);
   }
 
   @Override
@@ -109,4 +78,5 @@ public class SonarReport {
   public static SonarReport fromJson(String json) {
     return GSON.fromJson(json,SonarReport.class);
   }
+
 }

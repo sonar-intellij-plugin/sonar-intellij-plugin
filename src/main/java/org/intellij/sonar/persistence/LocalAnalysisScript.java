@@ -1,5 +1,7 @@
 package org.intellij.sonar.persistence;
 
+import com.google.common.base.Objects;
+
 public class LocalAnalysisScript {
 
   private String name;
@@ -43,18 +45,25 @@ public class LocalAnalysisScript {
     this.pathToSonarReport = pathToSonarReport;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     LocalAnalysisScript that = (LocalAnalysisScript) o;
-    if (!name.equals(that.name)) return false;
-    return true;
+    return Objects.equal(name, that.name);
   }
 
   @Override
   public int hashCode() {
-    return name.hashCode();
+    return Objects.hashCode(name);
+  }
+
+  @Override
+  public String toString() {
+    return "LocalAnalysisScript{" +
+            "name='" + name + '\'' +
+            ", sourceCode='" + sourceCode + '\'' +
+            ", pathToSonarReport='" + pathToSonarReport + '\'' +
+            '}';
   }
 }

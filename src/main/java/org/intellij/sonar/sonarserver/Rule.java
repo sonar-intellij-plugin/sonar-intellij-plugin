@@ -78,60 +78,22 @@ public class Rule implements Comparable {
     return StringUtils.isEmpty(key) || StringUtils.isEmpty(htmlDesc);
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Rule rule = (Rule) o;
-    if (htmlDesc != null
-      ? !htmlDesc.equals(rule.htmlDesc)
-      : rule.htmlDesc != null)
-      return false;
-    if (key != null
-      ? !key.equals(rule.key)
-      : rule.key != null)
-      return false;
-    if (lan != null
-      ? !lan.equals(rule.lan)
-      : rule.lan != null)
-      return false;
-    if (langName != null
-      ? !langName.equals(rule.langName)
-      : rule.langName != null)
-      return false;
-    if (name != null
-      ? !name.equals(rule.name)
-      : rule.name != null)
-      return false;
-    if (severity != null
-      ? !severity.equals(rule.severity)
-      : rule.severity != null)
-      return false;
-    return true;
+    return Objects.equal(key, rule.key) &&
+            Objects.equal(name, rule.name) &&
+            Objects.equal(severity, rule.severity) &&
+            Objects.equal(lan, rule.lan) &&
+            Objects.equal(langName, rule.langName) &&
+            Objects.equal(htmlDesc, rule.htmlDesc);
   }
 
   @Override
   public int hashCode() {
-    int result = key != null
-      ? key.hashCode()
-      : 0;
-    result = 31 * result+(name != null
-      ? name.hashCode()
-      : 0);
-    result = 31 * result+(severity != null
-      ? severity.hashCode()
-      : 0);
-    result = 31 * result+(lan != null
-      ? lan.hashCode()
-      : 0);
-    result = 31 * result+(langName != null
-      ? langName.hashCode()
-      : 0);
-    result = 31 * result+(htmlDesc != null
-      ? htmlDesc.hashCode()
-      : 0);
-    return result;
+    return Objects.hashCode(key, name, severity, lan, langName, htmlDesc);
   }
 
   @Override
