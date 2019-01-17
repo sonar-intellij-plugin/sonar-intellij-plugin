@@ -1,11 +1,5 @@
 package org.intellij.sonar.analysis;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonBundle;
 import com.intellij.lang.annotation.Annotation;
@@ -38,6 +32,12 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
 public class SonarExternalAnnotator
   extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo,SonarExternalAnnotator.AnnotationResult> {
 
@@ -47,8 +47,8 @@ public class SonarExternalAnnotator
     public PsiFile psiFile;
   }
 
-  public static class AnnotationResult {
-    public Set<SonarIssue> sonarIssues = new HashSet<>();
+  static class AnnotationResult {
+    Set<SonarIssue> sonarIssues = new HashSet<>();
   }
 
   @Nullable
@@ -76,60 +76,79 @@ public class SonarExternalAnnotator
   }
 
   @NotNull
-  private Set<SonarIssue> createSonarIssues(@NotNull PsiFile psiFile) {
+  private Set<SonarIssue> createSonarIssues(PsiFile psiFile) {
     final Set<SonarIssue> issues;
-    if (!DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile())) {
-      issues = IssuesByFileIndex.getIssuesForFile(psiFile);
-      for (SonarIssue issue : issues) {
-        final TextRange textRange = Finders.getLineRange(psiFile,issue.getLine());
-        createInvisibleHighlighter(psiFile,issue,textRange);
-      }
+    if (!fileChanged(psiFile)) {
+      issues = putIssuesToInvisibleHighlightersFor(psiFile);
     } else {
-      final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
-      Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
-      if (document.isPresent()) {
-        Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
-        for (RangeHighlighter highlighter : highlighters) {
-          Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(KEY));
-          issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
-        }
-      }
-      issues = issuesFromHighlighters;
+      issues = getSonarIssuesFromExistingHighlightersFor(psiFile);
     }
+    return issues;
+  }
+
+  private boolean fileChanged(PsiFile psiFile) {
+    return DocumentChangeListener.CHANGED_FILES.contains(psiFile.getVirtualFile());
+  }
+
+  private Set<SonarIssue> putIssuesToInvisibleHighlightersFor(PsiFile psiFile) {
+    Set<SonarIssue> issues;
+    issues = IssuesByFileIndex.getIssuesForFile(psiFile);
+    for (SonarIssue issue : issues) {
+      final TextRange textRange = Finders.getLineRange(psiFile,issue.getLine());
+      createInvisibleHighlighter(psiFile,issue,textRange);
+    }
+    return issues;
+  }
+
+  private Set<SonarIssue> getSonarIssuesFromExistingHighlightersFor(PsiFile psiFile) {
+    Set<SonarIssue> issues;
+    final Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+    Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+    if (document.isPresent()) {
+      Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(document.get());
+      for (RangeHighlighter highlighter : highlighters) {
+        Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(KEY));
+        issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
+      }
+    }
+    issues = issuesFromHighlighters;
     return issues;
   }
 
   private void createInvisibleHighlighter(PsiFile psiFile,final SonarIssue issue,final TextRange textRange) {
     final Optional<Document> document = Finders.findDocumentFromPsiFile(psiFile);
+    if (!document.isPresent()) return;
     final List<Editor> editors = Finders.findEditorsFrom(document.get());
     for (final Editor editor : editors) {
       final MarkupModel markupModel = editor.getMarkupModel();
       ApplicationManager.getApplication().invokeLater(
-              () -> {
-                final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
-                        editor,
-                        issue.getLine()
-                );
-                if (rangeHighlighterAtLine.isPresent()) {
-                  final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
-                  if (null != issuesOfHighlighter) {
-                    issuesOfHighlighter.add(issue);
-                  }
-                } else {
-                  TextAttributes attrs = new TextAttributes();
-                  final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
-                          textRange.getStartOffset(),
-                          textRange.getEndOffset(),
-                          0,
-                          attrs,
-                          HighlighterTargetArea.EXACT_RANGE
-                  );
-                  Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
-                  issuesOfHighlighter.add(issue);
-                  rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
-                }
-              }
+              () -> addSonarIssuesToHighlighter(issue, textRange, editor, markupModel)
       );
+    }
+  }
+
+  private void addSonarIssuesToHighlighter(SonarIssue issue, TextRange textRange, Editor editor, MarkupModel markupModel) {
+    final Optional<RangeHighlighter> rangeHighlighterAtLine = Finders.findRangeHighlighterAtLine(
+            editor,
+            issue.getLine()
+    );
+    if (rangeHighlighterAtLine.isPresent()) {
+      final Set<SonarIssue> issuesOfHighlighter = rangeHighlighterAtLine.get().getUserData(KEY);
+      if (null != issuesOfHighlighter) {
+        issuesOfHighlighter.add(issue);
+      }
+    } else {
+      TextAttributes attrs = new TextAttributes();
+      final RangeHighlighter rangeHighlighter = markupModel.addRangeHighlighter(
+              textRange.getStartOffset(),
+              textRange.getEndOffset(),
+              0,
+              attrs,
+              HighlighterTargetArea.EXACT_RANGE
+      );
+      Set<SonarIssue> issuesOfHighlighter = Sets.newLinkedHashSet();
+      issuesOfHighlighter.add(issue);
+      rangeHighlighter.putUserData(KEY,issuesOfHighlighter);
     }
   }
 
@@ -167,7 +186,7 @@ public class SonarExternalAnnotator
     }
   }
 
-  public static Optional<Annotation> createAnnotation(AnnotationHolder holder,PsiFile psiFile,SonarIssue issue) {
+  private static Optional<Annotation> createAnnotation(AnnotationHolder holder, PsiFile psiFile, SonarIssue issue) {
     HighlightSeverity severity = SonarToIjSeverityMapping.toHighlightSeverity(issue.getSeverity());
     Annotation annotation;
     if (issue.getLine() == null) {
