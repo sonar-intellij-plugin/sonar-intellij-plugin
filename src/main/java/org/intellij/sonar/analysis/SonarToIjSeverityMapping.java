@@ -1,51 +1,43 @@
 package org.intellij.sonar.analysis;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.lang.annotation.HighlightSeverity;
-import org.apache.commons.lang.StringUtils;
-import org.intellij.sonar.SonarSeverity;
 
-public class SonarToIjSeverityMapping {
+import java.util.Map;
 
-  public static HighlightSeverity toHighlightSeverity(String sonarSeverity) {
-    if (StringUtils.isBlank(sonarSeverity)) {
-      return HighlightSeverity.WARNING;
+class SonarToIjSeverityMapping {
+
+  private static final Map<String, HighlightSeverity> HIGHLIGHT_SEVERITY_BY_SONAR_SEVERITY = ImmutableMap.<String, HighlightSeverity>builder()
+          .put("BLOCKER", HighlightSeverity.ERROR)
+          .put("CRITICAL", HighlightSeverity.ERROR)
+          .put("MAJOR", HighlightSeverity.WARNING)
+          .put("INFO", HighlightSeverity.WEAK_WARNING)
+          .put("MINOR", HighlightSeverity.WEAK_WARNING)
+          .build();
+
+  private static final Map<String, ProblemHighlightType> PROBLEM_HIGHLIGHT_TYPE_BY_SONAR_SEVERITY = ImmutableMap.<String, ProblemHighlightType>builder()
+          .put("BLOCKER", ProblemHighlightType.ERROR)
+          .put("CRITICAL", ProblemHighlightType.ERROR)
+          .put("MAJOR", ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
+          .put("INFO", ProblemHighlightType.WEAK_WARNING)
+          .put("MINOR", ProblemHighlightType.WEAK_WARNING)
+          .build();
+
+  static HighlightSeverity toHighlightSeverity(String sonarSeverity) {
+    if (HIGHLIGHT_SEVERITY_BY_SONAR_SEVERITY.containsKey(Strings.nullToEmpty(sonarSeverity))) {
+      return HIGHLIGHT_SEVERITY_BY_SONAR_SEVERITY.get(sonarSeverity);
     } else {
-      sonarSeverity = sonarSeverity.toUpperCase();
-      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity) || SonarSeverity.CRITICAL.toString()
-        .equals(sonarSeverity)) {
-        return HighlightSeverity.ERROR;
-      } else
-        if (SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
-          return HighlightSeverity.WARNING;
-        } else
-          if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString()
-            .equals(sonarSeverity)) {
-            return HighlightSeverity.WEAK_WARNING;
-          } else {
-            return HighlightSeverity.WARNING;
-          }
+      return HighlightSeverity.WARNING;
     }
   }
 
-  public static ProblemHighlightType toProblemHighlightType(String sonarSeverity) {
-    if (StringUtils.isBlank(sonarSeverity)) {
-      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
+  static ProblemHighlightType toProblemHighlightType(String sonarSeverity) {
+    if (PROBLEM_HIGHLIGHT_TYPE_BY_SONAR_SEVERITY.containsKey(Strings.nullToEmpty(sonarSeverity))) {
+      return PROBLEM_HIGHLIGHT_TYPE_BY_SONAR_SEVERITY.get(sonarSeverity);
     } else {
-      sonarSeverity = sonarSeverity.toUpperCase();
-      if (SonarSeverity.BLOCKER.toString().equals(sonarSeverity) || SonarSeverity.CRITICAL.toString()
-        .equals(sonarSeverity)) {
-        return ProblemHighlightType.ERROR;
-      } else
-        if (SonarSeverity.MAJOR.toString().equals(sonarSeverity)) {
-          return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-        } else
-          if (SonarSeverity.INFO.toString().equals(sonarSeverity) || SonarSeverity.MINOR.toString()
-            .equals(sonarSeverity)) {
-            return ProblemHighlightType.WEAK_WARNING;
-          } else {
-            return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
-          }
+      return ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
     }
   }
 }
