@@ -19,12 +19,11 @@ import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.sonarqube.ws.Issues.Issue;
 
-import java.util.Collection;
+import java.util.AbstractCollection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DownloadIssuesTask implements Runnable {
 
@@ -82,8 +81,8 @@ public class DownloadIssuesTask implements Runnable {
 
   private void onSuccess(long downloadStartTime) {
     final long downloadedIssuesCount = downloadedIssuesByResourceKey.values().stream()
-            .flatMap((Function<ImmutableList<Issue>, Stream<?>>) Collection::stream)
-            .count();
+            .mapToLong(AbstractCollection::size)
+            .sum();
     sonarConsole.info(
       String.format(
         "Downloaded %d issues in %s",
@@ -108,8 +107,8 @@ public class DownloadIssuesTask implements Runnable {
         IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
       indexComponent.ifPresent(issuesByFileIndexProjectComponent -> issuesByFileIndexProjectComponent.getIndex().putAll(index));
       final int issuesCountInIndex = (int) index.values().stream()
-              .flatMap((Function<Set<SonarIssue>, Stream<?>>) Collection::stream)
-              .count();
+              .mapToLong(Set::size)
+              .sum();
       sonarConsole.info(
         String.format(
           "Finished creating index with %d issues for SonarQube resource %s in %s",
