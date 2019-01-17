@@ -1,13 +1,5 @@
 package org.intellij.sonar.configuration;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Optional;
-
-import javax.swing.*;
-
 import com.google.common.base.Strings;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.Application;
@@ -23,48 +15,46 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.ui.ColumnInfo;
 import org.intellij.sonar.persistence.LocalAnalysisScript;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Optional;
+
 public class LocalAnalysisScriptConfigurable extends DialogWrapper {
 
-  public static final ColumnInfo<VirtualFile,String> SOURCE_PATH_COLUMN = new ColumnInfo<VirtualFile,String>(
-    "Source path"
-  ) {
-    @Nullable
-    @Override
-    public String valueOf(VirtualFile virtualFile) {
-      return virtualFile != null
-        ? virtualFile.getPath()
-        : "";
-    }
-  };
-  public static final MouseAdapter SHOW_HOW_TO_DEFINE_SOURCE_CODE_OF_INCREMENTAL_ANALYSIS_SCRIPT = new MouseAdapter() {
+  private static final MouseAdapter SHOW_HOW_TO_DEFINE_SOURCE_CODE_OF_INCREMENTAL_ANALYSIS_SCRIPT = new MouseAdapter() {
     @Override
     public void mouseClicked(MouseEvent mouseEvent) {
       Messages.showMessageDialog(
-        "Available template variables:\n"+
-          "\n"+
-          "$WORKING_DIR\n"+
-          "$WORKING_DIR_NAME\n"+
-          "\n"+
-          "$MODULE_NAME\n"+
-          "$MODULE_BASE_DIR\n"+
-          "$MODULE_BASE_DIR_NAME\n"+
-          "\n"+
-          "$PROJECT_NAME\n"+
-          "$PROJECT_BASE_DIR\n"+
-          "$PROJECT_BASE_DIR_NAME\n"+
-          "\n"+
-          "$SONAR_HOST_URL\n"+
-          "$SONAR_SERVER_NAME\n"+
-          "$SONAR_USER_NAME\n"+
-          "$SONAR_USER_PASSWORD\n",
+              AVAILABLE_TEMPLATE_VARIABLES_MESSAGE,
         "Analysis Script",AllIcons.Actions.Help
       );
     }
   };
+
+  private static final String AVAILABLE_TEMPLATE_VARIABLES_MESSAGE = "Available template variables:\n" +
+          "\n" +
+          "$WORKING_DIR\n" +
+          "$WORKING_DIR_NAME\n" +
+          "\n" +
+          "$MODULE_NAME\n" +
+          "$MODULE_BASE_DIR\n" +
+          "$MODULE_BASE_DIR_NAME\n" +
+          "\n" +
+          "$PROJECT_NAME\n" +
+          "$PROJECT_BASE_DIR\n" +
+          "$PROJECT_BASE_DIR_NAME\n" +
+          "\n" +
+          "$SONAR_HOST_URL\n" +
+          "$SONAR_SERVER_NAME\n" +
+          "$SONAR_USER_NAME\n" +
+          "$SONAR_USER_PASSWORD\n";
+
   private Project myProject;
   private JPanel myRootPanel;
   private JLabel labelForSourceCodeOfIncrementalAnalysisScript;
