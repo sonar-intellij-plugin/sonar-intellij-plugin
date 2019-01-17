@@ -279,7 +279,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     removeFilesAffectedByReportFromIndex(sonarReport,indexComponent.get());
 
     // do nothing if no sonar issues
-    if (sonarReport.getIssues().size() <= 0) return;
+    if (sonarReport.getIssues().isEmpty()) return;
 
     // create index
     sonarConsole.info("Creating index from SonarQube report");
