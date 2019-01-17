@@ -1,18 +1,7 @@
 package org.intellij.sonar.analysis;
 
-import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
-import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import com.google.common.base.Charsets;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.intellij.notification.Notification;
@@ -38,6 +27,16 @@ import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
 import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
+import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
 
 public class RunLocalAnalysisScriptTask implements Runnable {
 
@@ -67,40 +66,83 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
     ImmutableList<PsiFile> psiFiles
   ) {
-    enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project,enrichedSettings.settings);
-    final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
-    if (scripName == null) {
-      return Optional.empty();
+    return Optional.ofNullable(new RunLocalAnalysisScriptTaskFactory().create(enrichedSettings, psiFiles));
+  }
+
+  private static class RunLocalAnalysisScriptTaskFactory {
+
+    private TemplateProcessor sourceCodeTemplateProcessor;
+    private TemplateProcessor pathToSonarReportTemplateProcessor;
+    private SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
+    private LocalAnalysisScript localAnalysisScript;
+    private File workingDir;
+
+    RunLocalAnalysisScriptTask create(
+            SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+            ImmutableList<PsiFile> psiFiles
+    ) {
+      this.enrichedSettings = enrichedSettings;
+      this.enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
+
+      // check scriptName
+      final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
+      if (scripName == null) {
+        return null;
+      }
+
+      // check LocalAnalysisScript
+      localAnalysisScript = LocalAnalysisScripts.get(scripName).orElse(null);
+      if (localAnalysisScript == null)
+        return null;
+
+      initSourceCodeTemplateProcessor();
+      initPathToSonarReportTemplateProcessor();
+
+      addServerConfigurationForProcessing();
+      addWorkingDirForProcessing();
+
+      // execute processors
+      final String sourceCode = sourceCodeTemplateProcessor.process();
+      final String pathToSonarReport = pathToSonarReportTemplateProcessor.process();
+
+      return new RunLocalAnalysisScriptTask(
+              enrichedSettings,
+              sourceCode,
+              pathToSonarReport,
+              workingDir,
+              psiFiles
+      );
     }
-    final Optional<LocalAnalysisScript> localAnalysisScript = LocalAnalysisScripts.get(scripName);
-    if (!localAnalysisScript.isPresent())
-      return Optional.empty();
-    final String sourceCodeTemplate = localAnalysisScript.get().getSourceCode();
-    final String serverName = enrichedSettings.settings.getServerName();
-    final Optional<SonarServerConfig> serverConfiguration = SonarServers.get(serverName);
-    final TemplateProcessor sourceCodeTemplateProcessor = TemplateProcessor.of(sourceCodeTemplate);
-    sourceCodeTemplateProcessor
-      .withProject(enrichedSettings.project)
-      .withModule(enrichedSettings.module);
-    String pathToSonarReportTemplate = localAnalysisScript.get().getPathToSonarReport();
-    final TemplateProcessor pathToSonarReportTemplateProcessor = TemplateProcessor.of(pathToSonarReportTemplate)
-      .withProject(enrichedSettings.project)
-      .withModule(enrichedSettings.module);
-    if (serverConfiguration.isPresent()) {
-      sourceCodeTemplateProcessor.withSonarServerConfiguration(serverConfiguration.get());
-      pathToSonarReportTemplateProcessor.withSonarServerConfiguration(serverConfiguration.get());
+
+    private void initSourceCodeTemplateProcessor() {
+      final String sourceCodeTemplate = localAnalysisScript.getSourceCode();
+      sourceCodeTemplateProcessor = TemplateProcessor.of(sourceCodeTemplate);
+      sourceCodeTemplateProcessor
+              .withProject(enrichedSettings.project)
+              .withModule(enrichedSettings.module);
     }
-    File workingDir = WorkingDirs.computeFrom(enrichedSettings);
-    sourceCodeTemplateProcessor.withWorkingDir(workingDir);
-    pathToSonarReportTemplateProcessor.withWorkingDir(workingDir);
-    final String sourceCode = sourceCodeTemplateProcessor.process();
-    final String pathToSonarReport = pathToSonarReportTemplateProcessor.process();
-    return Optional.of(
-      new RunLocalAnalysisScriptTask(
-        enrichedSettings,sourceCode,pathToSonarReport,workingDir,
-        psiFiles
-      )
-    );
+
+    private void initPathToSonarReportTemplateProcessor() {
+      String pathToSonarReportTemplate = localAnalysisScript.getPathToSonarReport();
+      pathToSonarReportTemplateProcessor = TemplateProcessor.of(pathToSonarReportTemplate)
+              .withProject(enrichedSettings.project)
+              .withModule(enrichedSettings.module);
+    }
+
+    private void addServerConfigurationForProcessing() {
+      final String serverName = enrichedSettings.settings.getServerName();
+      final Optional<SonarServerConfig> serverConfiguration = SonarServers.get(serverName);
+      if (serverConfiguration.isPresent()) {
+        sourceCodeTemplateProcessor.withSonarServerConfiguration(serverConfiguration.get());
+        pathToSonarReportTemplateProcessor.withSonarServerConfiguration(serverConfiguration.get());
+      }
+    }
+
+    private void addWorkingDirForProcessing() {
+      workingDir = WorkingDirs.computeFrom(enrichedSettings);
+      sourceCodeTemplateProcessor.withWorkingDir(workingDir);
+      pathToSonarReportTemplateProcessor.withWorkingDir(workingDir);
+    }
   }
 
   public void run() {
@@ -112,24 +154,28 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void execute() {
+
+    // init indicator
     final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
     ProgressIndicatorUtil.setText(indicator,"Executing SonarQube local analysis");
     ProgressIndicatorUtil.setText2(indicator,sourceCode);
     ProgressIndicatorUtil.setIndeterminate(indicator,true);
+
     final Optional<SonarServerConfig> sonarServerConfig = SonarServers.get(enrichedSettings.settings.getServerName());
-    if (sonarServerConfig.isPresent()
-      && !sonarServerConfig.get().isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.get().getUser())) {
+    if (sonarServerConfig.isPresent() && useLoginPassword(sonarServerConfig.get())) {
       final String password = sonarServerConfig.get().loadPassword();
       sonarConsole.withPasswordFilter(password);
     }
-    if (sonarServerConfig.isPresent()
-      && !sonarServerConfig.get().isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.get().loadToken())) {
+
+    if (sonarServerConfig.isPresent() && useToken(sonarServerConfig.get())) {
       final String token = sonarServerConfig.get().getToken();
       sonarConsole.withPasswordFilter(token);
     }
-    sonarConsole.info("working dir: "+this.workingDir.getPath());
-    sonarConsole.info("executing: "+this.sourceCode);
+
+    // execute user defined local analysis script
     final long startTime = System.currentTimeMillis();
+    sonarConsole.info("working dir: " + this.workingDir.getPath());
+    sonarConsole.info("executing: " + this.sourceCode);
     final Process process;
     try {
       process = Runtime.getRuntime().exec(this.sourceCode.split("[\\s]+"),null,this.workingDir);
@@ -137,6 +183,23 @@ public class RunLocalAnalysisScriptTask implements Runnable {
       sonarConsole.error(Throwables.getStackTraceAsString(e));
       return;
     }
+
+    streamProcessOutputToSonarConsole(indicator, process);
+
+    waitForProcessEnd(process);
+    logAnalysisResultToConsole(startTime, process);
+
+  }
+
+  private boolean useLoginPassword(SonarServerConfig sonarServerConfig) {
+    return !sonarServerConfig.isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.getUser());
+  }
+
+  private boolean useToken(SonarServerConfig sonarServerConfig) {
+    return !sonarServerConfig.isAnonymous() && !StringUtil.isEmptyOrSpaces(sonarServerConfig.loadToken());
+  }
+
+  private void streamProcessOutputToSonarConsole(ProgressIndicator indicator, Process process) {
     final StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(),sonarConsole,ERROR);
     final StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(),sonarConsole,INFO);
     errorGobbler.start();
@@ -147,11 +210,17 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         break;
       }
     }
+  }
+
+  private void waitForProcessEnd(Process process) {
     try {
       process.waitFor();
     } catch (InterruptedException e) {
-      sonarConsole.info("Unexpected end of process.\n"+Throwables.getStackTraceAsString(e));
+      sonarConsole.info("Unexpected end of process.\n"+ Throwables.getStackTraceAsString(e));
     }
+  }
+
+  private void logAnalysisResultToConsole(long startTime, Process process) {
     try {
       int exitCode = process.exitValue();
       sonarConsole.info(
@@ -165,14 +234,14 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         Notifications.Bus.notify(
           new Notification(
             "SonarQube","SonarQube",
-            String.format("Local analysis failed (%d)",exitCode),NotificationType.WARNING
+            String.format("Local analysis failed (%d)",exitCode), NotificationType.WARNING
           ),enrichedSettings.project
         );
       } else {
         readIssuesFromSonarReport();
       }
     } catch (IllegalThreadStateException ite) {
-      sonarConsole.info("Script execution aborted.\n"+Throwables.getStackTraceAsString(ite));
+      sonarConsole.info("Script execution aborted.\n"+ Throwables.getStackTraceAsString(ite));
     }
   }
 
@@ -201,20 +270,36 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(
       enrichedSettings.project
     );
+
+    // check if index component exists
     if (!indexComponent.isPresent()) {
       return;
     }
-    removeFilesAffectedByReportFromIndex(sonarReport,indexComponent);
+
+    removeFilesAffectedByReportFromIndex(sonarReport,indexComponent.get());
+
+    // do nothing if no sonar issues
     if (sonarReport.getIssues().size() <= 0) return;
+
+    // create index
     sonarConsole.info("Creating index from SonarQube report");
     final long indexCreationStartTime = System.currentTimeMillis();
     final Map<String,Set<SonarIssue>> index = new IssuesByFileIndexer(psiFiles)
       .withSonarReportIssues(sonarReport.getIssues())
       .withSonarConsole(sonarConsole)
       .create();
-    final int issuesCount = FluentIterable.from(index.values()).transformAndConcat(
-        sonarIssues -> sonarIssues
-    ).size();
+
+    logIndexCreationToConsole(indexCreationStartTime, index);
+    if (!index.isEmpty()) {
+      logNewIssuesToConsole(index);
+      indexComponent.get().getIndex().putAll(index);
+    }
+  }
+
+  private void logIndexCreationToConsole(long indexCreationStartTime, Map<String, Set<SonarIssue>> index) {
+    final int issuesCount = index.values().stream()
+            .mapToInt(Set::size)
+            .sum();
     sonarConsole.info(
       String.format(
         "Finished creating index from SonarQube report with %d issues in %s",
@@ -222,42 +307,44 @@ public class RunLocalAnalysisScriptTask implements Runnable {
         DurationUtil.getDurationBreakdown(System.currentTimeMillis()-indexCreationStartTime)
       )
     );
-    if (!index.isEmpty()) {
-      final int newIssuesCount = FluentIterable.from(index.values()).transformAndConcat(
-          sonarIssues -> sonarIssues
-      ).filter(
-          sonarIssue -> sonarIssue.getIsNew()
-      ).size();
-      if (newIssuesCount == 1) {
-        sonarConsole.info("1 issue is new!");
-      } else
-        if (newIssuesCount > 1) {
-          sonarConsole.info(String.format("%d issues are new!",newIssuesCount));
-        }
-      indexComponent.get().getIndex().putAll(index);
+  }
+
+  private void logNewIssuesToConsole(Map<String, Set<SonarIssue>> index) {
+    final long newIssuesCount = index.values().stream()
+            .flatMap(Collection::stream)
+            .filter(SonarIssue::getIsNew)
+            .count();
+    if (newIssuesCount == 1) {
+      sonarConsole.info("1 issue is new!");
+    } else if (newIssuesCount > 1) {
+        sonarConsole.info(String.format("%d issues are new!",newIssuesCount));
     }
   }
 
   private void removeFilesAffectedByReportFromIndex(
     SonarReport sonarReport,
-    Optional<IssuesByFileIndexProjectComponent> indexComponent
+    IssuesByFileIndexProjectComponent indexComponent
   ) {
     if (sonarReport.getComponents() != null) {
       for (Component component : sonarReport.getComponents()) {
-        final String path = component.getPath();
-        if (path != null) {
-          final String componentFullPath = new File(workingDir,path).toString();
-          indexComponent.get().getIndex().remove(componentFullPath);
-        }
+        removeComponentFromIndex(indexComponent, component);
       }
+    }
+  }
+
+  private void removeComponentFromIndex(IssuesByFileIndexProjectComponent indexComponent, Component component) {
+    final String path = component.getPath();
+    if (path != null) {
+      final String componentFullPath = new File(workingDir,path).toString();
+      indexComponent.getIndex().remove(componentFullPath);
     }
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(RunLocalAnalysisScriptTask.class.getName())
-      .add("sourceCode",sourceCode)
-      .add("pathToSonarReport",pathToSonarReport)
-      .toString();
+    return "RunLocalAnalysisScriptTask{" +
+            "sourceCode='" + sourceCode + '\'' +
+            ", pathToSonarReport='" + pathToSonarReport + '\'' +
+            '}';
   }
 }
