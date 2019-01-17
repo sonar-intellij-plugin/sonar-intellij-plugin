@@ -93,77 +93,142 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     @NotNull List<Tools> localTools,
     @NotNull final GlobalInspectionContext context
   ) {
-    final boolean newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
-      NewIssuesGlobalInspectionTool.class.getSimpleName(),
-      (GlobalInspectionContextBase) context
-    );
-    final boolean oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
-      OldIssuesGlobalInspectionTool.class.getSimpleName(),
-      (GlobalInspectionContextBase)context
-    );
-    if (!newIssuesGlobalInspectionToolEnabled && !oldIssuesGlobalInspectionToolEnabled)
-      return;
-    saveAllDocuments();
-    final Project project = context.getProject();
-    showSonarQubeToolWindowIfNeeded(project);
-    SonarConsole.get(project).clear();
-    final Set<Module> modules = Sets.newHashSet();
-    final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
-    context.getRefManager().getScope().accept(
-      new PsiElementVisitor() {
-        @Override
-        public void visitFile(PsiFile psiFile) {
-          filesBuilder.add(psiFile);
-          final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
-          if (module != null) modules.add(module);
-        }
-      }
-    );
-    final ImmutableList<PsiFile> psiFiles = filesBuilder.build();
-    IssuesByFileIndex.clearIndexFor(psiFiles);
-    Set<EnrichedSettings> enrichedSettingsFromScope = Sets.newHashSet();
-    if (modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType()) {
-      final Settings settings = ProjectSettings.getInstance(project).getState();
-      enrichedSettingsFromScope.add(new EnrichedSettings(settings,project,null));
-    } else {
-      for (Module module : modules) {
-        final Settings settings = ModuleSettings.getInstance(module).getState();
-        enrichedSettingsFromScope.add(new EnrichedSettings(settings,project,module));
-      }
-    }
-    if (oldIssuesGlobalInspectionToolEnabled) {
-      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-        final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings,psiFiles);
-        downloadTask.ifPresent(DownloadIssuesTask::run);
-      }
-    }
-    if (newIssuesGlobalInspectionToolEnabled) {
-      for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-        final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(
-          enrichedSettings,
-          psiFiles
-        );
-        scriptTask.ifPresent(RunLocalAnalysisScriptTask::run);
-      }
-    }
+    new InspectionToolsProcessor(context)
+            .runInspectionTools();
   }
 
-  private void saveAllDocuments() {
-    TransactionGuard.getInstance().submitTransactionAndWait(
-        () -> FileDocumentManager.getInstance().saveAllDocuments()
-    );
-  }
+  private class InspectionToolsProcessor {
+    private final GlobalInspectionContext context;
+    private boolean newIssuesGlobalInspectionToolEnabled;
+    private boolean oldIssuesGlobalInspectionToolEnabled;
+    private Project project;
+    private Set<Module> modules;
+    private ImmutableList<PsiFile> psiFiles;
+    private Set<EnrichedSettings> enrichedSettingsFromScope;
 
-  private void showSonarQubeToolWindowIfNeeded(final Project project) {
-    if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
-      ApplicationManager.getApplication().invokeLater(
-          () -> {
-            final ToolWindow toolWindow = ToolWindowManager.getInstance(project)
-              .getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
-            toolWindow.show(null);
-          }
+    InspectionToolsProcessor(GlobalInspectionContext context) {
+      this.context = context;
+    }
+
+    void runInspectionTools() {
+      checkIsNewIssuesGlobalInspectionToolEnabled();
+      checkIsOldIssuesGlobalInspectionToolEnabled();
+      if (!anyInspectionToolEnabled())
+        return;
+      saveAllDocuments();
+      initProject();
+      showSonarQubeToolWindowIfNeeded();
+      SonarConsole.get(project).clear();
+      collectModulesAndFiles();
+      IssuesByFileIndex.clearIndexFor(psiFiles);
+      buildEnrichedSettingsFromScope();
+      downloadOldIssues();
+      runLocalAnalysisScriptForNewIssues();
+    }
+
+    private void checkIsNewIssuesGlobalInspectionToolEnabled() {
+      newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
+              NewIssuesGlobalInspectionTool.class.getSimpleName(),
+              (GlobalInspectionContextBase) context
       );
     }
+
+    private void checkIsOldIssuesGlobalInspectionToolEnabled() {
+      oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
+              OldIssuesGlobalInspectionTool.class.getSimpleName(),
+              (GlobalInspectionContextBase)context
+      );
+    }
+
+    private boolean anyInspectionToolEnabled() {
+      return newIssuesGlobalInspectionToolEnabled || oldIssuesGlobalInspectionToolEnabled;
+    }
+
+    private void saveAllDocuments() {
+      TransactionGuard.getInstance().submitTransactionAndWait(
+              () -> FileDocumentManager.getInstance().saveAllDocuments()
+      );
+    }
+
+    private void initProject() {
+      project = context.getProject();
+    }
+
+    private void showSonarQubeToolWindowIfNeeded() {
+      if (SonarConsoleSettings.getInstance().isShowSonarConsoleOnAnalysis()) {
+        ApplicationManager.getApplication().invokeLater(
+                () -> {
+                  final ToolWindow toolWindow = ToolWindowManager.getInstance(project)
+                          .getToolWindow(SonarToolWindowFactory.TOOL_WINDOW_ID);
+                  toolWindow.show(null);
+                }
+        );
+      }
+    }
+
+    private void collectModulesAndFiles() {
+      modules = Sets.newHashSet();
+      final ImmutableList.Builder<PsiFile> filesBuilder = ImmutableList.builder();
+      context.getRefManager().getScope().accept(
+              new PsiElementVisitor() {
+                @Override
+                public void visitFile(PsiFile psiFile) {
+                  filesBuilder.add(psiFile);
+                  final Module module = ModuleUtil.findModuleForPsiElement(psiFile);
+                  if (module != null) modules.add(module);
+                }
+              }
+      );
+
+      psiFiles = filesBuilder.build();
+    }
+
+    private void buildEnrichedSettingsFromScope() {
+      enrichedSettingsFromScope = Sets.newHashSet();
+      if (isProjectScope()) {
+        addProjectSettings();
+      } else {
+        addModulesSettings();
+      }
+    }
+
+    private boolean isProjectScope() {
+      return modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType();
+    }
+
+    private void addProjectSettings() {
+      final Settings settings = ProjectSettings.getInstance(project).getState();
+      enrichedSettingsFromScope.add(new EnrichedSettings(settings, project,null));
+    }
+
+    private void addModulesSettings() {
+      for (Module module : modules) {
+        final Settings settings = ModuleSettings.getInstance(module).getState();
+        enrichedSettingsFromScope.add(new EnrichedSettings(settings, project,module));
+      }
+    }
+
+    private void downloadOldIssues() {
+      if (oldIssuesGlobalInspectionToolEnabled) {
+        for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+          final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
+          downloadTask.ifPresent(DownloadIssuesTask::run);
+        }
+      }
+    }
+
+    private void runLocalAnalysisScriptForNewIssues() {
+      if (newIssuesGlobalInspectionToolEnabled) {
+        for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
+          final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(
+                  enrichedSettings,
+                  psiFiles
+          );
+          scriptTask.ifPresent(RunLocalAnalysisScriptTask::run);
+        }
+      }
+    }
+
   }
 
   @Override
