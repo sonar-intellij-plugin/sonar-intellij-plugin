@@ -1,6 +1,5 @@
 package org.intellij.sonar.analysis;
 
-import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
