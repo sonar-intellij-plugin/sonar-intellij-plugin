@@ -82,28 +82,32 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
               .flatMap(entry -> entry.getValue().stream())
               .filter(SonarIssue::getIsNew)
               .count();
-      final Notification notification;
-      if (newIssuesCount == 1) {
+      sendNotification(context, newIssuesCount);
+    }
+  }
+
+  private void sendNotification(@NotNull GlobalInspectionContext context, long newIssuesCount) {
+    final Notification notification;
+    if (newIssuesCount == 1) {
+      notification = new Notification(
+        SONAR_QUBE,SONAR_QUBE,
+        "Found 1 new SonarQube issue",
+        NotificationType.WARNING
+      );
+    } else
+      if (newIssuesCount > 1) {
         notification = new Notification(
           SONAR_QUBE,SONAR_QUBE,
-          "Found 1 new SonarQube issue",
+          String.format("Found %d new SonarQube issues",newIssuesCount),
           NotificationType.WARNING
         );
-      } else
-        if (newIssuesCount > 1) {
-          notification = new Notification(
-            SONAR_QUBE,SONAR_QUBE,
-            String.format("Found %d new SonarQube issues",newIssuesCount),
-            NotificationType.WARNING
-          );
-        } else {
-          notification = new Notification(
-            SONAR_QUBE,SONAR_QUBE,
-            "No new SonarQube issues",
-            NotificationType.INFORMATION
-          );
-        }
-      Notifications.Bus.notify(notification,context.getProject());
-    }
+      } else {
+        notification = new Notification(
+          SONAR_QUBE,SONAR_QUBE,
+          "No new SonarQube issues",
+          NotificationType.INFORMATION
+        );
+      }
+    Notifications.Bus.notify(notification,context.getProject());
   }
 }
