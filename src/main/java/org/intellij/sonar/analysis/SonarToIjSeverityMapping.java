@@ -9,7 +9,8 @@ import java.util.Map;
 
 class SonarToIjSeverityMapping {
 
-  private static final Map<String, HighlightSeverity> HIGHLIGHT_SEVERITY_BY_SONAR_SEVERITY = ImmutableMap.<String, HighlightSeverity>builder()
+  private static final Map<String, HighlightSeverity> HIGHLIGHT_SEVERITY_BY_SONAR_SEVERITY = ImmutableMap
+          .<String, HighlightSeverity>builder()
           .put("BLOCKER", HighlightSeverity.ERROR)
           .put("CRITICAL", HighlightSeverity.ERROR)
           .put("MAJOR", HighlightSeverity.WARNING)
@@ -17,7 +18,8 @@ class SonarToIjSeverityMapping {
           .put("MINOR", HighlightSeverity.WEAK_WARNING)
           .build();
 
-  private static final Map<String, ProblemHighlightType> PROBLEM_HIGHLIGHT_TYPE_BY_SONAR_SEVERITY = ImmutableMap.<String, ProblemHighlightType>builder()
+  private static final Map<String, ProblemHighlightType> PROBLEM_HIGHLIGHT_TYPE_BY_SONAR_SEVERITY = ImmutableMap
+          .<String, ProblemHighlightType>builder()
           .put("BLOCKER", ProblemHighlightType.ERROR)
           .put("CRITICAL", ProblemHighlightType.ERROR)
           .put("MAJOR", ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
