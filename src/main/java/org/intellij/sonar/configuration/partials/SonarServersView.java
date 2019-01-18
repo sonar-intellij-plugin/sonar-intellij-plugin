@@ -10,6 +10,8 @@ import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.intellij.sonar.configuration.SonarServerConfigurable;
+import org.intellij.sonar.console.ConsoleLogLevel;
+import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.util.UIUtil;
@@ -72,10 +74,19 @@ public abstract class SonarServersView {
   }
 
   protected void addActionListenersForButtons() {
-    final JComboBox sonarServersComboBox = mySonarServersComboBox;
-    sonarServersComboBox.addItemListener(
+    addItemListenerForSonarServersComboBox();
+    addActionListenerForAddSonarServerButton();
+    addActionListenerForEditSonarServerButton();
+    addActionListenerForRemoveSonarServerButton();
+  }
+
+  private void addItemListenerForSonarServersComboBox() {
+    mySonarServersComboBox.addItemListener(
         itemEvent -> disableEditAndRemoveButtonsIfPossible()
     );
+  }
+
+  private void addActionListenerForAddSonarServerButton() {
     myAddSonarServerButton.addActionListener(
         actionEvent -> {
           final SonarServerConfigurable dlg = showSonarServerConfigurableDialog();
@@ -88,40 +99,51 @@ public abstract class SonarServersView {
             } catch (IllegalArgumentException e) {
               Messages.showErrorDialog(newSonarConfigurationBean.getName()+" already exists","SonarQube Name Error");
               showSonarServerConfigurableDialog(newSonarConfigurationBean);
+              SonarConsole.get(myProject).log(Throwables.getStackTraceAsString(e), ConsoleLogLevel.ERROR);
             }
           }
         }
     );
+  }
+
+  private void addActionListenerForEditSonarServerButton() {
     myEditSonarServerButton.addActionListener(
         actionEvent -> {
-          final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
+          final Object selectedSonarServer = mySonarServersComboBox.getSelectedItem();
           final Optional<SonarServerConfig> oldBean = SonarServers.get(selectedSonarServer.toString());
           if (!oldBean.isPresent()) {
             Messages.showErrorDialog(selectedSonarServer.toString()+" is not more preset","Cannot Perform Edit");
           } else {
             final SonarServerConfigurable dlg = showSonarServerConfigurableDialog(oldBean.get());
             if (dlg.isOK()) {
-              SonarServerConfig newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
-              try {
-                SonarServers.remove(oldBean.get().getName());
-                SonarServers.add(newSonarConfigurationBean);
-                mySonarServersComboBox.removeItem(selectedSonarServer);
-                mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
-                UIUtil.selectComboBoxItem(mySonarServersComboBox,newSonarConfigurationBean.getName());
-              } catch (IllegalArgumentException e) {
-                Messages.showErrorDialog(
-                  selectedSonarServer.toString()+" cannot be saved\n\n"+Throwables.getStackTraceAsString(
-                    e
-                  ),"Cannot Perform Edit"
-                );
-              }
+              performEdit(selectedSonarServer, oldBean.get(), dlg);
             }
           }
         }
     );
+  }
+
+  private void performEdit(Object selectedSonarServer, SonarServerConfig oldBean, SonarServerConfigurable dlg) {
+    SonarServerConfig newSonarConfigurationBean = dlg.toSonarServerConfigurationBean();
+    try {
+      SonarServers.remove(oldBean.getName());
+      SonarServers.add(newSonarConfigurationBean);
+      mySonarServersComboBox.removeItem(selectedSonarServer);
+      mySonarServersComboBox.addItem(makeObj(newSonarConfigurationBean.getName()));
+      UIUtil.selectComboBoxItem(mySonarServersComboBox,newSonarConfigurationBean.getName());
+    } catch (IllegalArgumentException e) {
+      Messages.showErrorDialog(
+        selectedSonarServer.toString()+" cannot be saved\n\n"+ Throwables.getStackTraceAsString(
+          e
+        ),"Cannot Perform Edit"
+      );
+    }
+  }
+
+  private void addActionListenerForRemoveSonarServerButton() {
     myRemoveSonarServerButton.addActionListener(
         actionEvent -> {
-          final Object selectedSonarServer = sonarServersComboBox.getSelectedItem();
+          final Object selectedSonarServer = mySonarServersComboBox.getSelectedItem();
           int rc = Messages.showOkCancelDialog(
             "Are you sure you want to remove "+selectedSonarServer.toString()+" ?",
             "Remove SonarQube Server",
