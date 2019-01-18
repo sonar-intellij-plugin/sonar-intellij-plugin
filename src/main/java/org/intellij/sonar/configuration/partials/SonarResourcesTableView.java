@@ -17,6 +17,7 @@ import javax.swing.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.AnActionButtonRunnable;
 import com.intellij.ui.TableUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.table.TableView;
@@ -24,6 +25,7 @@ import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import org.intellij.sonar.configuration.ResourcesSelectionConfigurable;
 import org.intellij.sonar.persistence.Resource;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SonarResourcesTableView {
@@ -69,27 +71,7 @@ public class SonarResourcesTableView {
   private JComponent createJComponent() {
     JPanel panelForTable = ToolbarDecorator.createDecorator(mySonarResourcesTable, null).
       setAddAction(
-          anActionButton -> {
-            final String selectedSonarServerName = Optional.ofNullable(mySonarServersView.getSelectedItem())
-                .orElse(NO_SONAR);
-            if (!NO_SONAR.equals(selectedSonarServerName)) {
-              ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(
-                myProject,
-                selectedSonarServerName
-              );
-              dlg.show();
-              if (dlg.isOK()) {
-                final List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
-                final List<Resource> currentSonarResources = mySonarResourcesTable.getItems();
-                Set<Resource> mergedSonarResourcesAsSet = new TreeSet<>(
-                    Comparator.comparing(Resource::getKey)
-                );
-                mergedSonarResourcesAsSet.addAll(currentSonarResources);
-                mergedSonarResourcesAsSet.addAll(selectedSonarResources);
-                setModel(Lists.newArrayList(mergedSonarResourcesAsSet));
-              }
-            }
-          }
+              addAction()
       ).
       setRemoveAction(
           anActionButton -> TableUtil.removeSelectedItems(mySonarResourcesTable)
@@ -98,6 +80,35 @@ public class SonarResourcesTableView {
       .createPanel();
     panelForTable.setPreferredSize(new Dimension(-1, 100));
     return panelForTable;
+  }
+
+  @NotNull
+  private AnActionButtonRunnable addAction() {
+    return anActionButton -> {
+      final String selectedSonarServerName = Optional.ofNullable(mySonarServersView.getSelectedItem())
+          .orElse(NO_SONAR);
+      if (!NO_SONAR.equals(selectedSonarServerName)) {
+        ResourcesSelectionConfigurable dlg = new ResourcesSelectionConfigurable(
+          myProject,
+          selectedSonarServerName
+        );
+        dlg.show();
+        if (dlg.isOK()) {
+          setSonarResourcesModel(dlg);
+        }
+      }
+    };
+  }
+
+  private void setSonarResourcesModel(ResourcesSelectionConfigurable dlg) {
+    final List<Resource> selectedSonarResources = dlg.getSelectedSonarResources();
+    final List<Resource> currentSonarResources = mySonarResourcesTable.getItems();
+    Set<Resource> mergedSonarResourcesAsSet = new TreeSet<>(
+        Comparator.comparing(Resource::getKey)
+    );
+    mergedSonarResourcesAsSet.addAll(currentSonarResources);
+    mergedSonarResourcesAsSet.addAll(selectedSonarResources);
+    setModel(Lists.newArrayList(mergedSonarResourcesAsSet));
   }
 
   public void setModel(List<Resource> sonarResources) {
