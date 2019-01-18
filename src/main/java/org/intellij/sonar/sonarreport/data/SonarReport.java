@@ -13,17 +13,17 @@ public class SonarReport {
   private String version;
   private List<Issue> issues;
   private List<Component> components;
-  private List<Rule> rules;
+  private List<SonarRule> rules;
   private List<User> users;
   private static final Gson GSON = new GsonBuilder()
     .registerTypeAdapter(DateTime.class,new DateTimeTypeConverter())
     .create();
 
-  public SonarReport(String version,List<Issue> issues,List<Component> components,List<Rule> rules,List<User> users) {
+  public SonarReport(String version, List<Issue> issues, List<Component> components, List<SonarRule> sonarRules, List<User> users) {
     this.version = version;
     this.issues = issues;
     this.components = components;
-    this.rules = rules;
+    this.rules = sonarRules;
     this.users = users;
   }
 
@@ -39,7 +39,7 @@ public class SonarReport {
     return components;
   }
 
-  public List<Rule> getRules() {
+  public List<SonarRule> getRules() {
     return rules;
   }
 

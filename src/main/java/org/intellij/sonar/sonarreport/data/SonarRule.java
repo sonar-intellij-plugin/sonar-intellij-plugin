@@ -2,14 +2,14 @@ package org.intellij.sonar.sonarreport.data;
 
 import com.google.common.base.Objects;
 
-public class Rule {
+public class SonarRule {
 
   private String key;
   private String rule;
   private String repository;
   private String name;
 
-  public Rule(String key,String rule,String repository,String name) {
+  public SonarRule(String key, String rule, String repository, String name) {
     this.key = key;
     this.rule = rule;
     this.repository = repository;
@@ -36,7 +36,7 @@ public class Rule {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Rule rule1 = (Rule) o;
+    SonarRule rule1 = (SonarRule) o;
     return Objects.equal(key, rule1.key) &&
             Objects.equal(rule, rule1.rule) &&
             Objects.equal(repository, rule1.repository) &&
