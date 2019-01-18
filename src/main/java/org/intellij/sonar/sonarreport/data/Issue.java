@@ -4,14 +4,14 @@ import com.google.common.base.Objects;
 
 public class Issue {
 
-  private String key;
-  private String component;
-  private Integer line;
-  private String message;
-  private String severity;
-  private String rule;
-  private String status;
-  private Boolean isNew;
+  private final String key;
+  private final String component;
+  private final Integer line;
+  private final String message;
+  private final String severity;
+  private final String rule;
+  private final String status;
+  private final Boolean isNew;
 
   public Issue(
     String key,
