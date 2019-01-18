@@ -68,87 +68,122 @@ public class IssuesByFileIndexer {
   }
 
   public Map<String,Set<SonarIssue>> create() {
-    final Map<String,Set<SonarIssue>> index = Maps.newConcurrentMap();
-    final int filesCount = files.size();
-    final AtomicInteger fileIndex = new AtomicInteger(0);
-    final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-    final int availableProcessors = Runtime.getRuntime().availableProcessors();
-    info(
-      String.format(
-        "Start processing %d files and %d issues with %d threads",
-        filesCount,
-        issues.size(),
-        availableProcessors
-      )
-    );
-    final ExecutorService executorService = Executors.newFixedThreadPool(availableProcessors);
-    final Iterable<List<PsiFile>> filePartitions = Iterables.partition(files,availableProcessors);
-    for (final List<PsiFile> partition : filePartitions) {
-      executorService.execute(
-          () -> {
-            for (PsiFile psiFile : partition) {
-              if (indicator.isCanceled()) break;
-              final int currentFileIndex = fileIndex.incrementAndGet();
-              ProgressIndicatorUtil.setFraction(indicator,1.0 * currentFileIndex / filesCount);
-              ProgressIndicatorUtil.setText2(indicator,psiFile.getName());
-              final String filesProgressMessage = String.format("%d / %d files processed",currentFileIndex,filesCount);
-              ProgressIndicatorUtil.setText(indicator,filesProgressMessage);
-              if (filesCount % currentFileIndex == 20) {
-                info(filesProgressMessage);
-              }
-              String fullFilePath = psiFile.getVirtualFile().getPath();
-              ImmutableSet.Builder<SonarIssue> entriesBuilder = ImmutableSet.builder();
-              final Settings settings = SettingsUtil.getSettingsFor(psiFile);
-              if (settings == null) continue;
-              final Collection<Resource> resources = settings.getResources();
-              if (resources == null || resources.isEmpty()) {
-                matchFileByResource(fullFilePath,entriesBuilder,null);
-              } else {
-                for (Resource resource : resources) {
-                  matchFileByResource(fullFilePath,entriesBuilder,resource.getKey());
-                }
-              }
-              final ImmutableSet<SonarIssue> sonarIssues = entriesBuilder.build();
-              if (!sonarIssues.isEmpty())
-                index.put(fullFilePath,sonarIssues);
-            }
-          }
+    return new SonarIssuesIndexBuilder()
+            .buildIndex()
+            .getIndex();
+  }
+
+
+
+  private class SonarIssuesIndexBuilder {
+    private Map<String, Set<SonarIssue>> index;
+    private int filesCount;
+    private AtomicInteger fileIndex;
+    private ProgressIndicator indicator;
+
+    public SonarIssuesIndexBuilder buildIndex() {
+      filesCount = files.size();
+      fileIndex = new AtomicInteger(0);
+
+      indicator = ProgressManager.getInstance().getProgressIndicator();
+      final int availableProcessors = Runtime.getRuntime().availableProcessors();
+
+      info(
+              String.format(
+                      "Start processing %d files and %d issues with %d threads",
+                      filesCount,
+                      issues.size(),
+                      availableProcessors
+              )
       );
-    }
-    executorService.shutdown();
-    try {
-      executorService.awaitTermination(Long.MAX_VALUE,TimeUnit.NANOSECONDS);
-    } catch (InterruptedException e) {
-      sonarConsole.error(Throwables.getStackTraceAsString(e));
-    }
-    return index;
-  }
 
-  private void info(String msg) {
-    if (sonarConsole != null) {
-      sonarConsole.info(msg);
-    }
-  }
+      final ExecutorService executorService = Executors.newFixedThreadPool(availableProcessors);
+      final Iterable<List<PsiFile>> filePartitions = Iterables.partition(files,availableProcessors);
 
-  private void matchFileByResource(
-    String fullFilePath,
-    ImmutableSet.Builder<SonarIssue> entriesBuilder,
-    String resourceKey
-  ) {
-    for (Issue issue : issues) {
-      String component = issue.getComponent();
-      if (SonarComponentToFileMatcher.match(component,resourceKey,fullFilePath)) {
-        entriesBuilder.add(
-          new SonarIssue(
-            issue.getKey(),
-            issue.getRule(),
-            issue.getLine(),
-            issue.getMessage(),
-            issue.getSeverity(),
-            issue.getIsNew()
-          )
-        );
+      index = Maps.newConcurrentMap();
+      for (final List<PsiFile> partition : filePartitions) {
+        executorService.execute(() -> createIndexFor(partition));
       }
+      executorService.shutdown();
+      try {
+        executorService.awaitTermination(Long.MAX_VALUE,TimeUnit.NANOSECONDS);
+      } catch (InterruptedException e) {
+        sonarConsole.error(Throwables.getStackTraceAsString(e));
+      }
+      return this;
+    }
+
+    private void createIndexFor(List<PsiFile> psiFiles) {
+      for (PsiFile psiFile : psiFiles) {
+        if (indicator.isCanceled()) break;
+
+        final int currentFileIndex = fileIndex.incrementAndGet();
+        ProgressIndicatorUtil.setFraction(indicator,1.0 * currentFileIndex / filesCount);
+        ProgressIndicatorUtil.setText2(indicator,psiFile.getName());
+        final String filesProgressMessage = String.format("%d / %d files processed",currentFileIndex, filesCount);
+        ProgressIndicatorUtil.setText(indicator,filesProgressMessage);
+
+        if (filesCount % currentFileIndex == 20) {
+          info(filesProgressMessage);
+        }
+
+        String fullFilePath = psiFile.getVirtualFile().getPath();
+
+        final Settings settings = SettingsUtil.getSettingsFor(psiFile);
+        if (settings == null) continue;
+
+        final Collection<Resource> resources = settings.getResources();
+
+        final Set<SonarIssue> sonarIssues = buildSonarIssues(fullFilePath, resources);
+        if (!sonarIssues.isEmpty())
+          index.put(fullFilePath,sonarIssues);
+      }
+    }
+
+    private Set<SonarIssue> buildSonarIssues(
+            String fullFilePath,
+            Collection<Resource> resources) {
+      ImmutableSet.Builder<SonarIssue> entriesBuilder = ImmutableSet.builder();
+      if (resources == null || resources.isEmpty()) {
+        matchFileByResource(fullFilePath,entriesBuilder,null);
+      } else {
+        for (Resource resource : resources) {
+          matchFileByResource(fullFilePath,entriesBuilder,resource.getKey());
+        }
+      }
+      return entriesBuilder.build();
+    }
+
+    private void info(String msg) {
+      if (sonarConsole != null) {
+        sonarConsole.info(msg);
+      }
+    }
+
+    private void matchFileByResource(
+            String fullFilePath,
+            ImmutableSet.Builder<SonarIssue> entriesBuilder,
+            String resourceKey
+    ) {
+      for (Issue issue : issues) {
+        String component = issue.getComponent();
+        if (SonarComponentToFileMatcher.match(component,resourceKey,fullFilePath)) {
+          entriesBuilder.add(
+                  new SonarIssue(
+                          issue.getKey(),
+                          issue.getRule(),
+                          issue.getLine(),
+                          issue.getMessage(),
+                          issue.getSeverity(),
+                          issue.getIsNew()
+                  )
+          );
+        }
+      }
+    }
+
+    public Map<String, Set<SonarIssue>> getIndex() {
+      return index;
     }
   }
 }
