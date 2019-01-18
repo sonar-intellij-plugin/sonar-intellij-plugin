@@ -166,7 +166,7 @@ public class IssuesByFileIndexer {
     ) {
       for (Issue issue : issues) {
         String component = issue.getComponent();
-        if (SonarComponentToFileMatcher.match(component,resourceKey,fullFilePath)) {
+        if (new SonarComponentToFileMatcher().match(component,resourceKey,fullFilePath)) {
           entriesBuilder.add(
                   new SonarIssue(
                           issue.getKey(),
