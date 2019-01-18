@@ -25,7 +25,6 @@ import org.intellij.sonar.sonarreport.data.Component;
 import org.intellij.sonar.sonarreport.data.SonarReport;
 import org.intellij.sonar.util.DurationUtil;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
-import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.TemplateProcessor;
 
 import java.io.File;
@@ -82,18 +81,18 @@ public class RunLocalAnalysisScriptTask implements Runnable {
             ImmutableList<PsiFile> psiFiles
     ) {
       this.enrichedSettings = enrichedSettings;
-      this.enrichedSettings.settings = SettingsUtil.process(enrichedSettings.project, enrichedSettings.settings);
-
-      // check scriptName
-      final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
-      if (scripName == null) {
-        return null;
+      if (enrichedSettings.settings != null) {
+        this.enrichedSettings.settings = enrichedSettings.settings.enrichWithProjectSettings(enrichedSettings.project);
+        // check scriptName
+        final String scripName = enrichedSettings.settings.getLocalAnalysisScripName();
+        if (scripName == null) {
+          return null;
+        }
+        // check LocalAnalysisScript
+        localAnalysisScript = LocalAnalysisScripts.get(scripName).orElse(null);
+        if (localAnalysisScript == null)
+          return null;
       }
-
-      // check LocalAnalysisScript
-      localAnalysisScript = LocalAnalysisScripts.get(scripName).orElse(null);
-      if (localAnalysisScript == null)
-        return null;
 
       initSourceCodeTemplateProcessor();
       initPathToSonarReportTemplateProcessor();

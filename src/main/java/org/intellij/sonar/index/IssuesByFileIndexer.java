@@ -13,7 +13,6 @@ import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.sonarreport.data.Issue;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
-import org.intellij.sonar.util.SettingsUtil;
 import org.intellij.sonar.util.SonarComponentToFileMatcher;
 import org.sonarqube.ws.Issues;
 
@@ -29,11 +28,11 @@ import java.util.stream.Collectors;
 
 public class IssuesByFileIndexer {
 
-  private final ImmutableList<PsiFile> files;
+  private final List<PsiFile> files;
   private List<Issue> issues;
   private SonarConsole sonarConsole;
 
-  public IssuesByFileIndexer(ImmutableList<PsiFile> files) {
+  public IssuesByFileIndexer(List<PsiFile> files) {
     this.files = files;
   }
 
@@ -129,7 +128,7 @@ public class IssuesByFileIndexer {
 
         String fullFilePath = psiFile.getVirtualFile().getPath();
 
-        final Settings settings = SettingsUtil.getSettingsFor(psiFile);
+        final Settings settings = Settings.getSettingsFor(psiFile);
         if (settings == null) continue;
 
         final Collection<Resource> resources = settings.getResources();

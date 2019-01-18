@@ -2,9 +2,15 @@ package org.intellij.sonar.persistence;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
 
 public class Settings {
 
@@ -61,6 +67,54 @@ public class Settings {
       alternativeWorkingDirPath,
       useAlternativeWorkingDir
     );
+  }
+
+  public static Settings getSettingsFor(PsiFile psiFile) {
+    Settings settings = null;
+    Project project = psiFile.getProject();
+    VirtualFile virtualFile = psiFile.getVirtualFile();
+    if (null != virtualFile) {
+      Module module = ModuleUtil.findModuleForFile(virtualFile,project);
+      if (null != module) {
+        settings = ModuleSettings.getInstance(module).getState();
+      }
+    } else {
+      settings = ProjectSettings.getInstance(project).getState();
+    }
+    if (null != settings) {
+      settings = settings.enrichWithProjectSettings(project);
+    }
+    return settings;
+  }
+
+  public Settings enrichWithProjectSettings(Project project) {
+    Settings enrichedSettings = copyOf(this);
+    if (SonarServers.PROJECT.equals(this.getServerName())) {
+      final Optional<Settings> projectSettings = Optional.ofNullable(ProjectSettings.getInstance(project).getState());
+      if (projectSettings.isPresent()) {
+        enrichedSettings.setServerName(projectSettings.get().getServerName());
+        enrichWithResources(enrichedSettings, projectSettings.get());
+        enrichedSettings.setWorkingDirSelection(projectSettings.get().getWorkingDirSelection());
+        enrichedSettings.setAlternativeWorkingDirPath(projectSettings.get().getAlternativeWorkingDirPath());
+        enrichedSettings.setUseAlternativeWorkingDir(projectSettings.get().getUseAlternativeWorkingDir());
+      }
+    }
+    enrichWithLocalAnalysisScript(project, enrichedSettings);
+    return enrichedSettings;
+  }
+
+  private void enrichWithResources(Settings processed, Settings projectSettings) {
+    if (this.getResources().isEmpty()) {
+      processed.setResources(projectSettings.getResources());
+    }
+  }
+
+  private void enrichWithLocalAnalysisScript(Project project, Settings processed) {
+    final String scripName = this.getLocalAnalysisScripName();
+    if (LocalAnalysisScripts.PROJECT.equals(scripName)) {
+      final Optional<Settings> projectSettings = Optional.ofNullable(ProjectSettings.getInstance(project).getState());
+      projectSettings.ifPresent(it -> processed.setLocalAnalysisScripName(it.getLocalAnalysisScripName()));
+    }
   }
 
   public boolean isEmpty() {

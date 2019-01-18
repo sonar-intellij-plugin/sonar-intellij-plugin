@@ -21,7 +21,6 @@ import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.Rule;
 import org.intellij.sonar.sonarserver.SonarServer;
-import org.intellij.sonar.util.SettingsUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -134,7 +133,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       final Module moduleForFile = ModuleUtil.findModuleForFile(psiFile.getVirtualFile(), project);
       if (moduleForFile != null) {
         settings = ModuleSettings.getInstance(moduleForFile).getState();
-        settings = SettingsUtil.process(project, settings);
+        if (settings != null) settings = settings.enrichWithProjectSettings(project);
       } else {
         settings = ProjectSettings.getInstance(project).getState();
       }

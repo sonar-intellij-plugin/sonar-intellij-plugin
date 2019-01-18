@@ -15,10 +15,10 @@ import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.persistence.SonarServers;
 import org.intellij.sonar.sonarserver.SonarServer;
 import org.intellij.sonar.util.DurationUtil;
-import org.intellij.sonar.util.SettingsUtil;
 import org.sonarqube.ws.Issues.Issue;
 
 import java.util.AbstractCollection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -28,16 +28,16 @@ public class DownloadIssuesTask implements Runnable {
 
   private final SonarServerConfig sonarServerConfig;
   private final Set<String> resourceKeys;
-  private final ImmutableList<PsiFile> psiFiles;
+  private final List<PsiFile> psiFiles;
   private final Map<String,ImmutableList<Issue>> downloadedIssuesByResourceKey = Maps.newConcurrentMap();
   private final SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
   private final SonarConsole sonarConsole;
 
-  public DownloadIssuesTask(
-    SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
-    SonarServerConfig sonarServerConfig,
-    Set<String> resourceKeys,
-    ImmutableList<PsiFile> psiFiles
+  private DownloadIssuesTask(
+          SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+          SonarServerConfig sonarServerConfig,
+          Set<String> resourceKeys,
+          List<PsiFile> psiFiles
   ) {
     this.enrichedSettings = enrichedSettings;
     this.sonarServerConfig = sonarServerConfig;
@@ -50,19 +50,9 @@ public class DownloadIssuesTask implements Runnable {
     SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
     ImmutableList<PsiFile> psiFiles
   ) {
-    final Settings settings = SettingsUtil.process(enrichedSettings.project,enrichedSettings.settings);
-    final String serverName = settings.getServerName();
-    if (serverName == null) return Optional.empty();
-    final Optional<SonarServerConfig> c = SonarServers.get(serverName);
-    if (!c.isPresent()) return Optional.empty();
-    final Set<String> resourceKeys = settings.getResources().stream().map(Resource::getKey).collect(Collectors.toSet());
-    return Optional.of(
-      new DownloadIssuesTask(
-        enrichedSettings,
-        c.get(),
-        resourceKeys,psiFiles
-      )
-    );
+    return new DownloadIssuesTaskBuilder()
+            .buildFrom(enrichedSettings, psiFiles)
+            .maybeGetDownloadIssuesTask();
   }
 
   @Override
@@ -128,4 +118,65 @@ public class DownloadIssuesTask implements Runnable {
       .add("downloadedIssuesByResourceKey",downloadedIssuesByResourceKey)
       .toString();
   }
+
+    private static class DownloadIssuesTaskBuilder {
+        private DownloadIssuesTask downloadIssuesTask;
+        private boolean processing;
+        private String serverName;
+        private Settings settings;
+        private SonarServerConfig sonarServerConfig;
+
+        DownloadIssuesTaskBuilder buildFrom(
+                SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+                List<PsiFile> psiFiles) {
+            downloadIssuesTask=null;
+            processing = true;
+            checkNotNull(enrichedSettings);
+            if (processing) initSettings(enrichedSettings);
+            if (processing) checkNotNullServerName();
+            if (processing) initSonarServerConfig();
+            if (processing) buildDownloadIssuesTask(enrichedSettings, psiFiles);
+            return this;
+        }
+
+        private void checkNotNull(SonarQubeInspectionContext.EnrichedSettings enrichedSettings) {
+            if (enrichedSettings.settings == null) {
+                processing = false;
+            }
+        }
+
+        private void initSettings(SonarQubeInspectionContext.EnrichedSettings enrichedSettings) {
+            settings = enrichedSettings.settings.enrichWithProjectSettings(enrichedSettings.project);
+        }
+
+        private void checkNotNullServerName() {
+            serverName = settings.getServerName();
+            if (serverName == null) {
+                processing = false;
+            }
+        }
+
+        private void initSonarServerConfig() {
+            final Optional<SonarServerConfig> maybeSonarServerConfig = SonarServers.get(serverName);
+            if (!maybeSonarServerConfig.isPresent()) {
+                processing = false;
+            } else {
+                sonarServerConfig = maybeSonarServerConfig.get();
+            }
+        }
+
+        private void buildDownloadIssuesTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, List<PsiFile> psiFiles) {
+            final Set<String> resourceKeys = settings.getResources().stream().map(Resource::getKey).collect(Collectors.toSet());
+            downloadIssuesTask =
+                    new DownloadIssuesTask(
+                            enrichedSettings,
+                            sonarServerConfig,
+                            resourceKeys,psiFiles
+                    );
+        }
+
+        Optional<DownloadIssuesTask> maybeGetDownloadIssuesTask() {
+            return Optional.ofNullable(downloadIssuesTask);
+        }
+    }
 }
