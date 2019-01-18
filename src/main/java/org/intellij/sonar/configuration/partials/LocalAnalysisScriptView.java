@@ -1,11 +1,5 @@
 package org.intellij.sonar.configuration.partials;
 
-import static org.intellij.sonar.util.UIUtil.makeObj;
-
-import java.util.Optional;
-
-import javax.swing.*;
-
 import com.google.common.base.Throwables;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -14,6 +8,11 @@ import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.persistence.LocalAnalysisScript;
 import org.intellij.sonar.persistence.LocalAnalysisScripts;
 import org.intellij.sonar.util.UIUtil;
+
+import javax.swing.*;
+import java.util.Optional;
+
+import static org.intellij.sonar.util.UIUtil.makeObj;
 
 public abstract class LocalAnalysisScriptView {
 
@@ -44,9 +43,19 @@ public abstract class LocalAnalysisScriptView {
   }
 
   private void addActionListenersForButtons() {
+    addItemListenersForLocalAnalysisScriptComboBox();
+    addActionListenersForAddLocalAnalysisScriptButton();
+    addActionListenersForEditLocalAnalysisScriptButton();
+    addActionListenersForRemoveLocalAnalysisScriptButton();
+  }
+
+  private void addItemListenersForLocalAnalysisScriptComboBox() {
     myLocalAnalysisScriptComboBox.addItemListener(
         itemEvent -> disableEditAndRemoveButtonsIfPossible()
     );
+  }
+
+  private void addActionListenersForAddLocalAnalysisScriptButton() {
     myAddLocalAnalysisScriptButton.addActionListener(
         e -> {
           final LocalAnalysisScriptConfigurable dlg = showLocalAnalysisScriptConfigurableDialog();
@@ -58,13 +67,16 @@ public abstract class LocalAnalysisScriptView {
               UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox,newLocalAnalysisScript.getName());
             } catch (IllegalArgumentException ex) {
               final String errorMessage = newLocalAnalysisScript.getName()+" already exists";
-              SonarConsole.get(myProject).error(errorMessage+"\n"+Throwables.getStackTraceAsString(ex));
+              SonarConsole.get(myProject).error(errorMessage+"\n"+ Throwables.getStackTraceAsString(ex));
               Messages.showErrorDialog(errorMessage,"Local Analysis Script Name Error");
               showLocalAnalysisScriptConfigurableDialog(newLocalAnalysisScript);
             }
           }
         }
     );
+  }
+
+  private void addActionListenersForEditLocalAnalysisScriptButton() {
     myEditLocalAnalysisScriptButton.addActionListener(
         actionEvent -> {
           final Object selected = myLocalAnalysisScriptComboBox.getSelectedItem();
@@ -74,23 +86,30 @@ public abstract class LocalAnalysisScriptView {
           } else {
             final LocalAnalysisScriptConfigurable dlg = showLocalAnalysisScriptConfigurableDialog(previous.get());
             if (dlg.isOK()) {
-              LocalAnalysisScript next = dlg.toLocalAnalysisScript();
-              try {
-                LocalAnalysisScripts.remove(previous.get().getName());
-                LocalAnalysisScripts.add(next);
-                myLocalAnalysisScriptComboBox.removeItem(selected);
-                myLocalAnalysisScriptComboBox.addItem(makeObj(next.getName()));
-                UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox,next.getName());
-              } catch (IllegalArgumentException e) {
-                Messages.showErrorDialog(
-                  selected.toString()+" cannot be saved\n\n"+Throwables.getStackTraceAsString(e),
-                  "Cannot Perform Edit"
-                );
-              }
+              performEdit(selected, previous.get(), dlg);
             }
           }
         }
     );
+  }
+
+  private void performEdit(Object selected, LocalAnalysisScript previous, LocalAnalysisScriptConfigurable dlg) {
+    LocalAnalysisScript next = dlg.toLocalAnalysisScript();
+    try {
+      LocalAnalysisScripts.remove(previous.getName());
+      LocalAnalysisScripts.add(next);
+      myLocalAnalysisScriptComboBox.removeItem(selected);
+      myLocalAnalysisScriptComboBox.addItem(makeObj(next.getName()));
+      UIUtil.selectComboBoxItem(myLocalAnalysisScriptComboBox,next.getName());
+    } catch (IllegalArgumentException e) {
+      Messages.showErrorDialog(
+        selected.toString()+" cannot be saved\n\n"+ Throwables.getStackTraceAsString(e),
+        "Cannot Perform Edit"
+      );
+    }
+  }
+
+  private void addActionListenersForRemoveLocalAnalysisScriptButton() {
     myRemoveLocalAnalysisScriptButton.addActionListener(
         actionEvent -> {
           final Object selected = myLocalAnalysisScriptComboBox.getSelectedItem();
