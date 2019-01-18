@@ -116,27 +116,24 @@ public class SonarServer {
 
     public List<Resource> getAllProjectsAndModules() {
         List<Resource> allResources = new LinkedList<>();
+
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         indicator.setText("Downloading SonarQube projects");
         List<Component> projects = getAllProjects(sonarClient);
         projects = projects.stream().sorted(comparing(Component::getName)).collect(toList());
 
-        if (null != projects) {
-            indicator.setText("Downloading SonarQube modules");
-            int i = 0;
-            for (Component project : projects) {
-                if (indicator.isCanceled()) break;
-                i++;
-                indicator.setFraction(1.0 * i / projects.size());
-                indicator.setText2(project.getName());
-                allResources.add(new Resource(project.getKey(), project.getName(), project.getQualifier()));
-                List<Component> modules = getAllModules(sonarClient, project.getId());
-                modules = modules.stream().sorted(comparing(Component::getName)).collect(toList());
-                if (null != modules) {
-                    for (Component module : modules) {
-                        allResources.add(new Resource(module.getKey(), module.getName(), module.getQualifier()));
-                    }
-                }
+        indicator.setText("Downloading SonarQube modules");
+        int i = 0;
+        for (Component project : projects) {
+            if (indicator.isCanceled()) break;
+            i++;
+            indicator.setFraction(1.0 * i / projects.size());
+            indicator.setText2(project.getName());
+            allResources.add(new Resource(project.getKey(), project.getName(), project.getQualifier()));
+            List<Component> modules = getAllModules(sonarClient, project.getId());
+            modules = modules.stream().sorted(comparing(Component::getName)).collect(toList());
+            for (Component module : modules) {
+                allResources.add(new Resource(module.getKey(), module.getName(), module.getQualifier()));
             }
         }
         return allResources;
