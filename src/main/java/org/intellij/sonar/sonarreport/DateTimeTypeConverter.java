@@ -1,4 +1,4 @@
-package org.intellij.sonar.sonarserver.result;
+package org.intellij.sonar.sonarreport;
 
 import java.lang.reflect.Type;
 import java.util.Date;

@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.base.Objects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.intellij.sonar.sonarserver.result.DateTimeTypeConverter;
+import org.intellij.sonar.sonarreport.DateTimeTypeConverter;
 import org.joda.time.DateTime;
 
 public class SonarReport {
