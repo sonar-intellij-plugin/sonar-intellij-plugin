@@ -4,7 +4,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>2.6.4</version>
+    <version>2.6.5</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -12,10 +12,16 @@
         Team
     </vendor>
 
-    <description>Connects SonarQube to IntelliJ IDEA</description>
+    <description>SonarQube Community Intellij Plugin connects SonarQube server with Intellij Idea products.</description>
 
     <change-notes>
         <![CDATA[
+<p>
+2.6.5
+<ul>
+<li>Make compatible with Intellij 2019.1</li>
+</ul>
+</p>
 <p>
 2.6.4
 <ul>
@@ -214,18 +220,8 @@
 ]]>
     </change-notes>
 
-    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-    <!--<idea-version since-build="99.18" until-build="111"/> &lt;!&ndash; Intellij 10 &ndash;&gt;-->
-    <!--<idea-version since-build="111.69" until-build="123.0"/> &lt;!&ndash; Intellij 11 &ndash;&gt;-->
-    <!--<idea-version since-build="123.0"/>--> <!-- Intellij 12+ -->
-    <!--<idea-version since-build="163" /> &lt;!&ndash; Intellij 2016.3 &ndash;&gt;-->
-    <!--<idea-version since-build="163" until-build="179.*" />  IntelliJ IDEA v.2017.1 -->
-    <!-- <idea-version since-build="172.*" />  IntelliJ IDEA v.2017.2 -->
-    <!-- <idea-version since-build="173.*" /> IntelliJ IDEA v.2017.3 -->
-    <!-- <idea-version since-build="181.*" /> IntelliJ IDEA v.2018.1 -->
-    <!-- <idea-version since-build="182.*" />  IntelliJ IDEA v.2018.2 -->
-    <idea-version since-build="183.*" /> <!-- IntelliJ IDEA v.2018.3 -->
-
+    <!-- see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html -->
+    <idea-version since-build="191" /> <!-- IntelliJ IDEA v.2019.1 -->
 
     <depends>com.intellij.modules.lang</depends>
 
