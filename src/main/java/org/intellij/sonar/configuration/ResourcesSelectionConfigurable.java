@@ -51,6 +51,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
   private JPanel myRootJPanel;
   private JLabel mySelectSonarResourcesFrom;
   private JPanel myPanelForSonarResources;
+  private JTextField myProjectNameFilterTextField;
   private List<Resource> myAllProjectsAndModules;
   private List<Resource> selectedSonarResources;
 
@@ -82,7 +83,9 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
     new TableSpeedSearch(myResourcesTable);
     myDownloadResourcesButton.addActionListener(
         actionEvent -> {
-          DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable();
+          DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable(
+                  myProjectNameFilterTextField.getText()
+          );
           ProgressManager.getInstance()
             .runProcessWithProgressSynchronously(
               downloadResourcesRunnable,
@@ -106,13 +109,20 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
 
   private class DownloadResourcesRunnable implements Runnable {
 
+    private final String projectNameFilter;
+
+
+    public DownloadResourcesRunnable(String projectNameFilter) {
+      this.projectNameFilter = projectNameFilter;
+    }
+
     @Override
     public void run() {
       final Optional<SonarServerConfig> sonarServerConfiguration = SonarServers.get(mySonarServerName);
       if (sonarServerConfiguration.isPresent()) {
         final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
         try {
-          myAllProjectsAndModules = sonarServer.getAllProjectsAndModules();
+          myAllProjectsAndModules = sonarServer.getAllProjectsAndModules(projectNameFilter);
           SonarResourcesComponent.getInstance().sonarResourcesBySonarServerName.put(
             mySonarServerName,
             ImmutableList.copyOf(myAllProjectsAndModules)

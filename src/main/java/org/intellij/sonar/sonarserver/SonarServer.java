@@ -114,12 +114,12 @@ public class SonarServer {
         return new Rule(rule.getKey(), rule.getName(), rule.getSeverity(), rule.getLang(), rule.getLangName(), rule.getHtmlDesc());
     }
 
-    public List<Resource> getAllProjectsAndModules() {
+    public List<Resource> getAllProjectsAndModules(String projectNameFilter) {
         List<Resource> allResources = new LinkedList<>();
 
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         indicator.setText("Downloading SonarQube projects");
-        List<Component> projects = getAllProjects(sonarClient);
+        List<Component> projects = getAllProjects(sonarClient, projectNameFilter);
         projects = projects.stream().sorted(comparing(Component::getName)).collect(toList());
 
         indicator.setText("Downloading SonarQube modules");
@@ -139,10 +139,14 @@ public class SonarServer {
         return allResources;
     }
 
-    public List<Component> getAllProjects(WsClient sonarClient) {
+    public List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter) {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
                 .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
+
+        if (projectNameFilter != null && !"".equals(projectNameFilter.trim())) {
+            query.setQuery(projectNameFilter);
+        }
 
         List<WsComponents.Component> components = new ArrayList<>();
 
