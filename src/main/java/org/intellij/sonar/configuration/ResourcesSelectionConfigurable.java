@@ -1,6 +1,7 @@
 package org.intellij.sonar.configuration;
 
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -81,21 +82,24 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       )
     );
     new TableSpeedSearch(myResourcesTable);
-    myDownloadResourcesButton.addActionListener(
-        actionEvent -> {
-          DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable(
-                  myProjectNameFilterTextField.getText()
-          );
-          ProgressManager.getInstance()
-            .runProcessWithProgressSynchronously(
-              downloadResourcesRunnable,
-              "Loading SonarQube resources from server",
-              true,
-              myProject
-            );
-        }
-    );
+    myDownloadResourcesButton.addActionListener(myDownloadResourcesButtonActionListener());
     return myRootJPanel;
+  }
+
+  @NotNull
+  private ActionListener myDownloadResourcesButtonActionListener() {
+    return actionEvent -> {
+      DownloadResourcesRunnable downloadResourcesRunnable = new DownloadResourcesRunnable(
+              myProjectNameFilterTextField.getText()
+      );
+      ProgressManager.getInstance()
+        .runProcessWithProgressSynchronously(
+          downloadResourcesRunnable,
+          "Loading SonarQube resources from server",
+          true,
+          myProject
+        );
+    };
   }
 
   private JComponent createResourcesTableComponent() {
