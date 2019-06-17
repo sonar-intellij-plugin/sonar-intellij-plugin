@@ -1,19 +1,5 @@
 package org.intellij.sonar.sonarserver;
 
-import static java.util.Collections.singletonList;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.removeEnd;
-
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.common.collect.ImmutableList;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -22,7 +8,6 @@ import com.intellij.util.net.HttpConfigurable;
 import com.intellij.util.net.ssl.CertificateManager;
 import com.intellij.util.net.ssl.ConfirmingTrustManager;
 import com.intellij.util.proxy.CommonProxy;
-
 import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.configuration.SonarQualifier;
 import org.intellij.sonar.persistence.Resource;
@@ -40,6 +25,17 @@ import org.sonarqube.ws.client.WsClientFactories;
 import org.sonarqube.ws.client.component.TreeWsRequest;
 import org.sonarqube.ws.client.issue.IssuesService;
 import org.sonarqube.ws.client.issue.SearchWsRequest;
+
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
+import java.util.*;
+import java.util.function.Consumer;
+
+import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.removeEnd;
 
 public class SonarServer {
 
@@ -119,7 +115,7 @@ public class SonarServer {
 
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         indicator.setText("Downloading SonarQube projects");
-        List<Component> projects = getAllProjects(sonarClient, projectNameFilter);
+        List<Component> projects = getAllProjects(sonarClient, projectNameFilter, mySonarServerConfig.getOrganization());
         projects = projects.stream().sorted(comparing(Component::getName)).collect(toList());
 
         indicator.setText("Downloading SonarQube modules");
@@ -139,14 +135,13 @@ public class SonarServer {
         return allResources;
     }
 
-    public List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter) {
+    public List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter, String organization) {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
                 .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
-
-        if (projectNameFilter != null && !"".equals(projectNameFilter.trim())) {
-            query.setQuery(projectNameFilter);
-        }
+        
+        addSearchParameter(projectNameFilter, query::setQuery);
+        addSearchParameter(organization, query::setOrganization);
 
         List<WsComponents.Component> components = new ArrayList<>();
 
@@ -202,5 +197,11 @@ public class SonarServer {
             builder.addAll(issuesService.search(query).getIssuesList());
         }
         return builder.build();
+    }
+
+    private void addSearchParameter(String paramValue, Consumer<String> consumer) {
+        if (paramValue != null && !"".equals(paramValue.trim())) {
+            consumer.accept(paramValue.trim());
+        }
     }
 }
