@@ -139,7 +139,7 @@ public class SonarServer {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
                 .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
-        
+
         addSearchParameter(projectNameFilter, query::setQuery);
         addSearchParameter(organization, query::setOrganization);
 
@@ -178,6 +178,7 @@ public class SonarServer {
         query.setComponentRoots(singletonList(resourceKey))
                 .setResolved(false)
                 .setPageSize(-1);
+        query.setProjectKeys(singletonList(resourceKey));
         IssuesService issuesService = sonarClient.issues();
         SearchWsResponse response = issuesService.search(query);
         builder.addAll(response.getIssuesList());
