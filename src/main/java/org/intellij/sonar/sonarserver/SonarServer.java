@@ -179,6 +179,7 @@ public class SonarServer {
                 .setResolved(false)
                 .setPageSize(-1);
         query.setProjectKeys(singletonList(resourceKey));
+        addSearchParameter(mySonarServerConfig.getOrganization(), query::setOrganization);
         IssuesService issuesService = sonarClient.issues();
         SearchWsResponse response = issuesService.search(query);
         builder.addAll(response.getIssuesList());
