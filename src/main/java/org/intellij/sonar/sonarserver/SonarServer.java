@@ -1,29 +1,8 @@
 package org.intellij.sonar.sonarserver;
 
-import static java.util.Collections.singletonList;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang.StringUtils.removeEnd;
-
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
 import com.google.common.collect.ImmutableList;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.util.net.HttpConfigurable;
-import com.intellij.util.net.ssl.CertificateManager;
-import com.intellij.util.net.ssl.ConfirmingTrustManager;
-import com.intellij.util.proxy.CommonProxy;
-
-import org.apache.commons.lang.StringUtils;
 import org.intellij.sonar.configuration.SonarQualifier;
 import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.SonarServerConfig;
@@ -34,79 +13,36 @@ import org.sonarqube.ws.Issues.SearchWsResponse;
 import org.sonarqube.ws.Rules;
 import org.sonarqube.ws.WsComponents;
 import org.sonarqube.ws.WsComponents.Component;
-import org.sonarqube.ws.client.HttpConnector;
 import org.sonarqube.ws.client.WsClient;
-import org.sonarqube.ws.client.WsClientFactories;
 import org.sonarqube.ws.client.component.TreeWsRequest;
 import org.sonarqube.ws.client.issue.IssuesService;
 import org.sonarqube.ws.client.issue.SearchWsRequest;
 
-public class SonarServer {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
-    private static final Logger LOG = Logger.getInstance(SonarServer.class);
+import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
+public class SonarServer {
 
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
-    private final SonarServerConfig mySonarServerConfig;
     private final WsClient sonarClient;
 
-    private SonarServer(SonarServerConfig sonarServerConfigBean) {
-        this.mySonarServerConfig = sonarServerConfigBean;
-        this.sonarClient = createSonarClient();
+    private SonarServer(SonarServerConfig sonarServerConfig) {
+        this.sonarClient = SonarClientFactory.getInstance()
+                .connectTimeoutInMs(CONNECT_TIMEOUT_IN_MILLISECONDS)
+                .readTimeoutInMs(READ_TIMEOUT_IN_MILLISECONDS)
+                .sonarServerConfig(sonarServerConfig)
+                .createSonarClient();
     }
 
     public static SonarServer create(SonarServerConfig sonarServerConfigBean) {
         return new SonarServer(sonarServerConfigBean);
-    }
-
-    private WsClient createSonarClient() {
-        String hostUrl = removeEnd(mySonarServerConfig.getHostUrl(), "/");
-        CertificateManager certificateManager = CertificateManager.getInstance();
-
-        HttpConnector.Builder connectorBuilder = HttpConnector.newBuilder()
-                .readTimeoutMilliseconds(READ_TIMEOUT_IN_MILLISECONDS)
-                .connectTimeoutMilliseconds(CONNECT_TIMEOUT_IN_MILLISECONDS)
-                .url(hostUrl)
-                .setTrustManager(ConfirmingTrustManager.createForStorage(certificateManager.getCacertsPath(), certificateManager.getPassword()));
-
-        if (!mySonarServerConfig.isAnonymous()) {
-            if (StringUtils.isNotBlank(mySonarServerConfig.loadToken())) {
-                // https://sonarqube.com/api/user_tokens/search
-                connectorBuilder.token(mySonarServerConfig.getToken());
-                mySonarServerConfig.clearToken();
-            } else {
-                mySonarServerConfig.loadPassword();
-                connectorBuilder.credentials(mySonarServerConfig.getUser(), mySonarServerConfig.getPassword());
-                mySonarServerConfig.clearPassword();
-            }
-        }
-
-        Optional<Proxy> proxy = getIntelliJProxyFor(hostUrl);
-        if (proxy.isPresent()) {
-            HttpConfigurable proxySettings = HttpConfigurable.getInstance();
-            connectorBuilder.proxy(proxy.get());
-            if (proxySettings.PROXY_AUTHENTICATION) {
-                connectorBuilder.proxyCredentials(proxySettings.getProxyLogin(), proxySettings.getPlainProxyPassword());
-            }
-        }
-
-        return WsClientFactories.getDefault().newClient(connectorBuilder.build());
-    }
-
-    private Optional<Proxy> getIntelliJProxyFor(String server) {
-        List<Proxy> proxies;
-        try {
-            proxies = CommonProxy.getInstance().select(new URL(server));
-        } catch (MalformedURLException e) {
-            LOG.error("Unable to configure proxy", e);
-            return Optional.empty();
-        }
-        for (Proxy proxy : proxies) {
-            if (proxy.type() == Proxy.Type.HTTP) {
-                return Optional.of(proxy);
-            }
-        }
-        return Optional.empty();
     }
 
     public Rule getRule(String key) {
@@ -139,7 +75,7 @@ public class SonarServer {
         return allResources;
     }
 
-    public List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter) {
+    private List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter) {
         org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
                 .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
@@ -170,7 +106,7 @@ public class SonarServer {
         return Collections.unmodifiableList(components);
     }
 
-    public List<Component> getAllModules(WsClient sonarClient, String projectResourceId) {
+    private List<Component> getAllModules(WsClient sonarClient, String projectResourceId) {
         TreeWsRequest query = new TreeWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.MODULE.getQualifier()))
                 .setBaseComponentId(projectResourceId);
