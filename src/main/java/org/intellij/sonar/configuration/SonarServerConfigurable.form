@@ -138,7 +138,9 @@
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <toolTipText value="Needed for integration with Sonarcloud.io"/>
+        </properties>
       </component>
     </children>
   </grid>
