@@ -126,7 +126,8 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       if (sonarServerConfiguration.isPresent()) {
         final SonarServer sonarServer = SonarServer.create(sonarServerConfiguration.get());
         try {
-          myAllProjectsAndModules = sonarServer.getAllProjectsAndModules(projectNameFilter);
+          String organization = sonarServerConfiguration.get().getOrganization();
+          myAllProjectsAndModules = sonarServer.getAllProjectsAndModules(projectNameFilter, organization);
           SonarResourcesComponent.getInstance().sonarResourcesBySonarServerName.put(
             mySonarServerName,
             ImmutableList.copyOf(myAllProjectsAndModules)

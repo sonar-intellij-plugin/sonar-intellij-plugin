@@ -18,18 +18,21 @@ public class SonarServerConfig {
 
   @Transient
   private String token;
+  private String organization;
 
   public static SonarServerConfig of(String hostUrl) {
-    return SonarServerConfig.of(null,hostUrl,true,null, null);
+    return SonarServerConfig.of(null,hostUrl,true,null, null, null);
   }
 
-  public static SonarServerConfig of(String name,String hostUrl,boolean anonymous,String user, String token ) {
+  public static SonarServerConfig of(String name,String hostUrl,boolean anonymous,String user,
+                                     String token, String organization ) {
     SonarServerConfig bean = new SonarServerConfig();
     bean.name = name;
     bean.hostUrl = hostUrl;
     bean.anonymous = anonymous;
     bean.user = user;
     bean.token = token;
+    bean.organization = organization;
     return bean;
   }
 
@@ -63,6 +66,14 @@ public class SonarServerConfig {
 
   public void setUser(String user) {
     this.user = user;
+  }
+
+  public String getOrganization() {
+    return organization;
+  }
+
+  public void setOrganization(String organization) {
+    this.organization = organization;
   }
 
   public String getPassword() {

@@ -29,6 +29,7 @@ public class SonarServerConfigurable extends DialogWrapper {
   private JRadioButton tokenRadioButton;
   private JRadioButton credentialsRadioButton;
   private JTextField tokenText;
+  private JTextField myOrganizationTextField;
 
   public SonarServerConfigurable(@Nullable Project project) {
     super(project);
@@ -135,7 +136,8 @@ public class SonarServerConfigurable extends DialogWrapper {
       myHostUrlTextField.getText(),
       myAnonymousCheckBox.isSelected(),
       myUserTextField.getText(),
-      tokenText.getText()
+      tokenText.getText(),
+      myOrganizationTextField.getText()
     );
     if (credentialsRadioButton.isSelected()) {
       sonarServerConfig.setPassword(String.valueOf(myPasswordField.getPassword()));
@@ -160,6 +162,7 @@ public class SonarServerConfigurable extends DialogWrapper {
       }
     }
     this.myAnonymousCheckBox.setSelected(bean.isAnonymous());
+    this.myOrganizationTextField.setText(bean.getOrganization());
     initCheckboxes();
   }
 }

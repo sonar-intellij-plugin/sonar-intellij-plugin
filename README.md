@@ -29,7 +29,7 @@ In your IDE go to `File -> Settings -> Other Settings -> SonarQube`.
 ![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_selection.png "Example server selection")
 
 
-Click Add, enter the address of your Sonar server and the credentials (if needed) and click `OK`.
+Click Add, enter the address of your Sonar server and the credentials (if needed) and click `OK` (if you use Sonarcloud.io as Sonar server then you need to enter value for Organization).
 
 ![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_configuration.png "Example server configuration")
 

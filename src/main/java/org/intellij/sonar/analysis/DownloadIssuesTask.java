@@ -62,7 +62,7 @@ public class DownloadIssuesTask implements Runnable {
     for (String resourceKey : resourceKeys) {
       final String downloadingIssuesMessage = String.format("Downloading issues for SonarQube resource %s",resourceKey);
       sonarConsole.info(downloadingIssuesMessage);
-      final ImmutableList<Issue> issues = sonarServer.getAllIssuesFor(resourceKey);
+      final ImmutableList<Issue> issues = sonarServer.getAllIssuesFor(resourceKey, sonarServerConfig.getOrganization());
       downloadedIssuesByResourceKey.put(resourceKey,issues);
     }
     onSuccess(startTime);
