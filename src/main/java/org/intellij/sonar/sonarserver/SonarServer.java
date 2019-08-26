@@ -110,7 +110,6 @@ public class SonarServer {
         TreeWsRequest query = new TreeWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.MODULE.getQualifier()))
                 .setComponent(projectResourceKey);
- //               .setBaseComponentKey(projectResourceKey);
         return sonarClient.components().tree(query).getComponentsList();
     }
 
