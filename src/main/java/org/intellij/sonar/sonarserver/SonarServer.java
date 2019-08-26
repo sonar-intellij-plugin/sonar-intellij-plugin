@@ -67,7 +67,7 @@ public class SonarServer {
             indicator.setFraction(1.0 * i / projects.size());
             indicator.setText2(project.getName());
             allResources.add(new Resource(project.getKey(), project.getName(), project.getQualifier()));
-            List<Component> modules = getAllModules(sonarClient, project.getId());
+            List<Component> modules = getAllModules(sonarClient, project.getKey());
             modules = modules.stream().sorted(comparing(Component::getName)).collect(toList());
             for (Component module : modules) {
                 allResources.add(new Resource(module.getKey(), module.getName(), module.getQualifier()));
@@ -106,10 +106,11 @@ public class SonarServer {
         return Collections.unmodifiableList(components);
     }
 
-    private List<Component> getAllModules(WsClient sonarClient, String projectResourceId) {
+    private List<Component> getAllModules(WsClient sonarClient, String projectResourceKey) {
         TreeWsRequest query = new TreeWsRequest()
                 .setQualifiers(singletonList(SonarQualifier.MODULE.getQualifier()))
-                .setBaseComponentId(projectResourceId);
+                .setComponent(projectResourceKey);
+ //               .setBaseComponentKey(projectResourceKey);
         return sonarClient.components().tree(query).getComponentsList();
     }
 
