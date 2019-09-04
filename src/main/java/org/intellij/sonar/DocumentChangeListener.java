@@ -1,11 +1,5 @@
 package org.intellij.sonar;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.application.ApplicationManager;
@@ -25,6 +19,12 @@ import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.util.Finders;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class DocumentChangeListener extends AbstractProjectComponent {
 
@@ -55,61 +55,30 @@ public class DocumentChangeListener extends AbstractProjectComponent {
     CHANGED_FILES.clear();
   }
 
+  private void rememberChangedFile(final DocumentEvent e) {
+    ApplicationManager.getApplication().invokeLater(
+            () -> ApplicationManager.getApplication().runReadAction(
+                    () -> addFileFromEventToChangedFiles(e)
+            )
+    );
+  }
+
+  private void addFileFromEventToChangedFiles(DocumentEvent e) {
+    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
+    file.ifPresent(CHANGED_FILES::add);
+  }
+
   private void updateIssuesPositions(final DocumentEvent e,final Project project) {
     final Optional<Document> document = Optional.ofNullable(e.getDocument());
     final List<Editor> editors = Finders.findEditorsFrom(document.get());
     for (final Editor editor : editors) {
       ApplicationManager.getApplication().invokeLater(
           () -> {
-            updateIssueLines(document,editor);
+            document.ifPresent($ -> updateIssueLines($,editor));
             final Optional<VirtualFile> file = removeIssuesDeletedInEditor(e,project);
-            updateHighlightingFor(file,project);
+            file.ifPresent($ -> updateHighlightingFor($,project));
           }
       );
-    }
-  }
-
-  private void updateHighlightingFor(Optional<VirtualFile> file,Project project) {
-    if (file.isPresent() && !project.isDisposed() && project.isInitialized()) {
-      Optional<PsiFile> psiFile = Optional.ofNullable(PsiManager.getInstance(project).findFile(file.get()));
-      psiFile.ifPresent(psiFile1 -> DaemonCodeAnalyzer.getInstance(project).restart(psiFile1));
-    }
-  }
-
-  /**
-   removes issues without highlighter (highlighter was removed in editor) by iterating over all issues from
-   remaining highlighters and updating the issues index
-
-   @param documentEvent
-   triggered the change of the document
-   @param project
-   the document belongs to
-   */
-  private Optional<VirtualFile> removeIssuesDeletedInEditor(DocumentEvent documentEvent,Project project) {
-    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(
-        documentEvent.getDocument()
-    ));
-    if (file.isPresent()) {
-      Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
-      Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(documentEvent.getDocument());
-      retrieveIssuesFromHighlighters(issuesFromHighlighters,highlighters);
-      final Optional<IssuesByFileIndexProjectComponent> indexComponent =
-        IssuesByFileIndexProjectComponent.getInstance(project);
-      if (indexComponent.isPresent()) {
-        final Map<String,Set<SonarIssue>> index = indexComponent.get().getIndex();
-        index.put(file.get().getPath(),issuesFromHighlighters);
-      }
-    }
-    return file;
-  }
-
-  private void retrieveIssuesFromHighlighters(
-    Set<SonarIssue> issuesFromHighlighters,
-    Set<RangeHighlighter> highlighters
-  ) {
-    for (RangeHighlighter highlighter : highlighters) {
-      Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
-      issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
     }
   }
 
@@ -121,8 +90,8 @@ public class DocumentChangeListener extends AbstractProjectComponent {
    @param editor
    containing the document
    */
-  private void updateIssueLines(Optional<Document> document,Editor editor) {
-    Set<RangeHighlighter> allHighlighters = Finders.findAllRangeHighlightersFrom(document.get());
+  private void updateIssueLines(Document document,Editor editor) {
+    Set<RangeHighlighter> allHighlighters = Finders.findAllRangeHighlightersFrom(document);
     for (RangeHighlighter highlighter : allHighlighters) {
       updateLineForAllIssuesFrom(editor,highlighter);
     }
@@ -141,16 +110,46 @@ public class DocumentChangeListener extends AbstractProjectComponent {
     }
   }
 
-  private void rememberChangedFile(final DocumentEvent e) {
-    ApplicationManager.getApplication().invokeLater(
-        () -> ApplicationManager.getApplication().runReadAction(
-            () -> addFileFromEventToChangedFiles(e)
-        )
-    );
+  /**
+   removes issues without highlighter (highlighter was removed in editor) by iterating over all issues from
+   remaining highlighters and updating the issues index
+
+   @param documentEvent
+   triggered the change of the document
+   @param project
+   the document belongs to
+   */
+  private Optional<VirtualFile> removeIssuesDeletedInEditor(DocumentEvent documentEvent,Project project) {
+    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(
+            documentEvent.getDocument()
+    ));
+    if (file.isPresent()) {
+      Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
+      Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(documentEvent.getDocument());
+      retrieveIssuesFromHighlighters(issuesFromHighlighters,highlighters);
+      final Optional<IssuesByFileIndexProjectComponent> indexComponent =
+              IssuesByFileIndexProjectComponent.getInstance(project);
+      if (indexComponent.isPresent()) {
+        final Map<String,Set<SonarIssue>> index = indexComponent.get().getIndex();
+        index.put(file.get().getPath(),issuesFromHighlighters);
+      }
+    }
+    return file;
   }
 
-  private void addFileFromEventToChangedFiles(DocumentEvent e) {
-    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
-    file.ifPresent(CHANGED_FILES::add);
+  private void retrieveIssuesFromHighlighters(
+          Set<SonarIssue> issuesFromHighlighters,
+          Set<RangeHighlighter> highlighters) {
+    for (RangeHighlighter highlighter : highlighters) {
+      Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+      issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
+    }
+  }
+
+  private void updateHighlightingFor(VirtualFile virtualFile,Project project) {
+      if (virtualFile.isValid() && !project.isDisposed() && project.isInitialized()) {
+        Optional<PsiFile> psiFile = Optional.ofNullable(PsiManager.getInstance(project).findFile(virtualFile));
+        psiFile.ifPresent(psiFile1 -> DaemonCodeAnalyzer.getInstance(project).restart(psiFile1));
+      }
   }
 }
