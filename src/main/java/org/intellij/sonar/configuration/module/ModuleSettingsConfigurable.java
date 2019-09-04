@@ -3,8 +3,6 @@ package org.intellij.sonar.configuration.module;
 import static org.intellij.sonar.util.UIUtil.makeObj;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Optional;
 

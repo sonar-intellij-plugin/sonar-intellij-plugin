@@ -55,9 +55,9 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
   public static void remove(@NotNull final String sonarServerName) {
     final Optional<SonarServerConfig> bean = get(sonarServerName);
     Preconditions.checkArgument(bean.isPresent());
-      getAll().ifPresent($ -> getInstance().beans = $.stream()
-              .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
-              .collect(Collectors.toCollection(LinkedList::new)));
+    getAll().ifPresent(sonarServerConfigs -> getInstance().beans = sonarServerConfigs.stream()
+            .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
+            .collect(Collectors.toCollection(LinkedList::new)));
   }
 
   public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {

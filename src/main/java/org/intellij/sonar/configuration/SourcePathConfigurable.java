@@ -2,7 +2,6 @@ package org.intellij.sonar.configuration;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.*;
 
@@ -17,7 +16,6 @@ import com.intellij.openapi.util.NullableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.Consumer;
 import org.jetbrains.annotations.Nullable;
 
 public class SourcePathConfigurable extends DialogWrapper {
