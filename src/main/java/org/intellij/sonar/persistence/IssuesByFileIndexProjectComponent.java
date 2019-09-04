@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 public class IssuesByFileIndexProjectComponent
   implements ProjectComponent, PersistentStateComponent<IssuesByFileIndexProjectComponent> {
 
-  private Map<String,Set<SonarIssue>> index = new HashMap<String,Set<SonarIssue>>();
+  private Map<String,Set<SonarIssue>> index = new HashMap<>();
 
   public IssuesByFileIndexProjectComponent() {
   }
@@ -41,7 +41,7 @@ public class IssuesByFileIndexProjectComponent
   }
 
   @Override
-  public void loadState(IssuesByFileIndexProjectComponent state) {
+  public void loadState(@NotNull IssuesByFileIndexProjectComponent state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 

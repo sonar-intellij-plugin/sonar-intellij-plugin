@@ -45,7 +45,7 @@ public class SonarIntellijPluginApplicationComponent implements com.intellij.ope
   }
 
   private void registerExternalAnnotatorFor(Language language) {
-    LanguageExtensionPoint<SonarExternalAnnotator> ep = new LanguageExtensionPoint<SonarExternalAnnotator>();
+    LanguageExtensionPoint<SonarExternalAnnotator> ep = new LanguageExtensionPoint<>();
     ep.language = language.getID();
     ep.implementationClass = SonarExternalAnnotator.class.getName();
     ep.setPluginDescriptor(plugin);

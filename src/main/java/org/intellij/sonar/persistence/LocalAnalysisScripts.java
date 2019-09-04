@@ -25,7 +25,7 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
 
   public static final String NO_LOCAL_ANALYSIS = "<NO LOCAL ANALYSIS>";
   public static final String PROJECT = "<PROJECT>";
-  public Collection<LocalAnalysisScript> beans = new ArrayList<LocalAnalysisScript>();
+  public Collection<LocalAnalysisScript> beans = new ArrayList<>();
 
   @NotNull
   public static LocalAnalysisScripts getInstance() {
@@ -68,7 +68,7 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
   }
 
   @Override
-  public void loadState(LocalAnalysisScripts state) {
+  public void loadState(@NotNull LocalAnalysisScripts state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 

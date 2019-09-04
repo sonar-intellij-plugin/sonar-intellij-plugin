@@ -28,7 +28,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
 
   public static final String NO_SONAR = "<NO SONAR>";
   public static final String PROJECT = "<PROJECT>";
-  public Collection<SonarServerConfig> beans = new ArrayList<SonarServerConfig>();
+  public Collection<SonarServerConfig> beans = new ArrayList<>();
 
   @NotNull
   public static SonarServers getInstance() {
@@ -60,7 +60,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
     final List<SonarServerConfig> newBeans = getAll().get().stream()
         .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
         .collect(Collectors.toList());
-    getInstance().beans = new LinkedList<SonarServerConfig>(newBeans);
+    getInstance().beans = new LinkedList<>(newBeans);
   }
 
   public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {
@@ -83,7 +83,7 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
   }
 
   @Override
-  public void loadState(SonarServers state) {
+  public void loadState(@NotNull SonarServers state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 

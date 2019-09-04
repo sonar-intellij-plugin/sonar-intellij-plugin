@@ -7,8 +7,8 @@ import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -19,6 +19,7 @@ import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
 import org.intellij.sonar.util.Finders;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -28,14 +29,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public class DocumentChangeListener extends AbstractProjectComponent {
 
-  public static final Set<VirtualFile> CHANGED_FILES = new CopyOnWriteArraySet<VirtualFile>();
+  public static final Set<VirtualFile> CHANGED_FILES = new CopyOnWriteArraySet<>();
 
   protected DocumentChangeListener(final Project project) {
     super(project);
     EditorFactory.getInstance().getEventMulticaster().addDocumentListener(
-      new DocumentAdapter() {
+      new DocumentListener() {
         @Override
-        public void documentChanged(final DocumentEvent e) {
+        public void documentChanged(@NotNull final DocumentEvent e) {
           rememberChangedFile(e);
           updateIssuesPositions(e,project);
         }
@@ -64,18 +65,19 @@ public class DocumentChangeListener extends AbstractProjectComponent {
   }
 
   private void addFileFromEventToChangedFiles(DocumentEvent e) {
-    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(e.getDocument()));
+    FileDocumentManager fdm = FileDocumentManager.getInstance();
+    final Optional<VirtualFile> file = Optional.ofNullable(fdm.getFile(e.getDocument()));
     file.ifPresent(CHANGED_FILES::add);
   }
 
-  private void updateIssuesPositions(final DocumentEvent e,final Project project) {
-    final Optional<Document> document = Optional.ofNullable(e.getDocument());
-    final List<Editor> editors = Finders.findEditorsFrom(document.get());
+  private void updateIssuesPositions(final DocumentEvent documentEvent,final Project project) {
+    final Document document = documentEvent.getDocument();
+    final List<Editor> editors = Finders.findEditorsFrom(document);
     for (final Editor editor : editors) {
       ApplicationManager.getApplication().invokeLater(
           () -> {
-            document.ifPresent($ -> updateIssueLines($,editor));
-            final Optional<VirtualFile> file = removeIssuesDeletedInEditor(e,project);
+            updateIssueLines(document,editor);
+            final Optional<VirtualFile> file = removeIssuesDeletedInEditor(documentEvent,project);
             file.ifPresent($ -> updateHighlightingFor($,project));
           }
       );
@@ -92,8 +94,8 @@ public class DocumentChangeListener extends AbstractProjectComponent {
    */
   private void updateIssueLines(Document document,Editor editor) {
     Set<RangeHighlighter> allHighlighters = Finders.findAllRangeHighlightersFrom(document);
-    for (RangeHighlighter highlighter : allHighlighters) {
-      updateLineForAllIssuesFrom(editor,highlighter);
+    for (RangeHighlighter rh : allHighlighters) {
+      updateLineForAllIssuesFrom(editor,rh);
     }
   }
 
@@ -120,7 +122,8 @@ public class DocumentChangeListener extends AbstractProjectComponent {
    the document belongs to
    */
   private Optional<VirtualFile> removeIssuesDeletedInEditor(DocumentEvent documentEvent,Project project) {
-    final Optional<VirtualFile> file = Optional.ofNullable(FileDocumentManager.getInstance().getFile(
+    FileDocumentManager fdm = FileDocumentManager.getInstance();
+    final Optional<VirtualFile> file = Optional.ofNullable(fdm.getFile(
             documentEvent.getDocument()
     ));
     if (file.isPresent()) {
@@ -140,16 +143,20 @@ public class DocumentChangeListener extends AbstractProjectComponent {
   private void retrieveIssuesFromHighlighters(
           Set<SonarIssue> issuesFromHighlighters,
           Set<RangeHighlighter> highlighters) {
-    for (RangeHighlighter highlighter : highlighters) {
-      Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
+    for (RangeHighlighter rh : highlighters) {
+      Optional<Set<SonarIssue>> issuesFromHighlighter = Optional.ofNullable(rh.getUserData(SonarExternalAnnotator.KEY));
       issuesFromHighlighter.ifPresent(issuesFromHighlighters::addAll);
     }
   }
 
   private void updateHighlightingFor(VirtualFile virtualFile,Project project) {
       if (virtualFile.isValid() && !project.isDisposed() && project.isInitialized()) {
-        Optional<PsiFile> psiFile = Optional.ofNullable(PsiManager.getInstance(project).findFile(virtualFile));
-        psiFile.ifPresent(psiFile1 -> DaemonCodeAnalyzer.getInstance(project).restart(psiFile1));
+        PsiManager pm = PsiManager.getInstance(project);
+        Optional<PsiFile> psiFile = Optional.ofNullable(pm.findFile(virtualFile));
+        psiFile.ifPresent($ -> {
+          DaemonCodeAnalyzer daemonCodeAnalyzer = DaemonCodeAnalyzer.getInstance(project);
+          daemonCodeAnalyzer.restart($);
+        });
       }
   }
 }

@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 )
 public class SonarRules implements PersistentStateComponent<SonarRules>, ProjectComponent {
 
-  private Map<String,Rule> sonarRulesByRuleKey = new ConcurrentHashMap<String,Rule>();
+  private Map<String,Rule> sonarRulesByRuleKey = new ConcurrentHashMap<>();
 
   public static Optional<SonarRules> getInstance(Project project) {
     return Optional.ofNullable(project.getComponent(SonarRules.class));
@@ -35,7 +35,7 @@ public class SonarRules implements PersistentStateComponent<SonarRules>, Project
   }
 
   @Override
-  public void loadState(SonarRules state) {
+  public void loadState(@NotNull SonarRules state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 
