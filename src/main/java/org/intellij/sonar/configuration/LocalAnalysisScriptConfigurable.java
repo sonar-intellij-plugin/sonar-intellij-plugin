@@ -103,15 +103,13 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
     public void actionPerformed(ActionEvent e) {
       Application application = ApplicationManager.getApplication();
       VirtualFile previous = application.runWriteAction(
-        new NullableComputable<VirtualFile>() {
-          public VirtualFile compute() {
-            final String path = FileUtil.toSystemIndependentName(myPathToSonarReportTextFieldWithBrowseButton.getText
-                ());
-            return !StringUtil.isEmptyOrSpaces(path)
-              ? LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
-              : null;
-          }
-        }
+              (NullableComputable<VirtualFile>) () -> {
+                final String path = FileUtil.toSystemIndependentName(myPathToSonarReportTextFieldWithBrowseButton.getText
+                    ());
+                return !StringUtil.isEmptyOrSpaces(path)
+                  ? LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
+                  : null;
+              }
       );
       FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(true,false,false,false,false,false);
       fileDescriptor.setShowFileSystemRoots(true);

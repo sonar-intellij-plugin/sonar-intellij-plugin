@@ -147,6 +147,7 @@ public abstract class SonarServersView {
           int rc = Messages.showOkCancelDialog(
             "Are you sure you want to remove "+selectedSonarServer.toString()+" ?",
             "Remove SonarQube Server",
+            "Yes, remove", "No",
             Messages.getQuestionIcon()
           );
           if (rc == Messages.OK) {

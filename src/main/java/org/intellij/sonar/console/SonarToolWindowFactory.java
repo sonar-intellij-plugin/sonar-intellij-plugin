@@ -22,12 +22,13 @@ package org.intellij.sonar.console;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import org.jetbrains.annotations.NotNull;
 
 public class SonarToolWindowFactory implements ToolWindowFactory {
 
   public static final String TOOL_WINDOW_ID = "SonarQube";
 
   @Override
-  public void createToolWindowContent(Project project,ToolWindow toolWindow) {
+  public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
   }
 }

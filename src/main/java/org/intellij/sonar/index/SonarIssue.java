@@ -2,6 +2,7 @@ package org.intellij.sonar.index;
 
 import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
+import org.jetbrains.annotations.NotNull;
 
 public class SonarIssue implements Comparable {
 
@@ -94,7 +95,7 @@ public class SonarIssue implements Comparable {
   }
 
   @Override
-  public int compareTo(Object that) {
+  public int compareTo(@NotNull Object that) {
     return Objects.equal(this,that)
       ? 0
       : -1;

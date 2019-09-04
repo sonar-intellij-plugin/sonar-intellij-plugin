@@ -116,12 +116,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
     );
     processAlternativeDirSelections();
     myUseAlternativeWorkingDirCheckBox.addActionListener(
-      new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          processAlternativeDirSelections();
-        }
-      }
+            e -> processAlternativeDirSelections()
     );
   }
 
@@ -156,16 +151,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
   @Override
   public void disposeUIResources() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void projectOpened() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void projectClosed() {
     // To change body of implemented methods use File | Settings | File Templates.
   }
 

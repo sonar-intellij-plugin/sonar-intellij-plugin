@@ -1,12 +1,5 @@
 package org.intellij.sonar.persistence;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -14,9 +7,14 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @State(
   name = "sonarServers",
@@ -57,10 +55,9 @@ public class SonarServers implements PersistentStateComponent<SonarServers> {
   public static void remove(@NotNull final String sonarServerName) {
     final Optional<SonarServerConfig> bean = get(sonarServerName);
     Preconditions.checkArgument(bean.isPresent());
-    final List<SonarServerConfig> newBeans = getAll().get().stream()
-        .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
-        .collect(Collectors.toList());
-    getInstance().beans = new LinkedList<>(newBeans);
+      getAll().ifPresent($ -> getInstance().beans = $.stream()
+              .filter(sonarServerConfigurationBean -> !bean.get().equals(sonarServerConfigurationBean))
+              .collect(Collectors.toCollection(LinkedList::new)));
   }
 
   public static Optional<SonarServerConfig> get(@NotNull final String sonarServerName) {

@@ -3,6 +3,7 @@ package org.intellij.sonar.sonarserver;
 import com.google.common.base.Objects;
 import com.intellij.util.xmlb.annotations.Transient;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 public class Rule implements Comparable {
 
@@ -74,8 +75,8 @@ public class Rule implements Comparable {
   }
 
   @Transient
-  public boolean isEmpty() {
-    return StringUtils.isEmpty(key) || StringUtils.isEmpty(htmlDesc);
+  public boolean isValid() {
+    return !StringUtils.isEmpty(key) && !StringUtils.isEmpty(htmlDesc);
   }
 
   @Override
@@ -97,7 +98,7 @@ public class Rule implements Comparable {
   }
 
   @Override
-  public int compareTo(Object that) {
+  public int compareTo(@NotNull Object that) {
     return Objects.equal(this,that)
       ? 0
       : -1;

@@ -34,7 +34,7 @@ public class SonarResourcesComponent implements PersistentStateComponent<SonarRe
   }
 
   @Override
-  public void loadState(SonarResourcesComponent state) {
+  public void loadState(@NotNull SonarResourcesComponent state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 }

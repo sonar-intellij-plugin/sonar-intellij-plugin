@@ -95,7 +95,7 @@ public class ResourcesSelectionConfigurable extends DialogWrapper {
       ProgressManager.getInstance()
         .runProcessWithProgressSynchronously(
           downloadResourcesRunnable,
-          "Loading SonarQube resources from server",
+                "Loading SonarQube Resources from Server",
           true,
           myProject
         );

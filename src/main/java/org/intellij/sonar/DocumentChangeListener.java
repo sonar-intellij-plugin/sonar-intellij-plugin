@@ -78,7 +78,7 @@ public class DocumentChangeListener extends AbstractProjectComponent {
           () -> {
             updateIssueLines(document,editor);
             final Optional<VirtualFile> file = removeIssuesDeletedInEditor(documentEvent,project);
-            file.ifPresent($ -> updateHighlightingFor($,project));
+            file.ifPresent(it -> updateHighlightingFor(it,project));
           }
       );
     }
@@ -153,9 +153,9 @@ public class DocumentChangeListener extends AbstractProjectComponent {
       if (virtualFile.isValid() && !project.isDisposed() && project.isInitialized()) {
         PsiManager pm = PsiManager.getInstance(project);
         Optional<PsiFile> psiFile = Optional.ofNullable(pm.findFile(virtualFile));
-        psiFile.ifPresent($ -> {
+        psiFile.ifPresent(it -> {
           DaemonCodeAnalyzer daemonCodeAnalyzer = DaemonCodeAnalyzer.getInstance(project);
-          daemonCodeAnalyzer.restart($);
+          daemonCodeAnalyzer.restart(it);
         });
       }
   }

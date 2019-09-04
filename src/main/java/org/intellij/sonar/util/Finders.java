@@ -54,9 +54,8 @@ public class Finders {
   }
 
   public static Optional<Document> findDocumentFromPsiFile(PsiFile psiFile) {
-    final Optional<Project> project = Optional.ofNullable(psiFile.getProject());
-    if (!project.isPresent()) return Optional.empty();
-    return Optional.ofNullable(PsiDocumentManager.getInstance(project.get()).getDocument(psiFile));
+    Project project = psiFile.getProject();
+    return Optional.ofNullable(PsiDocumentManager.getInstance(project).getDocument(psiFile));
   }
 
   @NotNull

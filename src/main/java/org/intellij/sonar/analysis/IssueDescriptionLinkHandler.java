@@ -121,7 +121,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
     }
 
     private void getDescriptionFromRule(Rule rule) {
-      if (rule != null && !rule.isEmpty()) {
+      if (rule != null && rule.isValid()) {
         description = rule.getHtmlDesc();
         if (description != null) {
           processing = false;
@@ -152,7 +152,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       persistedRule = sonarServer.getRule(sonarIssue.getRuleKey());
       if (sonarRules != null) {
         final SonarRules sonarRulesState = sonarRules.getState();
-        if (sonarRulesState != null && !persistedRule.isEmpty()) {
+        if (sonarRulesState != null && persistedRule.isValid()) {
           sonarRulesState.getSonarRulesByRuleKey().put(sonarIssue.getRuleKey(), persistedRule);
         }
       }

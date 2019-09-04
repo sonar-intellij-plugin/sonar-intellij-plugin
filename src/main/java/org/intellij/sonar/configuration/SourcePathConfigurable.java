@@ -42,24 +42,19 @@ public class SourcePathConfigurable extends DialogWrapper {
     public void actionPerformed(ActionEvent e) {
       Application application = ApplicationManager.getApplication();
       VirtualFile previous = application.runWriteAction(
-        new NullableComputable<VirtualFile>() {
-          public VirtualFile compute() {
-            final String path = FileUtil.toSystemIndependentName(mySourcePathTextFieldWithBrowseButton.getText());
-            return LocalFileSystem.getInstance().refreshAndFindFileByPath(path);
-          }
-        }
+              (NullableComputable<VirtualFile>) () -> {
+                final String path = FileUtil.toSystemIndependentName(mySourcePathTextFieldWithBrowseButton.getText());
+                return LocalFileSystem.getInstance().refreshAndFindFileByPath(path);
+              }
       );
       FileChooserDescriptor fileDescriptor = new FileChooserDescriptor(false,true,false,false,false,true);
       fileDescriptor.setShowFileSystemRoots(true);
       fileDescriptor.setTitle("Configure Path");
       fileDescriptor.setDescription("Configure SonarQube source path for incremental analysis script");
       FileChooser.chooseFiles(
-        fileDescriptor,null,previous,new Consumer<List<VirtualFile>>() {
-          @Override
-          public void consume(final java.util.List<VirtualFile> files) {
-            String path = files.get(0).getPath();
-            mySourcePathTextFieldWithBrowseButton.setText(path);
-          }
+        fileDescriptor,null,previous, files -> {
+          String path = files.get(0).getPath();
+          mySourcePathTextFieldWithBrowseButton.setText(path);
         }
       );
     }

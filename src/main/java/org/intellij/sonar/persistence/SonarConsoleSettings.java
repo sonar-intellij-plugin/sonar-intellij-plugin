@@ -37,7 +37,7 @@ public class SonarConsoleSettings implements PersistentStateComponent<SonarConso
   }
 
   @Override
-  public void loadState(SonarConsoleSettings state) {
+  public void loadState(@NotNull SonarConsoleSettings state) {
     XmlSerializerUtil.copyBean(state,this);
   }
 

@@ -27,6 +27,7 @@ import com.intellij.codeInspection.lang.RefManagerExtension;
 import com.intellij.codeInspection.reference.RefManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class SonarQubeInspectionExtensionsFactory extends InspectionExtensionsFactory {
@@ -49,18 +50,18 @@ public class SonarQubeInspectionExtensionsFactory extends InspectionExtensionsFa
   }
 
   @Override
-  public boolean isToCheckMember(PsiElement element,String id) {
+  public boolean isToCheckMember(@NotNull PsiElement element, @NotNull String id) {
     return false;
   }
 
   @Nullable
   @Override
-  public String getSuppressedInspectionIdsIn(PsiElement element) {
+  public String getSuppressedInspectionIdsIn(@NotNull PsiElement element) {
     return null;
   }
 
   @Override
-  public boolean isProjectConfiguredToRunInspections(Project project,boolean online) {
+  public boolean isProjectConfiguredToRunInspections(@NotNull Project project, boolean online) {
     return true;
   }
 }

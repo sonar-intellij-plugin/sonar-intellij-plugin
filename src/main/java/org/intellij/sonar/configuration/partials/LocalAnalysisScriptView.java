@@ -116,6 +116,7 @@ public abstract class LocalAnalysisScriptView {
           int rc = Messages.showOkCancelDialog(
             "Are you sure you want to remove "+selected.toString()+" ?",
             "Remove Local Analysis Script",
+            "Yes, remove", "No",
             Messages.getQuestionIcon()
           );
           if (rc == Messages.OK) {

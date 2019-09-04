@@ -1,11 +1,5 @@
 package org.intellij.sonar.persistence;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -14,6 +8,11 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @State(
   name = "localAnalysisScripts",
@@ -46,10 +45,9 @@ public class LocalAnalysisScripts implements PersistentStateComponent<LocalAnaly
   public static void remove(@NotNull final String name) {
     final Optional<LocalAnalysisScript> bean = get(name);
     Preconditions.checkArgument(bean.isPresent());
-    final List<LocalAnalysisScript> newBeans = getAll().stream()
-        .filter(localAnalysisScript -> !bean.get().equals(localAnalysisScript))
-        .collect(Collectors.toList());
-    getInstance().beans = new ArrayList<>(newBeans);
+      getInstance().beans = getAll().stream()
+              .filter(localAnalysisScript -> !bean.get().equals(localAnalysisScript))
+              .collect(Collectors.toList());
   }
 
   public static Optional<LocalAnalysisScript> get(@NotNull final String name) {

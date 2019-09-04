@@ -47,14 +47,6 @@ public class ModuleSettings implements PersistentStateComponent<Settings>, Modul
   }
 
   @Override
-  public void projectOpened() {
-  }
-
-  @Override
-  public void projectClosed() {
-  }
-
-  @Override
   public void moduleAdded() {
   }
 
