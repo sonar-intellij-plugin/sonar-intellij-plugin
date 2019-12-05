@@ -245,7 +245,7 @@
     </change-notes>
 
     <!-- see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html -->
-    <idea-version since-build="192" /> <!-- IntelliJ IDEA v.2019.2 -->
+    <idea-version since-build="193" /> <!-- IntelliJ IDEA v.2019.3 -->
 
     <depends>com.intellij.modules.lang</depends>
 
