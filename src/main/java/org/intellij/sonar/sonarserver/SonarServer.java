@@ -1,6 +1,9 @@
 package org.intellij.sonar.sonarserver;
 
 import com.google.common.collect.ImmutableList;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import org.intellij.sonar.configuration.SonarQualifier;
@@ -32,6 +35,7 @@ public class SonarServer {
 
     private static final int CONNECT_TIMEOUT_IN_MILLISECONDS = 60*1000;
     private static final int READ_TIMEOUT_IN_MILLISECONDS = 60*1000;
+    private static final int DOWNLOAD_LIMIT = 10_000;
     private final WsClient sonarClient;
 
     private SonarServer(SonarServerConfig sonarServerConfig) {
@@ -125,7 +129,8 @@ public class SonarServer {
         SearchWsResponse response = issuesService.search(query);
         builder.addAll(response.getIssuesList());
         Common.Paging paging = response.getPaging();
-        Integer total = paging.getTotal();
+        showWarningIfDownloadLimitReached(paging);
+        Integer total = Math.min(paging.getTotal(), DOWNLOAD_LIMIT);
         Integer pageSize = paging.getPageSize();
         Integer pages = total / pageSize + (total % pageSize > 0 ? 1 : 0);
         for (int pageIndex = 2; pageIndex <= pages; pageIndex++) {
@@ -140,6 +145,17 @@ public class SonarServer {
             builder.addAll(issuesService.search(query).getIssuesList());
         }
         return builder.build();
+    }
+
+    private void showWarningIfDownloadLimitReached(Common.Paging paging) {
+        if (paging.getTotal() > DOWNLOAD_LIMIT) {
+            Notifications.Bus.notify(new Notification(
+                    "SonarQube","SonarQube",
+                    String.format("Your project has %d issues, downloading instead the maximum amount of %s. ",
+                            paging.getTotal(), DOWNLOAD_LIMIT),
+                    NotificationType.WARNING
+            ));
+        }
     }
 
     private void addSearchParameter(String paramValue, Consumer<String> consumer) {
