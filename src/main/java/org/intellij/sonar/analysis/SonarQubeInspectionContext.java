@@ -33,6 +33,9 @@ import com.intellij.codeInspection.ex.InspectionProfileImpl;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.TransactionGuard;
 import com.intellij.openapi.editor.Editor;
@@ -224,7 +227,15 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
                   enrichedSettings,
                   psiFiles
           );
-          scriptTask.ifPresent(RunLocalAnalysisScriptTask::run);
+          if (scriptTask.isPresent()) {
+            scriptTask.get().run();
+          } else {
+            Notifications.Bus.notify(new Notification(
+                    "SonarQube","SonarQube",
+                    "SonarQube (new issues) is enabled, but the local analysis script is not configured. Aborting...",
+                    NotificationType.ERROR
+            ));
+          }
         }
       }
     }
