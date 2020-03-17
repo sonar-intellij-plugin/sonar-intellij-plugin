@@ -6,7 +6,7 @@ addons:
   sonarcloud:
     organization: "sonar-intellij-plugin"
     token:
-      secure: "ff9e2abb0a2ab57c79101fd1cc23e62cfeee2a8d"
+      secure: "f98e0adaa69bd0ead0cffe21ff6edbc51501125f"
 
 jdk:
   - openjdk8
