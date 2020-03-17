@@ -222,21 +222,25 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
     private void runLocalAnalysisScriptForNewIssues() {
       if (newIssuesGlobalInspectionToolEnabled) {
-        for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-          final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(
-                  enrichedSettings,
-                  psiFiles
-          );
-          if (scriptTask.isPresent()) {
-            scriptTask.get().run();
-          } else {
-            Notifications.Bus.notify(new Notification(
-                    "SonarQube","SonarQube",
-                    "SonarQube (new issues) is enabled, but the local analysis script is not configured. Aborting...",
-                    NotificationType.ERROR
-            ));
-          }
+        for (final EnrichedSettings settings : enrichedSettingsFromScope) {
+          runScriptTaskFrom(settings);
         }
+      }
+    }
+
+    private void runScriptTaskFrom(EnrichedSettings enrichedSettings) {
+      final Optional<RunLocalAnalysisScriptTask> scriptTask = RunLocalAnalysisScriptTask.from(
+              enrichedSettings,
+              psiFiles
+      );
+      if (scriptTask.isPresent()) {
+        scriptTask.get().run();
+      } else {
+        Notifications.Bus.notify(new Notification(
+                "SonarQube","SonarQube",
+                "SonarQube (new issues) is enabled, but the local analysis script is not configured. Aborting...",
+                NotificationType.ERROR
+        ));
       }
     }
 
