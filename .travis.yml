@@ -5,8 +5,6 @@ install: true
 addons:
   sonarcloud:
     organization: "sonar-intellij-plugin"
-    token:
-      secure: "f98e0adaa69bd0ead0cffe21ff6edbc51501125f"
 
 jdk:
   - openjdk8
