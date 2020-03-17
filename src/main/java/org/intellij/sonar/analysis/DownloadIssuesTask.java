@@ -3,6 +3,9 @@ package org.intellij.sonar.analysis;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
@@ -62,13 +65,29 @@ public class DownloadIssuesTask implements Runnable {
     for (String resourceKey : resourceKeys) {
       final String downloadingIssuesMessage = String.format("Downloading issues for SonarQube resource %s",resourceKey);
       sonarConsole.info(downloadingIssuesMessage);
-      final ImmutableList<Issue> issues = sonarServer.getAllIssuesFor(resourceKey, sonarServerConfig.getOrganization());
-      downloadedIssuesByResourceKey.put(resourceKey,issues);
+        final ImmutableList<Issue> issues;
+        tryDownloadingIssues(sonarServer, resourceKey);
     }
     onSuccess(startTime);
   }
 
-  private void onSuccess(long downloadStartTime) {
+    private void tryDownloadingIssues(SonarServer sonarServer, String resourceKey) {
+        ImmutableList<Issue> issues;
+        try {
+            issues = sonarServer.getAllIssuesFor(resourceKey, sonarServerConfig.getOrganization());
+            downloadedIssuesByResourceKey.put(resourceKey,issues);
+        } catch (Exception e) {
+            sonarConsole.error(e.getMessage());
+            Notifications.Bus.notify(
+                    new Notification(
+                            "SonarQube","SonarQube",
+                            "Downloading sonar issues failed!", NotificationType.ERROR
+                    ),enrichedSettings.project
+            );
+        }
+    }
+
+    private void onSuccess(long downloadStartTime) {
     final long downloadedIssuesCount = downloadedIssuesByResourceKey.values().stream()
             .mapToLong(AbstractCollection::size)
             .sum();

@@ -213,10 +213,22 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
     private void downloadOldIssues() {
       if (oldIssuesGlobalInspectionToolEnabled) {
-        for (final EnrichedSettings enrichedSettings : enrichedSettingsFromScope) {
-          final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
-          downloadTask.ifPresent(DownloadIssuesTask::run);
+        for (final EnrichedSettings settings : enrichedSettingsFromScope) {
+          runDownloadTaskFrom(settings);
         }
+      }
+    }
+
+    private void runDownloadTaskFrom(EnrichedSettings enrichedSettings) {
+      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
+      if (downloadTask.isPresent()) {
+        downloadTask.get().run();
+      } else {
+        Notifications.Bus.notify(new Notification(
+                "SonarQube","SonarQube",
+                "SonarQube is enabled, but the sonar server is not configured. Aborting...",
+                NotificationType.ERROR
+        ));
       }
     }
 
