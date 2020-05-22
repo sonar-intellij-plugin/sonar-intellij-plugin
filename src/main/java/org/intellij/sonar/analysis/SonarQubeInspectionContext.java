@@ -19,17 +19,11 @@
  */
 package org.intellij.sonar.analysis;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.intellij.analysis.AnalysisScope;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInspection.GlobalInspectionContext;
-import com.intellij.codeInspection.ex.GlobalInspectionContextBase;
-import com.intellij.codeInspection.ex.InspectionProfileImpl;
 import com.intellij.codeInspection.ex.InspectionToolWrapper;
 import com.intellij.codeInspection.ex.Tools;
 import com.intellij.codeInspection.lang.GlobalInspectionContextExtension;
@@ -53,11 +47,20 @@ import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.SonarToolWindowFactory;
 import org.intellij.sonar.index.IssuesByFileIndex;
+import org.intellij.sonar.persistence.LocalAnalysisScripts;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.persistence.SonarConsoleSettings;
+import org.intellij.sonar.persistence.SonarServers;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public class SonarQubeInspectionContext implements GlobalInspectionContextExtension<SonarQubeInspectionContext> {
 
@@ -80,14 +83,6 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
       this.project = project;
       this.module = module;
     }
-  }
-
-  private boolean isInspectionToolEnabled(final String toolName,final GlobalInspectionContextBase context) {
-    final InspectionProfileImpl currentProfile = context.getCurrentProfile();
-    final Project project = context.getProject();
-    return currentProfile.getAllEnabledInspectionTools(project).stream()
-        .map(Tools::getShortName)
-        .anyMatch(toolName::equals);
   }
 
   @Override
@@ -114,33 +109,37 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
 
     void runInspectionTools() {
-      checkIsNewIssuesGlobalInspectionToolEnabled();
-      checkIsOldIssuesGlobalInspectionToolEnabled();
-      if (!anyInspectionToolEnabled())
-        return;
-      saveAllDocuments();
       initProject();
+      collectModulesAndFiles();
+      buildEnrichedSettingsFromScope();
+      checkIsNewIssuesInspectionToolEnabled();
+      checkIsOldIssuesInspectionToolEnabled();
+
+      if (!anyInspectionToolEnabled()) {
+        SonarConsole.get(project).info("No Sonar Inspections enabled.");
+        return;
+      }
+
+      saveAllDocuments();
       showSonarQubeToolWindowIfNeeded();
       SonarConsole.get(project).clear();
-      collectModulesAndFiles();
       IssuesByFileIndex.clearIndexFor(psiFiles);
-      buildEnrichedSettingsFromScope();
       downloadOldIssues();
       runLocalAnalysisScriptForNewIssues();
     }
 
-    private void checkIsNewIssuesGlobalInspectionToolEnabled() {
-      newIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
-              NewIssuesGlobalInspectionTool.class.getSimpleName(),
-              (GlobalInspectionContextBase) context
-      );
+    private void checkIsNewIssuesInspectionToolEnabled() {
+      Predicate<EnrichedSettings> filter = s -> !LocalAnalysisScripts.NO_LOCAL_ANALYSIS.equals(s.settings.getLocalAnalysisScripName());
+      newIssuesGlobalInspectionToolEnabled = settingsFromScopeAnyMatch(filter);
     }
 
-    private void checkIsOldIssuesGlobalInspectionToolEnabled() {
-      oldIssuesGlobalInspectionToolEnabled = isInspectionToolEnabled(
-              OldIssuesGlobalInspectionTool.class.getSimpleName(),
-              (GlobalInspectionContextBase)context
-      );
+    private void checkIsOldIssuesInspectionToolEnabled() {
+      Predicate<EnrichedSettings> filter = s -> !SonarServers.NO_SONAR.equals(s.settings.getServerName());
+      oldIssuesGlobalInspectionToolEnabled = settingsFromScopeAnyMatch(filter);
+    }
+
+    private boolean settingsFromScopeAnyMatch(Predicate<EnrichedSettings> filter) {
+      return enrichedSettingsFromScope.stream().anyMatch(filter);
     }
 
     private boolean anyInspectionToolEnabled() {
@@ -187,7 +186,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
 
     private void buildEnrichedSettingsFromScope() {
-      enrichedSettingsFromScope = Sets.newHashSet();
+      enrichedSettingsFromScope = new HashSet<>();
       if (isProjectScope()) {
         addProjectSettings();
       } else {
@@ -196,18 +195,75 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
 
     private boolean isProjectScope() {
-      return modules.isEmpty() || AnalysisScope.PROJECT == context.getRefManager().getScope().getScopeType();
+      return modules.isEmpty() || selectedScopeIsProject() || inCustomScopeProjectIsSelected();
+    }
+
+    private boolean selectedScopeIsProject() {
+      return isSelectedScope(AnalysisScope.PROJECT);
+    }
+
+    private boolean inCustomScopeProjectIsSelected(){
+      return isSelectedScope(AnalysisScope.CUSTOM) && isProjectSelected();
+    }
+
+    private boolean isSelectedScope(int scopeType) {
+      return scopeType == context.getRefManager().getScope().getScopeType();
+    }
+
+    private boolean isProjectSelected(){
+      return "Project Files".equals(context.getRefManager().getScope().getDisplayName());
     }
 
     private void addProjectSettings() {
-      final Settings settings = ProjectSettings.getInstance(project).getState();
-      enrichedSettingsFromScope.add(new EnrichedSettings(settings, project,null));
+      final Settings settings = getProjectSettings();
+      EnrichedSettings enrichedSettings = createEnrichedSettings(null, settings);
+      enrichedSettingsFromScope.add(enrichedSettings);
+    }
+
+    @Nullable
+    private Settings getProjectSettings() {
+      return ProjectSettings.getInstance(project).getState();
     }
 
     private void addModulesSettings() {
+      final Settings projectSettings = getProjectSettings();
+
       for (Module module : modules) {
-        final Settings settings = ModuleSettings.getInstance(module).getState();
-        enrichedSettingsFromScope.add(new EnrichedSettings(settings, project,module));
+        final Settings settings = getModuleSettings(module);
+        insertProjectSettingsIfConfigured(projectSettings, settings);
+        EnrichedSettings enrichedSettings = createEnrichedSettings(module, settings);
+        enrichedSettingsFromScope.add(enrichedSettings);
+      }
+    }
+
+    @NotNull
+    private SonarQubeInspectionContext.EnrichedSettings createEnrichedSettings(Module module, Settings settings) {
+      return new EnrichedSettings(settings, project, module);
+    }
+
+    @Nullable
+    private Settings getModuleSettings(Module module) {
+      return ModuleSettings.getInstance(module).getState();
+    }
+
+    private void insertProjectSettingsIfConfigured(Settings projectSettings, Settings moduleSettings){
+      updateServerNameSettings(projectSettings, moduleSettings);
+      updateLocalAnalysisScriptsSettings(projectSettings, moduleSettings);
+    }
+
+    private void updateServerNameSettings(Settings projectSettings, Settings moduleSettings) {
+      String serverName = moduleSettings.getServerName();
+
+      if(SonarServers.PROJECT.equals(serverName)){
+        moduleSettings.setServerName(projectSettings.getServerName());
+      }
+    }
+
+    private void updateLocalAnalysisScriptsSettings(Settings projectSettings, Settings moduleSettings) {
+      String scriptName = moduleSettings.getLocalAnalysisScripName();
+
+      if(LocalAnalysisScripts.PROJECT.equals(scriptName)){
+        moduleSettings.setLocalAnalysisScripName(projectSettings.getLocalAnalysisScripName());
       }
     }
 
@@ -220,7 +276,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
 
     private void runDownloadTaskFrom(EnrichedSettings enrichedSettings) {
-      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(enrichedSettings, psiFiles);
+      final Optional<DownloadIssuesTask> downloadTask = DownloadIssuesTask.from(project, enrichedSettings, psiFiles);
       if (downloadTask.isPresent()) {
         downloadTask.get().run();
       } else {
@@ -283,5 +339,6 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
   @Override
   public void cleanup() {
+    // do nothing
   }
 }

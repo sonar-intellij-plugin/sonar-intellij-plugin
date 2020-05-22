@@ -42,8 +42,8 @@ public class ModuleSonarServersView extends SonarServersView {
 
   @Override
   protected boolean editAndRemoveButtonsCanBeEnabled() {
-    final boolean isNoSonarSelected = NO_SONAR.equals(mySonarServersComboBox.getSelectedItem().toString());
-    final boolean isProjectSonarSelected = PROJECT.equals(mySonarServersComboBox.getSelectedItem().toString());
+    final boolean isNoSonarSelected = NO_SONAR.equals(String.valueOf(mySonarServersComboBox.getSelectedItem()));
+    final boolean isProjectSonarSelected = PROJECT.equals(String.valueOf(mySonarServersComboBox.getSelectedItem()));
     return !isNoSonarSelected && !isProjectSonarSelected;
   }
 

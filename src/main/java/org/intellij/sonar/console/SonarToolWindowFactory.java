@@ -30,5 +30,6 @@ public class SonarToolWindowFactory implements ToolWindowFactory {
 
   @Override
   public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+    SonarConsole.get(project).info("Use Analyze -> Inspect Code to update Issues from SonarServer.");
   }
 }

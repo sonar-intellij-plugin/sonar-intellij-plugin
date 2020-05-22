@@ -138,7 +138,7 @@ public class ProjectSettingsConfigurable implements Configurable, ProjectCompone
   }
 
   @Override
-  public void apply() throws ConfigurationException {
+  public void apply() {
     myProjectSettings.loadState(this.toSettings());
     mySonarConsoleSettings.loadState(this.toSonarConsoleSettings());
   }

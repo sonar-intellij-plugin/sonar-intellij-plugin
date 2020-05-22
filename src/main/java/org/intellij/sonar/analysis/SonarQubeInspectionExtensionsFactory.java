@@ -33,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
 public class SonarQubeInspectionExtensionsFactory extends InspectionExtensionsFactory {
 
   @Override
-  public GlobalInspectionContextExtension createGlobalInspectionContextExtension() {
+  public GlobalInspectionContextExtension<SonarQubeInspectionContext> createGlobalInspectionContextExtension() {
     return new SonarQubeInspectionContext();
   }
 

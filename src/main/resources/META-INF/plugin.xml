@@ -4,7 +4,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Community Plugin</name>
 
-    <version>2.8.4</version>
+    <version>2.9.0</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -16,6 +16,13 @@
 
     <change-notes>
         <![CDATA[
+<p>
+2.9.0
+<ul>
+<li>Provides SonarServer Inspection for IntelliJ 2020.1</li>
+</ul>
+</p>
+<p>
 <p>
 2.8.4
 <ul>
@@ -264,7 +271,7 @@
     </change-notes>
 
     <!-- see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html -->
-    <idea-version since-build="193" /> <!-- IntelliJ IDEA v.2019.3 -->
+    <idea-version since-build="201.6668" /> <!-- IntelliJ IDEA v.2020.1-->
 
     <depends>com.intellij.modules.lang</depends>
 
@@ -302,13 +309,16 @@
                 org.intellij.sonar.persistence.ModuleSettings
             </implementation-class>
         </component>
+        <component>
+            <implementation-class>
+                org.intellij.sonar.configuration.module.ModuleSettingsConfigurable
+            </implementation-class>
+        </component>
     </module-components>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="projectSettingsConfigurable"
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"/>
-        <moduleConfigurable id="moduleSettingsConfigurable"
-                            instance="org.intellij.sonar.configuration.module.ModuleSettingsConfigurable"/>
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarServers"/>
         <applicationService

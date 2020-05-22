@@ -36,10 +36,11 @@ public abstract class SonarServersView {
     this.myEditSonarServerButton = myEditSonarServerButton;
     this.myRemoveSonarServerButton = myRemoveSonarServerButton;
     this.myProject = myProject;
+
+    addActionListenersForButtons();
   }
 
   public void init() {
-    addActionListenersForButtons();
     initSonarServersComboBox();
     disableEditAndRemoveButtonsIfPossible();
   }
@@ -53,6 +54,7 @@ public abstract class SonarServersView {
   }
 
   protected abstract boolean editAndRemoveButtonsCanBeEnabled();
+
   protected abstract void initSonarServersComboBox();
 
   protected void disableEditAndRemoveButtonsIfPossible() {
@@ -73,7 +75,7 @@ public abstract class SonarServersView {
     return dlg;
   }
 
-  protected void addActionListenersForButtons() {
+  protected final void addActionListenersForButtons() {
     addItemListenerForSonarServersComboBox();
     addActionListenerForAddSonarServerButton();
     addActionListenerForEditSonarServerButton();

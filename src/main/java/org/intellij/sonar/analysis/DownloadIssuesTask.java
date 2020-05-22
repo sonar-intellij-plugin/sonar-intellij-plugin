@@ -7,6 +7,7 @@ import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.IssuesByFileIndexer;
@@ -36,26 +37,22 @@ public class DownloadIssuesTask implements Runnable {
   private final SonarQubeInspectionContext.EnrichedSettings enrichedSettings;
   private final SonarConsole sonarConsole;
 
-  private DownloadIssuesTask(
-          SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
-          SonarServerConfig sonarServerConfig,
-          Set<String> resourceKeys,
-          List<PsiFile> psiFiles
-  ) {
+  private DownloadIssuesTask(Project project,
+                             SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+                             SonarServerConfig sonarServerConfig,
+                             Set<String> resourceKeys,
+                             List<PsiFile> psiFiles) {
     this.enrichedSettings = enrichedSettings;
     this.sonarServerConfig = sonarServerConfig;
     this.resourceKeys = resourceKeys;
     this.psiFiles = psiFiles;
-    this.sonarConsole = SonarConsole.get(enrichedSettings.project);
+    this.sonarConsole = SonarConsole.get(project);
   }
 
-  public static Optional<DownloadIssuesTask> from(
-    SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
-    ImmutableList<PsiFile> psiFiles
-  ) {
-    return new DownloadIssuesTaskBuilder()
-            .buildFrom(enrichedSettings, psiFiles)
-            .maybeGetDownloadIssuesTask();
+  public static Optional<DownloadIssuesTask> from(Project project,
+                                                  SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
+                                                  ImmutableList<PsiFile> psiFiles) {
+    return new DownloadIssuesTaskBuilder().buildFrom(project, enrichedSettings, psiFiles).maybeGetDownloadIssuesTask();
   }
 
   @Override
@@ -65,7 +62,6 @@ public class DownloadIssuesTask implements Runnable {
     for (String resourceKey : resourceKeys) {
       final String downloadingIssuesMessage = String.format("Downloading issues for SonarQube resource %s",resourceKey);
       sonarConsole.info(downloadingIssuesMessage);
-        final ImmutableList<Issue> issues;
         tryDownloadingIssues(sonarServer, resourceKey);
     }
     onSuccess(startTime);
@@ -146,6 +142,7 @@ public class DownloadIssuesTask implements Runnable {
         private SonarServerConfig sonarServerConfig;
 
         DownloadIssuesTaskBuilder buildFrom(
+            Project project,
                 SonarQubeInspectionContext.EnrichedSettings enrichedSettings,
                 List<PsiFile> psiFiles) {
             downloadIssuesTask=null;
@@ -154,7 +151,7 @@ public class DownloadIssuesTask implements Runnable {
             if (processing) initSettings(enrichedSettings);
             if (processing) checkNotNullServerName();
             if (processing) initSonarServerConfig();
-            if (processing) buildDownloadIssuesTask(enrichedSettings, psiFiles);
+            if (processing) buildDownloadIssuesTask(project, enrichedSettings, psiFiles);
             return this;
         }
 
@@ -184,14 +181,9 @@ public class DownloadIssuesTask implements Runnable {
             }
         }
 
-        private void buildDownloadIssuesTask(SonarQubeInspectionContext.EnrichedSettings enrichedSettings, List<PsiFile> psiFiles) {
+        private void buildDownloadIssuesTask(Project project, SonarQubeInspectionContext.EnrichedSettings enrichedSettings, List<PsiFile> psiFiles) {
             final Set<String> resourceKeys = settings.getResources().stream().map(Resource::getKey).collect(Collectors.toSet());
-            downloadIssuesTask =
-                    new DownloadIssuesTask(
-                            enrichedSettings,
-                            sonarServerConfig,
-                            resourceKeys,psiFiles
-                    );
+            downloadIssuesTask = new DownloadIssuesTask(project, enrichedSettings, sonarServerConfig, resourceKeys, psiFiles);
         }
 
         Optional<DownloadIssuesTask> maybeGetDownloadIssuesTask() {

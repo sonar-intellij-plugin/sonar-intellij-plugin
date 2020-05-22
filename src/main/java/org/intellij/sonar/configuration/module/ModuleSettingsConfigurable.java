@@ -132,7 +132,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   }
 
   @Override
-  public void apply() throws ConfigurationException {
+  public void apply() {
     Settings settings = this.toSettings();
     ModuleSettings projectSettingsComponent = ModuleSettings.getInstance(myModule);
     projectSettingsComponent.loadState(settings);
