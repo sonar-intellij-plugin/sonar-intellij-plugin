@@ -226,7 +226,7 @@ Hacking the plugin is very easy, just follow the following steps
 - open project in IntelliJ
     - File->Open-> (Directory sonar-intellij-plugin)
 - run the plugin inside intellij
-    - run gradleTask runIdea  
+    - run gradleTask runIde  
 
 ## License
 

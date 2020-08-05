@@ -17,7 +17,7 @@ repositories {
 version = '2.9.0'
 
 intellij {
-    version '2020.1'
+    version '2020.2'
 }
 
 dependencies {
