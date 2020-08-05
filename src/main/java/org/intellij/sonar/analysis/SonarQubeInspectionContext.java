@@ -79,11 +79,11 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
 
   public static class EnrichedSettings {
 
-    private final Settings settings;
-    private final Project project;
-    private final Module module;
+    public Settings settings;
+    public Project project;
+    public Module module;
 
-    public EnrichedSettings(final Settings settings, final Project project, final Module module) {
+    public EnrichedSettings(Settings settings,Project project,Module module) {
       this.settings = settings;
       this.project = project;
       this.module = module;
