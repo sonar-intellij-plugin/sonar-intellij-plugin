@@ -17,6 +17,12 @@
     <change-notes>
         <![CDATA[
 <p>
+2.9.1
+<ul>
+<li>Provides SonarServer Inspection for IntelliJ 2020.2</li>
+</ul>
+</p>
+<p>
 2.9.0
 <ul>
 <li>Provides SonarServer Inspection for IntelliJ 2020.1</li>
@@ -271,7 +277,7 @@
     </change-notes>
 
     <!-- see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html -->
-    <idea-version since-build="201.6668" /> <!-- IntelliJ IDEA v.2020.1-->
+    <idea-version since-build="202" /> <!-- IntelliJ IDEA v.2020.2-->
 
     <depends>com.intellij.modules.lang</depends>
 
