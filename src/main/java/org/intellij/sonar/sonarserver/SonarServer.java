@@ -122,7 +122,7 @@ public class SonarServer {
         SearchWsRequest query = new SearchWsRequest();
         query.setComponentRoots(singletonList(resourceKey))
                 .setResolved(false)
-                .setPageSize(-1);
+                .setPageSize(500);
         query.setProjectKeys(singletonList(resourceKey));
         addSearchParameter(organization, query::setOrganization);
         IssuesService issuesService = sonarClient.issues();
