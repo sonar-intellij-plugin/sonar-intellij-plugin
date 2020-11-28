@@ -13,7 +13,7 @@ public class StreamGobbler extends Thread {
   private final SonarConsole console;
   private final ConsoleLogLevel logLevel;
 
-  public StreamGobbler(InputStream is,SonarConsole sonarConsole,ConsoleLogLevel logLevel) {
+  public StreamGobbler(InputStream is, SonarConsole sonarConsole, ConsoleLogLevel logLevel) {
     this.is = is;
     this.console = sonarConsole;
     this.logLevel = logLevel;

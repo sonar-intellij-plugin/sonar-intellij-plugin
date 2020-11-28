@@ -1,21 +1,19 @@
 package org.intellij.sonar;
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.extensions.PluginId;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
-import org.jetbrains.annotations.NotNull;
 
-public class SonarIntellijPluginApplicationComponent implements com.intellij.openapi.components.ApplicationComponent {
+public class SonarIntellijPluginApplicationService {
 
-  private IdeaPluginDescriptor plugin;
+  private final IdeaPluginDescriptor plugin;
 
-  @Override
-  public void initComponent() {
-    plugin = PluginManager.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
+  public SonarIntellijPluginApplicationService() {
+    plugin = PluginManagerCore.getPlugin(PluginId.getId("org.mayevskiy.intellij.sonar"));
     if (plugin != null && plugin.isEnabled()) {
       registerExternalAnnotatorForAllLanguages();
     }
@@ -24,8 +22,8 @@ public class SonarIntellijPluginApplicationComponent implements com.intellij.ope
   private void registerExternalAnnotatorForAllLanguages() {
     // filters fix #212: displaying annotations three times
     Language.getRegisteredLanguages().stream()
-            .filter(SonarIntellijPluginApplicationComponent::doesNotImplementMetaLanguage)
-            .filter(SonarIntellijPluginApplicationComponent::doesNotHaveBaseLanguage)
+            .filter(SonarIntellijPluginApplicationService::doesNotImplementMetaLanguage)
+            .filter(SonarIntellijPluginApplicationService::doesNotHaveBaseLanguage)
             .forEach(this::registerExternalAnnotatorFor);
   }
 
@@ -52,14 +50,4 @@ public class SonarIntellijPluginApplicationComponent implements com.intellij.ope
     Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(ep);
   }
 
-  @Override
-  public void disposeComponent() {
-    // nothing to free
-  }
-
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return getClass().getSimpleName();
-  }
 }
