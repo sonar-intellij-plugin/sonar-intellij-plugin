@@ -293,14 +293,6 @@
 
     <depends>com.intellij.modules.lang</depends>
 
-    <project-components>
-        <component>
-            <implementation-class>
-                org.intellij.sonar.console.SonarConsole
-            </implementation-class>
-        </component>
-    </project-components>
-
     <module-components>
         <component>
             <implementation-class>
