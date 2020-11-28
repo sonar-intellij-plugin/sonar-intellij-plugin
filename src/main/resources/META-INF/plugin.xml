@@ -296,11 +296,6 @@ fix error invalid page size issue #268
         </component>
         <component>
             <implementation-class>
-                org.intellij.sonar.DocumentChangeListener
-            </implementation-class>
-        </component>
-        <component>
-            <implementation-class>
                 org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
             </implementation-class>
         </component>
@@ -324,6 +319,11 @@ fix error invalid page size issue #268
         </component>
     </module-components>
 
+
+    <projectListeners>
+        <listener class="org.intellij.sonar.DocumentChangeListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </projectListeners>
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="projectSettingsConfigurable"
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"
