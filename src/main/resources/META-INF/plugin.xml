@@ -301,11 +301,6 @@ fix error invalid page size issue #268
         </component>
         <component>
             <implementation-class>
-                org.intellij.sonar.persistence.SonarRules
-            </implementation-class>
-        </component>
-        <component>
-            <implementation-class>
                 org.intellij.sonar.console.SonarConsole
             </implementation-class>
         </component>
@@ -340,6 +335,7 @@ fix error invalid page size issue #268
                 serviceImplementation="org.intellij.sonar.persistence.SonarConsoleSettings"/>
         <applicationService serviceImplementation="org.intellij.sonar.SonarIntellijPluginApplicationService" />
         <projectService serviceImplementation="org.intellij.sonar.console.SonarConsole" />
+        <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRules"/>
         <moduleService serviceImplementation="org.intellij.sonar.persistence.ModuleSettings" />
 
         <toolWindow id="SonarQube" anchor="bottom"
