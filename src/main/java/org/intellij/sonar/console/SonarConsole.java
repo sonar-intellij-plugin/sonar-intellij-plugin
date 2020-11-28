@@ -25,7 +25,7 @@ public final class SonarConsole {
   }
 
   public static synchronized SonarConsole get(Project project) {
-    return project.getComponent(SonarConsole.class);
+    return project.getService(SonarConsole.class);
   }
 
   public SonarConsole withPasswordFilter(String password) {

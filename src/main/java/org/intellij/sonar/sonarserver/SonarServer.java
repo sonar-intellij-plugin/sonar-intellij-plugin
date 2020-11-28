@@ -50,8 +50,8 @@ public class SonarServer {
         return new SonarServer(sonarServerConfigBean);
     }
 
-    public Rule getRule(String key) {
-        Rules.Rule rule = sonarClient.rules().show(null, key).getRule();
+    public Rule getRule(String organization, String key) {
+        Rules.Rule rule = sonarClient.rules().show(organization, key).getRule();
         return new Rule(rule.getKey(), rule.getName(), rule.getSeverity(), rule.getLang(), rule.getLangName(), rule.getHtmlDesc());
     }
 

@@ -18,7 +18,7 @@ public class ProjectSettings  implements PersistentStateComponent<Settings> {
   protected Settings settings = new Settings();
 
   public static ProjectSettings getInstance(Project project) {
-    return project.getComponent(ProjectSettings.class);
+    return project.getService(ProjectSettings.class);
   }
 
   @Nullable

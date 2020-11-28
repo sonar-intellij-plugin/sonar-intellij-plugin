@@ -139,7 +139,7 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
 
   @Override
   public void reset() {
-    ModuleSettings moduleSettings = myModule.getComponent(ModuleSettings.class);
+    ModuleSettings moduleSettings = myModule.getService(ModuleSettings.class);
     if (moduleSettings != null && moduleSettings.getState() != null) {
       Settings persistedSettings = moduleSettings.getState();
       this.setValuesFromSettings(persistedSettings);

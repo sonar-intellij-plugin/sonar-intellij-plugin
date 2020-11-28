@@ -324,8 +324,9 @@ fix error invalid page size issue #268
                 serviceImplementation="org.intellij.sonar.persistence.SonarResourcesComponent"/>
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarConsoleSettings"/>
-        <applicationService serviceImplementation="org.intellij.sonar.SonarIntellijPluginApplicationService" />
-
+        <applicationService
+                preload="true"
+                serviceImplementation="org.intellij.sonar.SonarIntellijPluginApplicationService" />
         <projectService serviceImplementation="org.intellij.sonar.console.SonarConsole" />
         <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRules" />
         <projectService serviceImplementation="org.intellij.sonar.persistence.ProjectSettings" />

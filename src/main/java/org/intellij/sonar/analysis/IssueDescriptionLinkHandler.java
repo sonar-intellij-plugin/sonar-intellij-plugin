@@ -149,7 +149,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
 
     private void persistRule() {
       final SonarServer sonarServer = SonarServer.create(serverConfig);
-      persistedRule = sonarServer.getRule(sonarIssue.getRuleKey());
+      persistedRule = sonarServer.getRule(serverConfig.getOrganization(), sonarIssue.getRuleKey());
       if (sonarRules != null) {
         final SonarRules sonarRulesState = sonarRules.getState();
         if (sonarRulesState != null && persistedRule.isValid()) {

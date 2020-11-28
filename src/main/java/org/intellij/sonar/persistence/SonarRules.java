@@ -24,7 +24,7 @@ public class SonarRules implements PersistentStateComponent<SonarRules> {
   private Map<String,Rule> sonarRulesByRuleKey = new ConcurrentHashMap<>();
 
   public static Optional<SonarRules> getInstance(Project project) {
-    return Optional.ofNullable(project.getComponent(SonarRules.class));
+    return Optional.ofNullable(project.getService(SonarRules.class));
   }
 
   @Nullable

@@ -2,6 +2,7 @@ package org.intellij.sonar.analysis;
 
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.daemon.DaemonBundle;
+import com.intellij.codeInsight.daemon.impl.AnnotationHolderImpl;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+
+import static com.intellij.lang.annotation.HighlightSeverity.*;
 
 public class SonarExternalAnnotator
   extends ExternalAnnotator<SonarExternalAnnotator.InitialInfo,SonarExternalAnnotator.AnnotationResult> {
@@ -219,17 +222,7 @@ public class SonarExternalAnnotator
           PsiElement location,
           HighlightSeverity severity
   ) {
-    if (HighlightSeverity.ERROR.equals(severity)) {
-      return holder.createErrorAnnotation(location.getTextRange(),message);
-    } else
-    if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-      return holder.createWeakWarningAnnotation(location.getTextRange(),message);
-    } else
-    if (HighlightSeverity.WARNING.equals(severity)) {
-      return holder.createWarningAnnotation(location.getTextRange(),message);
-    } else {
-      throw new IllegalArgumentException("Unhandled severity "+severity);
-    }
+    return createAnnotation(holder, message, location.getTextRange(), severity);
   }
 
   private static Annotation createAnnotation(
@@ -238,17 +231,13 @@ public class SonarExternalAnnotator
           TextRange textRange,
           HighlightSeverity severity
   ) {
-    if (HighlightSeverity.ERROR.equals(severity)) {
-      return holder.createErrorAnnotation(textRange,message);
-    } else
-    if (HighlightSeverity.WEAK_WARNING.equals(severity)) {
-      return holder.createWeakWarningAnnotation(textRange,message);
-    } else
-    if (HighlightSeverity.WARNING.equals(severity)) {
-      return holder.createWarningAnnotation(textRange,message);
-    } else {
+    if (!Sets.newHashSet(ERROR, WEAK_WARNING, WARNING)
+            .contains(severity)) {
       throw new IllegalArgumentException("Unhandled severity "+severity);
     }
+    Annotation annotation = ((AnnotationHolderImpl) holder)
+            .createAnnotation(severity, textRange, message);
+    return annotation;
   }
 
   private static String createTooltip(SonarIssue issue) {

@@ -30,7 +30,7 @@ public class IssuesByFileIndexProjectService
 
   public static Optional<IssuesByFileIndexProjectService> getInstance(@NotNull Project project) {
     if (project.isDisposed()) return Optional.empty();
-    return Optional.ofNullable(project.getComponent(IssuesByFileIndexProjectService.class));
+    return Optional.ofNullable(project.getService(IssuesByFileIndexProjectService.class));
   }
 
   @Nullable

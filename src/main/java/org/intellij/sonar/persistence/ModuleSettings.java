@@ -19,7 +19,7 @@ public class ModuleSettings implements PersistentStateComponent<Settings> {
   protected Settings settings = new Settings();
 
   public static ModuleSettings getInstance(Module module) {
-    return module.getComponent(ModuleSettings.class);
+    return module.getService(ModuleSettings.class);
   }
 
   @Nullable
