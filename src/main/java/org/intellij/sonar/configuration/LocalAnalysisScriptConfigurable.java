@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
@@ -118,7 +119,7 @@ public class LocalAnalysisScriptConfigurable extends DialogWrapper {
       FileChooser.chooseFiles(
         fileDescriptor,
         myProject,
-          Optional.ofNullable(previous).orElse(myProject.getBaseDir()),
+          Optional.ofNullable(previous).orElse(ProjectUtil.guessProjectDir(myProject)),
           files -> {
             String path = files.get(0).getPath();
             myPathToSonarReportTextFieldWithBrowseButton.setText(path);
