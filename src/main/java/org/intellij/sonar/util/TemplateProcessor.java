@@ -18,6 +18,7 @@ import java.io.File;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 
@@ -112,7 +113,7 @@ public class TemplateProcessor {
     if (null != project) {
       projectName = project.getName();
       projectBaseDir = project.getBasePath();
-      projectBaseDirName = project.getBaseDir().getName();
+      projectBaseDirName = ProjectUtil.guessProjectDir(project).getName();
     }
     processedTemplate = processedTemplate.replace(PROJECT_NAME.getVariableName(),projectName);
     processedTemplate = processedTemplate.replace(PROJECT_BASE_DIR_NAME.getVariableName(),projectBaseDirName);
