@@ -4,7 +4,6 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
     @Storage("$MODULE_FILE$")
   }
 )
-public class ModuleSettings implements PersistentStateComponent<Settings>, ModuleComponent {
+public class ModuleSettings implements PersistentStateComponent<Settings> {
 
   protected Settings settings = new Settings();
 
@@ -40,21 +39,4 @@ public class ModuleSettings implements PersistentStateComponent<Settings>, Modul
     this.settings = settings;
   }
 
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return "ModuleSettings";
-  }
-
-  @Override
-  public void moduleAdded() {
-  }
-
-  @Override
-  public void initComponent() {
-  }
-
-  @Override
-  public void disposeComponent() {
-  }
 }
