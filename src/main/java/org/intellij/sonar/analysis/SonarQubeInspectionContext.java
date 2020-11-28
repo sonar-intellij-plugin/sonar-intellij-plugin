@@ -31,7 +31,6 @@ import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.TransactionGuard;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -47,20 +46,11 @@ import org.intellij.sonar.DocumentChangeListener;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.SonarToolWindowFactory;
 import org.intellij.sonar.index.IssuesByFileIndex;
-import org.intellij.sonar.persistence.LocalAnalysisScripts;
-import org.intellij.sonar.persistence.ModuleSettings;
-import org.intellij.sonar.persistence.ProjectSettings;
-import org.intellij.sonar.persistence.Settings;
-import org.intellij.sonar.persistence.SonarConsoleSettings;
-import org.intellij.sonar.persistence.SonarServers;
+import org.intellij.sonar.persistence.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class SonarQubeInspectionContext implements GlobalInspectionContextExtension<SonarQubeInspectionContext> {
