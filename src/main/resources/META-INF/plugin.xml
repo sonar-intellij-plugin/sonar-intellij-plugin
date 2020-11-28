@@ -284,7 +284,7 @@ fix error invalid page size issue #268
     </change-notes>
 
     <!-- see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html -->
-    <idea-version since-build="202" /> <!-- IntelliJ IDEA v.2020.2-->
+    <idea-version since-build="202.5103.13" /> <!-- IntelliJ IDEA v.2020.2-->
 
     <depends>com.intellij.modules.lang</depends>
 

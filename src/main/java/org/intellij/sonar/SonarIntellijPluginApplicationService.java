@@ -43,10 +43,11 @@ public class SonarIntellijPluginApplicationService {
   }
 
   private void registerExternalAnnotatorFor(Language language) {
-    LanguageExtensionPoint<SonarExternalAnnotator> ep = new LanguageExtensionPoint<>();
-    ep.language = language.getID();
-    ep.implementationClass = SonarExternalAnnotator.class.getName();
-    ep.setPluginDescriptor(plugin);
+    LanguageExtensionPoint<SonarExternalAnnotator> ep = new LanguageExtensionPoint<>(
+            language.getID(),
+            SonarExternalAnnotator.class.getName(),
+            plugin);
+
     Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(ep);
   }
 
