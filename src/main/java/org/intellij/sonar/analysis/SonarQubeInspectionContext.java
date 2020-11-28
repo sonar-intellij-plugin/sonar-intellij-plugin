@@ -152,7 +152,7 @@ public class SonarQubeInspectionContext implements GlobalInspectionContextExtens
     }
 
     private void saveAllDocuments() {
-      TransactionGuard.getInstance().submitTransactionAndWait(
+      ApplicationManager.getApplication().invokeAndWait(
               () -> FileDocumentManager.getInstance().saveAllDocuments()
       );
     }
