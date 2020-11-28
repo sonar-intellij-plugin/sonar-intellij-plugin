@@ -1,13 +1,9 @@
 package org.intellij.sonar.console;
 
-import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
-import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
-
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -15,13 +11,17 @@ import com.intellij.ui.content.Content;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-public class SonarConsole extends AbstractProjectComponent {
+import static org.intellij.sonar.console.ConsoleLogLevel.ERROR;
+import static org.intellij.sonar.console.ConsoleLogLevel.INFO;
 
+public final class SonarConsole {
+
+  private final Project myProject;
   private ConsoleView consoleView;
   private String passwordFiler;
 
   public SonarConsole(Project project) {
-    super(project);
+    myProject = project;
   }
 
   public static synchronized SonarConsole get(Project project) {
