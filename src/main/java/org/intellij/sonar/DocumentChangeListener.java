@@ -17,7 +17,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.intellij.sonar.index.SonarIssue;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 import org.intellij.sonar.util.Finders;
 import org.jetbrains.annotations.NotNull;
 
@@ -127,8 +127,8 @@ public class DocumentChangeListener
             Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
             Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(documentEvent.getDocument());
             retrieveIssuesFromHighlighters(issuesFromHighlighters, highlighters);
-            final Optional<IssuesByFileIndexProjectComponent> indexComponent =
-                    IssuesByFileIndexProjectComponent.getInstance(project);
+            final Optional<IssuesByFileIndexProjectService> indexComponent =
+                    IssuesByFileIndexProjectService.getInstance(project);
             if (indexComponent.isPresent()) {
                 final Map<String, Set<SonarIssue>> index = indexComponent.get().getIndex();
                 index.put(file.get().getPath(), issuesFromHighlighters);

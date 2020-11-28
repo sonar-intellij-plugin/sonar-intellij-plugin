@@ -12,7 +12,7 @@ import com.intellij.psi.PsiFile;
 import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.index.IssuesByFileIndexer;
 import org.intellij.sonar.index.SonarIssue;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.Settings;
 import org.intellij.sonar.persistence.SonarServerConfig;
@@ -107,8 +107,8 @@ public class DownloadIssuesTask implements Runnable {
         .withSonarServerIssues(issues)
         .withSonarConsole(sonarConsole)
         .create();
-      final Optional<IssuesByFileIndexProjectComponent> indexComponent =
-        IssuesByFileIndexProjectComponent.getInstance(enrichedSettings.project);
+      final Optional<IssuesByFileIndexProjectService> indexComponent =
+        IssuesByFileIndexProjectService.getInstance(enrichedSettings.project);
       indexComponent.ifPresent(issuesByFileIndexProjectComponent -> issuesByFileIndexProjectComponent.getIndex().putAll(index));
       final int issuesCountInIndex = (int) index.values().stream()
               .mapToLong(Set::size)

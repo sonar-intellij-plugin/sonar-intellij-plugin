@@ -291,11 +291,6 @@ fix error invalid page size issue #268
     <project-components>
         <component>
             <implementation-class>
-                org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
-            </implementation-class>
-        </component>
-        <component>
-            <implementation-class>
                 org.intellij.sonar.console.SonarConsole
             </implementation-class>
         </component>
@@ -334,6 +329,7 @@ fix error invalid page size issue #268
         <projectService serviceImplementation="org.intellij.sonar.console.SonarConsole" />
         <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRules" />
         <projectService serviceImplementation="org.intellij.sonar.persistence.ProjectSettings" />
+        <projectService serviceImplementation="org.intellij.sonar.persistence.IssuesByFileIndexProjectService" />
 
         <moduleService serviceImplementation="org.intellij.sonar.persistence.ModuleSettings" />
 

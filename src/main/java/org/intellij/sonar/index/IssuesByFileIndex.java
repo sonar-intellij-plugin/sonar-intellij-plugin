@@ -9,12 +9,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 
 public class IssuesByFileIndex {
 
   public static Map<String,Set<SonarIssue>> getIndex(Project project) {
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(
+    final Optional<IssuesByFileIndexProjectService> indexComponent = IssuesByFileIndexProjectService.getInstance(
       project
     );
     if (!indexComponent.isPresent()) {

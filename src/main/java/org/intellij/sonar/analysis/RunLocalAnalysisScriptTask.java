@@ -16,7 +16,7 @@ import org.intellij.sonar.console.SonarConsole;
 import org.intellij.sonar.console.StreamGobbler;
 import org.intellij.sonar.index.IssuesByFileIndexer;
 import org.intellij.sonar.index.SonarIssue;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 import org.intellij.sonar.persistence.LocalAnalysisScript;
 import org.intellij.sonar.persistence.LocalAnalysisScripts;
 import org.intellij.sonar.persistence.SonarServerConfig;
@@ -266,7 +266,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void createIndexFrom(SonarReport sonarReport) {
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent = IssuesByFileIndexProjectComponent.getInstance(
+    final Optional<IssuesByFileIndexProjectService> indexComponent = IssuesByFileIndexProjectService.getInstance(
       enrichedSettings.project
     );
 
@@ -322,7 +322,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   private void removeFilesAffectedByReportFromIndex(
     SonarReport sonarReport,
-    IssuesByFileIndexProjectComponent indexComponent
+    IssuesByFileIndexProjectService indexComponent
   ) {
     if (sonarReport.getComponents() != null) {
       for (Component component : sonarReport.getComponents()) {
@@ -331,7 +331,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     }
   }
 
-  private void removeComponentFromIndex(IssuesByFileIndexProjectComponent indexComponent, Component component) {
+  private void removeComponentFromIndex(IssuesByFileIndexProjectService indexComponent, Component component) {
     final String path = component.getPath();
     if (path != null) {
       final String componentFullPath = new File(workingDir,path).toString();

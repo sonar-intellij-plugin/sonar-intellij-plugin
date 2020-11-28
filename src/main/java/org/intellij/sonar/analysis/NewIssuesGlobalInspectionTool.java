@@ -11,7 +11,7 @@ import com.intellij.notification.Notifications;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.index.SonarIssue;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,8 +74,8 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
         .filter(Objects::nonNull)
         .map(psiFile -> psiFile.getVirtualFile().getPath())
         .collect(Collectors.toSet());
-    final Optional<IssuesByFileIndexProjectComponent> indexComponent =
-      IssuesByFileIndexProjectComponent.getInstance(context.getProject());
+    final Optional<IssuesByFileIndexProjectService> indexComponent =
+      IssuesByFileIndexProjectService.getInstance(context.getProject());
     if (indexComponent.isPresent()) {
       long newIssuesCount = indexComponent.get().getIndex().entrySet().stream()
               .filter(entry -> analyzedPaths.contains(entry.getKey()))

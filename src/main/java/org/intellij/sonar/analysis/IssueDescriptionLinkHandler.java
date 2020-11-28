@@ -12,7 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import org.intellij.sonar.index.SonarIssue;
-import org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent;
+import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 import org.intellij.sonar.persistence.ModuleSettings;
 import org.intellij.sonar.persistence.ProjectSettings;
 import org.intellij.sonar.persistence.Settings;
@@ -43,7 +43,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
     private Editor editor;
     private Project project;
     private PsiFile psiFile;
-    private IssuesByFileIndexProjectComponent state;
+    private IssuesByFileIndexProjectService state;
     private SonarIssue sonarIssue;
     private SonarRules sonarRules;
     private Settings settings;
@@ -88,7 +88,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
     }
 
     private void getIssuesByFileIndexProjectComponent() {
-      Optional<IssuesByFileIndexProjectComponent> issuesByFileIndexProjectComponent = IssuesByFileIndexProjectComponent.getInstance(project);
+      Optional<IssuesByFileIndexProjectService> issuesByFileIndexProjectComponent = IssuesByFileIndexProjectService.getInstance(project);
       if (!issuesByFileIndexProjectComponent.isPresent()) {
         processing = false;
         return;
