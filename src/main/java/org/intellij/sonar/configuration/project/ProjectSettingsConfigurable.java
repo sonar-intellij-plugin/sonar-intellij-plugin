@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import org.intellij.sonar.configuration.WorkingDirs;
 import org.intellij.sonar.configuration.partials.AlternativeWorkingDirActionListener;
@@ -102,7 +103,9 @@ public class ProjectSettingsConfigurable implements Configurable {
   private void initAlternativeWorkingDir() {
     myAlternativeWorkingDirTextFieldWithBrowseButton.addActionListener(
       new AlternativeWorkingDirActionListener(
-        myProject,myAlternativeWorkingDirTextFieldWithBrowseButton,myProject.getBaseDir()
+        myProject,
+              myAlternativeWorkingDirTextFieldWithBrowseButton,
+              ProjectUtil.guessProjectDir(myProject)
       )
     );
     processAlternativeDirSelections();
