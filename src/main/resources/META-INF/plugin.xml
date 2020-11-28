@@ -331,7 +331,9 @@ fix error invalid page size issue #268
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable id="projectSettingsConfigurable"
-                             instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"/>
+                             instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"
+                             displayName="SonarQube"
+        />
 
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarServers"/>
