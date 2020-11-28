@@ -4,6 +4,7 @@ import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtensionPoint;
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.extensions.PluginId;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
@@ -48,7 +49,10 @@ public class SonarIntellijPluginApplicationService {
             SonarExternalAnnotator.class.getName(),
             plugin);
 
-    Extensions.getRootArea().getExtensionPoint("com.intellij.externalAnnotator").registerExtension(ep);
+    Extensions
+            .getRootArea()
+            .getExtensionPoint("com.intellij.externalAnnotator")
+            .registerExtension(ep);
   }
 
 }
