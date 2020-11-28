@@ -25,11 +25,13 @@ public final class PasswordManager {
     );
   }
 
-  public static String loadPassword(final String key) {
+  public static String loadPassword(final String user) {
     UIUtil.invokeAndWaitIfNeeded(
         (Runnable) () -> {
           try {
-            password = PasswordSafe.getInstance().getPassword(null,PasswordManager.class,key);
+            password = PasswordSafe.getInstance()
+                    .get(new CredentialAttributes(PasswordManager.class.getName(), user))
+                    .getPasswordAsString();
           } catch (Exception e) {
             Messages.showErrorDialog("Cannot load password\n"+Throwables.getStackTraceAsString(e),"Error");
           }
