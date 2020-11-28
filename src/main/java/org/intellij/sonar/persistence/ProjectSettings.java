@@ -1,6 +1,5 @@
 package org.intellij.sonar.persistence;
 
-import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -14,13 +13,9 @@ import org.jetbrains.annotations.Nullable;
     @Storage("sonarSettings.xml")
   }
 )
-public class ProjectSettings extends AbstractProjectComponent implements PersistentStateComponent<Settings> {
+public class ProjectSettings  implements PersistentStateComponent<Settings> {
 
   protected Settings settings = new Settings();
-
-  protected ProjectSettings(Project project) {
-    super(project);
-  }
 
   public static ProjectSettings getInstance(Project project) {
     return project.getComponent(ProjectSettings.class);
@@ -37,9 +32,4 @@ public class ProjectSettings extends AbstractProjectComponent implements Persist
     this.settings = settings;
   }
 
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return "ProjectSettings";
-  }
 }

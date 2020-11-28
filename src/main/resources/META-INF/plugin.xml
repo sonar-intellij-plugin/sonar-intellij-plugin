@@ -291,11 +291,6 @@ fix error invalid page size issue #268
     <project-components>
         <component>
             <implementation-class>
-                org.intellij.sonar.persistence.ProjectSettings
-            </implementation-class>
-        </component>
-        <component>
-            <implementation-class>
                 org.intellij.sonar.persistence.IssuesByFileIndexProjectComponent
             </implementation-class>
         </component>
@@ -320,6 +315,7 @@ fix error invalid page size issue #268
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
     <extensions defaultExtensionNs="com.intellij">
+
         <projectConfigurable id="projectSettingsConfigurable"
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"
                              displayName="SonarQube"
@@ -334,8 +330,11 @@ fix error invalid page size issue #268
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarConsoleSettings"/>
         <applicationService serviceImplementation="org.intellij.sonar.SonarIntellijPluginApplicationService" />
+
         <projectService serviceImplementation="org.intellij.sonar.console.SonarConsole" />
-        <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRules"/>
+        <projectService serviceImplementation="org.intellij.sonar.persistence.SonarRules" />
+        <projectService serviceImplementation="org.intellij.sonar.persistence.ProjectSettings" />
+
         <moduleService serviceImplementation="org.intellij.sonar.persistence.ModuleSettings" />
 
         <toolWindow id="SonarQube" anchor="bottom"
