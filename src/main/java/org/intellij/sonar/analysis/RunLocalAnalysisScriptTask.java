@@ -262,7 +262,9 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     } else {
       sonarConsole.info("Did not find any issues in the SonarQube report");
     }
-    createIndexFrom(sonarReport);
+    if (sonarReport != null) {
+      createIndexFrom(sonarReport);
+    }
   }
 
   private void createIndexFrom(SonarReport sonarReport) {
