@@ -7,8 +7,8 @@ apply plugin: 'org.jetbrains.intellij'
 apply plugin: 'java'
 apply plugin: 'jacoco'
 
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
+targetCompatibility = 11
+sourceCompatibility = 11
 
 repositories {
     mavenCentral()

@@ -7,7 +7,7 @@ addons:
     organization: "sonar-intellij-plugin"
 
 jdk:
-  - openjdk8
+  - openjdk11
 
 script:
   - ./gradlew sonarqube
