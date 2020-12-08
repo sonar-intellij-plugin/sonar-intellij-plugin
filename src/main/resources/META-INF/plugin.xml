@@ -305,15 +305,6 @@
 
     <depends>com.intellij.modules.lang</depends>
 
-    <module-components>
-        <component>
-            <implementation-class>
-                org.intellij.sonar.configuration.module.ModuleSettingsConfigurable
-            </implementation-class>
-        </component>
-    </module-components>
-
-
     <projectListeners>
         <listener class="org.intellij.sonar.DocumentChangeListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
@@ -324,7 +315,9 @@
                              instance="org.intellij.sonar.configuration.project.ProjectSettingsConfigurable"
                              displayName="SonarQube"
         />
-
+        <moduleConfigurationEditorProvider
+                implementation="org.intellij.sonar.configuration.module.SonarQubeModuleConfigurationEditorProvider"
+        />
         <applicationService
                 serviceImplementation="org.intellij.sonar.persistence.SonarServers"/>
         <applicationService

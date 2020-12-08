@@ -1,19 +1,11 @@
 package org.intellij.sonar.configuration.module;
 
-import static org.intellij.sonar.util.UIUtil.makeObj;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Optional;
-
-import javax.swing.*;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
-import com.intellij.openapi.options.Configurable;
+import com.intellij.openapi.module.ModuleConfigurationEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ui.configuration.ModuleConfigurationState;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.sonar.configuration.WorkingDirs;
@@ -26,10 +18,16 @@ import org.intellij.sonar.util.LocalAnalysisScriptsUtil;
 import org.intellij.sonar.util.SonarServersUtil;
 import org.intellij.sonar.util.UIUtil;
 import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ModuleSettingsConfigurable implements Configurable, ModuleComponent {
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Optional;
+
+import static org.intellij.sonar.util.UIUtil.makeObj;
+
+public class ModuleSettingsConfigurationEditor implements ModuleConfigurationEditor {
 
   private final ModuleLocalAnalysisScriptView myLocalAnalysisScriptView;
   private final SonarResourcesTableView mySonarResourcesTableView;
@@ -50,22 +48,22 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   private JCheckBox myUseAlternativeWorkingDirCheckBox;
   private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
 
-  public ModuleSettingsConfigurable(Module module) {
-    this.myModule = module;
-    this.myProject = module.getProject();
+  public ModuleSettingsConfigurationEditor(ModuleConfigurationState state) {
+    this.myModule = state.getRootModel().getModule();;
+    this.myProject = state.getProject();
     this.myLocalAnalysisScriptView = new ModuleLocalAnalysisScriptView(
-      myLocalAnalysisScriptComboBox,
-      myAddLocalAnalysisScriptButton,
-      myEditLocalAnalysisScriptButton,
-      myRemoveLocalAnalysisScriptButton,
-      myProject
+            myLocalAnalysisScriptComboBox,
+            myAddLocalAnalysisScriptButton,
+            myEditLocalAnalysisScriptButton,
+            myRemoveLocalAnalysisScriptButton,
+            myProject
     );
     this.mySonarServersView = new ModuleSonarServersView(
-      mySonarServersComboBox,
-      myAddSonarServerButton,
-      myEditSonarServerButton,
-      myRemoveSonarServerButton,
-      myProject
+            mySonarServersComboBox,
+            myAddSonarServerButton,
+            myEditSonarServerButton,
+            myRemoveSonarServerButton,
+            myProject
     );
     this.mySonarResourcesTableView = new SonarResourcesTableView(myProject,mySonarServersView);
   }
@@ -133,8 +131,8 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   @Override
   public void apply() {
     Settings settings = this.toSettings();
-    ModuleSettings projectSettingsComponent = ModuleSettings.getInstance(myModule);
-    projectSettingsComponent.loadState(settings);
+    ModuleSettings moduleSettings = ModuleSettings.getInstance(myModule);
+    moduleSettings.loadState(settings);
   }
 
   @Override
@@ -149,26 +147,6 @@ public class ModuleSettingsConfigurable implements Configurable, ModuleComponent
   @Override
   public void disposeUIResources() {
     // To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void moduleAdded() {
-  }
-
-  @Override
-  public void initComponent() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @Override
-  public void disposeComponent() {
-    // To change body of implemented methods use File | Settings | File Templates.
-  }
-
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return "SonarQube";
   }
 
   public Settings toSettings() {
