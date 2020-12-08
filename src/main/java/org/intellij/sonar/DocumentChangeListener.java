@@ -100,7 +100,7 @@ public class DocumentChangeListener
 
     private void updateLineForAllIssuesFrom(Editor editor, RangeHighlighter highlighter) {
         Optional<Set<SonarIssue>> issues = Optional.ofNullable(highlighter.getUserData(SonarExternalAnnotator.KEY));
-        if (!issues.isPresent()) return;
+        if (issues.isEmpty()) return;
         int ijLine = Finders.findLineOfRangeHighlighter(highlighter, editor);
         int rhLine = ijLine + 1;
         for (SonarIssue issue : issues.get()) {
@@ -127,10 +127,10 @@ public class DocumentChangeListener
             Set<SonarIssue> issuesFromHighlighters = Sets.newLinkedHashSet();
             Set<RangeHighlighter> highlighters = Finders.findAllRangeHighlightersFrom(documentEvent.getDocument());
             retrieveIssuesFromHighlighters(issuesFromHighlighters, highlighters);
-            final Optional<IssuesByFileIndexProjectService> indexComponent =
+            final Optional<IssuesByFileIndexProjectService> indexService =
                     IssuesByFileIndexProjectService.getInstance(project);
-            if (indexComponent.isPresent()) {
-                final Map<String, Set<SonarIssue>> index = indexComponent.get().getIndex();
+            if (indexService.isPresent()) {
+                final Map<String, Set<SonarIssue>> index = indexService.get().getIndex();
                 index.put(file.get().getPath(), issuesFromHighlighters);
             }
         }

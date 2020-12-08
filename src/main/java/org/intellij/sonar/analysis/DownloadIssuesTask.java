@@ -107,9 +107,9 @@ public class DownloadIssuesTask implements Runnable {
         .withSonarServerIssues(issues)
         .withSonarConsole(sonarConsole)
         .create();
-      final Optional<IssuesByFileIndexProjectService> indexComponent =
+      final Optional<IssuesByFileIndexProjectService> indexService =
         IssuesByFileIndexProjectService.getInstance(enrichedSettings.project);
-      indexComponent.ifPresent(issuesByFileIndexProjectComponent -> issuesByFileIndexProjectComponent.getIndex().putAll(index));
+      indexService.ifPresent(s -> s.getIndex().putAll(index));
       final int issuesCountInIndex = (int) index.values().stream()
               .mapToLong(Set::size)
               .sum();

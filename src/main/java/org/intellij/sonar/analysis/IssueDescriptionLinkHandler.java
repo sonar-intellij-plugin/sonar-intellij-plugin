@@ -63,7 +63,7 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       this.processing = true;
       getProject();
       if (processing) getPsiFile();
-      if (processing) getIssuesByFileIndexProjectComponent();
+      if (processing) getIssuesByFileIndexProjectService();
       if (processing) getSonarIssue();
       if (processing) getDescriptionFromFetchedRules();
       if (processing) getSettings();
@@ -87,13 +87,13 @@ public class IssueDescriptionLinkHandler extends TooltipLinkHandler {
       }
     }
 
-    private void getIssuesByFileIndexProjectComponent() {
-      Optional<IssuesByFileIndexProjectService> issuesByFileIndexProjectComponent = IssuesByFileIndexProjectService.getInstance(project);
-      if (!issuesByFileIndexProjectComponent.isPresent()) {
+    private void getIssuesByFileIndexProjectService() {
+      Optional<IssuesByFileIndexProjectService> issuesByFileIndexProjectService = IssuesByFileIndexProjectService.getInstance(project);
+      if (!issuesByFileIndexProjectService.isPresent()) {
         processing = false;
         return;
       }
-      state = issuesByFileIndexProjectComponent.get().getState();
+      state = issuesByFileIndexProjectService.get().getState();
       if (state == null) {
         processing = false;
       }

@@ -14,13 +14,13 @@ import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
 public class IssuesByFileIndex {
 
   public static Map<String,Set<SonarIssue>> getIndex(Project project) {
-    final Optional<IssuesByFileIndexProjectService> indexComponent = IssuesByFileIndexProjectService.getInstance(
+    final Optional<IssuesByFileIndexProjectService> indexService = IssuesByFileIndexProjectService.getInstance(
       project
     );
-    if (!indexComponent.isPresent()) {
+    if (!indexService.isPresent()) {
       return Maps.newConcurrentMap();
     } else {
-      return indexComponent.get().getIndex();
+      return indexService.get().getIndex();
     }
   }
 

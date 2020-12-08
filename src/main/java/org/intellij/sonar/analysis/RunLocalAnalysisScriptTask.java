@@ -268,16 +268,16 @@ public class RunLocalAnalysisScriptTask implements Runnable {
   }
 
   private void createIndexFrom(SonarReport sonarReport) {
-    final Optional<IssuesByFileIndexProjectService> indexComponent = IssuesByFileIndexProjectService.getInstance(
+    final Optional<IssuesByFileIndexProjectService> indexService = IssuesByFileIndexProjectService.getInstance(
       enrichedSettings.project
     );
 
-    // check if index component exists
-    if (!indexComponent.isPresent()) {
+    // check if index service exists
+    if (!indexService.isPresent()) {
       return;
     }
 
-    removeFilesAffectedByReportFromIndex(sonarReport,indexComponent.get());
+    removeFilesAffectedByReportFromIndex(sonarReport,indexService.get());
 
     // do nothing if no sonar issues
     if (sonarReport.getIssues().isEmpty()) return;
@@ -293,7 +293,7 @@ public class RunLocalAnalysisScriptTask implements Runnable {
     logIndexCreationToConsole(indexCreationStartTime, index);
     if (!index.isEmpty()) {
       logNewIssuesToConsole(index);
-      indexComponent.get().getIndex().putAll(index);
+      indexService.get().getIndex().putAll(index);
     }
   }
 
@@ -324,11 +324,11 @@ public class RunLocalAnalysisScriptTask implements Runnable {
 
   private void removeFilesAffectedByReportFromIndex(
     SonarReport sonarReport,
-    IssuesByFileIndexProjectService indexComponent
+    IssuesByFileIndexProjectService indexService
   ) {
     if (sonarReport.getComponents() != null) {
       for (Component component : sonarReport.getComponents()) {
-        removeComponentFromIndex(indexComponent, component);
+        removeComponentFromIndex(indexService, component);
       }
     }
   }

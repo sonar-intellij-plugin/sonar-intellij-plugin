@@ -74,10 +74,10 @@ public class NewIssuesGlobalInspectionTool extends BaseGlobalInspectionTool {
         .filter(Objects::nonNull)
         .map(psiFile -> psiFile.getVirtualFile().getPath())
         .collect(Collectors.toSet());
-    final Optional<IssuesByFileIndexProjectService> indexComponent =
+    final Optional<IssuesByFileIndexProjectService> indexService =
       IssuesByFileIndexProjectService.getInstance(context.getProject());
-    if (indexComponent.isPresent()) {
-      long newIssuesCount = indexComponent.get().getIndex().entrySet().stream()
+    if (indexService.isPresent()) {
+      long newIssuesCount = indexService.get().getIndex().entrySet().stream()
               .filter(entry -> analyzedPaths.contains(entry.getKey()))
               .flatMap(entry -> entry.getValue().stream())
               .filter(SonarIssue::getIsNew)
