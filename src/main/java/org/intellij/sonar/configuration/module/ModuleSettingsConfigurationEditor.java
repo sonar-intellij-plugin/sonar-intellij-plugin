@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleConfigurationEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ui.configuration.ModuleConfigurationState;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -99,10 +101,10 @@ public class ModuleSettingsConfigurationEditor implements ModuleConfigurationEdi
   }
 
   private void initAlternativeWorkingDir() {
-    final VirtualFile moduleFile = myModule.getModuleFile();
-    final VirtualFile projectBaseDir = myProject.getBaseDir();
-    final VirtualFile dirToSelect = moduleFile != null
-      ? moduleFile.getParent()
+    VirtualFile[] contentRoots = ModuleRootManager.getInstance(myModule).getContentRoots();
+    final VirtualFile projectBaseDir = ProjectUtil.guessProjectDir(myProject);
+    final VirtualFile dirToSelect = contentRoots.length > 0
+      ? contentRoots[0]
       : projectBaseDir;
     myAlternativeWorkingDirTextFieldWithBrowseButton.addActionListener(
       new AlternativeWorkingDirActionListener(
