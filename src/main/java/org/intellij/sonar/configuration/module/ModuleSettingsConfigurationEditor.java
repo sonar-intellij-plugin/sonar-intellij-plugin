@@ -51,7 +51,7 @@ public class ModuleSettingsConfigurationEditor implements ModuleConfigurationEdi
   private TextFieldWithBrowseButton myAlternativeWorkingDirTextFieldWithBrowseButton;
 
   public ModuleSettingsConfigurationEditor(ModuleConfigurationState state) {
-    this.myModule = state.getRootModel().getModule();;
+    this.myModule = state.getRootModel().getModule();
     this.myProject = state.getProject();
     this.myLocalAnalysisScriptView = new ModuleLocalAnalysisScriptView(
             myLocalAnalysisScriptComboBox,
