@@ -30,8 +30,8 @@ public final class PasswordManager {
         (Runnable) () -> {
           try {
             password = PasswordSafe.getInstance()
-                    .get(new CredentialAttributes(PasswordManager.class.getName(), user))
-                    .getPasswordAsString();
+                    .getPassword(new CredentialAttributes(
+                            PasswordManager.class.getName(), user));
           } catch (Exception e) {
             Messages.showErrorDialog("Cannot load password\n"+Throwables.getStackTraceAsString(e),"Error");
           }
