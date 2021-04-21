@@ -14,10 +14,10 @@ repositories {
     mavenCentral()
 }
 
-version = '2.9.7'
+version = '2.9.8'
 
 intellij {
-    version '2020.3'
+    version '2021.1'
 }
 
 dependencies {
