@@ -12,14 +12,20 @@
         Team
     </vendor>
 
-    <description>SonarQube Community Intellij Plugin connects SonarQube server with Intellij Idea products.</description>
+    <description>SonarQube Analyzer connects SonarQube server with Intellij Idea products.</description>
 
     <change-notes>
         <![CDATA[
 <p>
+2.9.9
+<ul>
+<li>Change plugin name to SonarQube Analyzer</li>
+</ul>
+</p>
+<p>
 2.9.8
 <ul>
-<li>>Provides SonarServer Inspection for IntelliJ 2021.1</li>
+<li>Provides SonarServer Inspection for IntelliJ 2021.1</li>
 </ul>
 </p>
 <p>
