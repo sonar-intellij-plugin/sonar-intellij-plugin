@@ -10,14 +10,14 @@ import org.joda.time.DateTime;
 
 public class SonarReport {
 
+  private static final Gson GSON = new GsonBuilder()
+          .registerTypeAdapter(DateTime.class,new DateTimeTypeConverter())
+          .create();
   private String version;
   private List<Issue> issues;
   private List<Component> components;
   private List<SonarRule> rules;
   private List<User> users;
-  private static final Gson GSON = new GsonBuilder()
-    .registerTypeAdapter(DateTime.class,new DateTimeTypeConverter())
-    .create();
 
   public SonarReport(String version, List<Issue> issues, List<Component> components, List<SonarRule> sonarRules, List<User> users) {
     this.version = version;
