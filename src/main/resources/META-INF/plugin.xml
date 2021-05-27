@@ -16,6 +16,12 @@
     <change-notes>
         <![CDATA[
 <p>
+2.10.1-IB
+<ul>
+<li>Switch to newer sonar API (6.7 -> 8.5)</li>
+</ul>
+</p>
+<p>
 2.10.1
 <ul>
 <li>Fixes Light files should have PSI only in one project</li>
