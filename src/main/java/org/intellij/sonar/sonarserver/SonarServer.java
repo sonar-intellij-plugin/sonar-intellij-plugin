@@ -10,16 +10,14 @@ import org.intellij.sonar.configuration.SonarQualifier;
 import org.intellij.sonar.persistence.Resource;
 import org.intellij.sonar.persistence.SonarServerConfig;
 import org.intellij.sonar.util.ProgressIndicatorUtil;
-import org.sonarqube.ws.Common;
+import org.sonarqube.ws.*;
 import org.sonarqube.ws.Issues.Issue;
 import org.sonarqube.ws.Issues.SearchWsResponse;
-import org.sonarqube.ws.Rules;
-import org.sonarqube.ws.WsComponents;
-import org.sonarqube.ws.WsComponents.Component;
 import org.sonarqube.ws.client.WsClient;
-import org.sonarqube.ws.client.component.TreeWsRequest;
-import org.sonarqube.ws.client.issue.IssuesService;
-import org.sonarqube.ws.client.issue.SearchWsRequest;
+import org.sonarqube.ws.client.components.TreeRequest;
+import org.sonarqube.ws.client.issues.IssuesService;
+import org.sonarqube.ws.client.issues.SearchRequest;
+import org.sonarqube.ws.client.rules.ShowRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +49,10 @@ public class SonarServer {
     }
 
     public Rule getRule(String organization, String key) {
-        Rules.Rule rule = sonarClient.rules().show(organization, key).getRule();
+        ShowRequest rq = new ShowRequest();
+        rq.setOrganization(organization);
+        rq.setKey(key);
+        Rules.Rule rule = sonarClient.rules().show(rq).getRule();
         return new Rule(rule.getKey(), rule.getName(), rule.getSeverity(), rule.getLang(), rule.getLangName(), rule.getHtmlDesc());
     }
 
@@ -60,37 +61,37 @@ public class SonarServer {
 
         final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
         indicator.setText("Downloading SonarQube projects");
-        List<Component> projects = getAllProjects(sonarClient, projectNameFilter, organization);
-        projects = projects.stream().sorted(comparing(Component::getName)).collect(toList());
+        List<Components.Component> projects = getAllProjects(sonarClient, projectNameFilter, organization);
+        projects = projects.stream().sorted(comparing(Components.Component::getName)).collect(toList());
 
         indicator.setText("Downloading SonarQube modules");
         int i = 0;
-        for (Component project : projects) {
+        for (Components.Component project : projects) {
             if (indicator.isCanceled()) break;
             i++;
             indicator.setFraction(1.0 * i / projects.size());
             indicator.setText2(project.getName());
             allResources.add(new Resource(project.getKey(), project.getName(), project.getQualifier()));
-            List<Component> modules = getAllModules(sonarClient, project.getKey());
-            modules = modules.stream().sorted(comparing(Component::getName)).collect(toList());
-            for (Component module : modules) {
+            List<Components.Component> modules = getAllModules(sonarClient, project.getKey());
+            modules = modules.stream().sorted(comparing(Components.Component::getName)).collect(toList());
+            for (Components.Component module : modules) {
                 allResources.add(new Resource(module.getKey(), module.getName(), module.getQualifier()));
             }
         }
         return allResources;
     }
 
-    private List<Component> getAllProjects(WsClient sonarClient, String projectNameFilter, String organization) {
-        org.sonarqube.ws.client.component.SearchWsRequest query = new org.sonarqube.ws.client.component.SearchWsRequest()
+    private List<Components.Component> getAllProjects(WsClient sonarClient, String projectNameFilter, String organization) {
+        org.sonarqube.ws.client.components.SearchRequest query = new org.sonarqube.ws.client.components.SearchRequest()
                 .setQualifiers(singletonList(SonarQualifier.PROJECT.getQualifier()))
-                .setPageSize(500); //-1 is not allowed, neither int max. The limit is 500.
+                .setPs("500"); //-1 is not allowed, neither int max. The limit is 500.
 
-        addSearchParameter(projectNameFilter, query::setQuery);
+        addSearchParameter(projectNameFilter, query::setQ);
         addSearchParameter(organization, query::setOrganization);
 
-        List<WsComponents.Component> components = new ArrayList<>();
+        List<Components.Component> components = new ArrayList<>();
 
-        WsComponents.SearchWsResponse response = sonarClient.components().search(query);
+        Components.SearchWsResponse response = sonarClient.components().search(query);
         Common.Paging paging = response.getPaging();
         int total = paging.getTotal();
         int pageSize = paging.getPageSize();
@@ -101,7 +102,7 @@ public class SonarServer {
             components.addAll(response.getComponentsList());
             for (int pageIndex = 2; pageIndex <= pages; pageIndex++)
             {
-                query.setPage(pageIndex);
+                query.setP(String.valueOf(pageIndex));
                 response = sonarClient.components().search(query);
                 components.addAll(response.getComponentsList());
             }
@@ -110,8 +111,8 @@ public class SonarServer {
         return Collections.unmodifiableList(components);
     }
 
-    private List<Component> getAllModules(WsClient sonarClient, String projectResourceKey) {
-        TreeWsRequest query = new TreeWsRequest()
+    private List<Components.Component> getAllModules(WsClient sonarClient, String projectResourceKey) {
+        TreeRequest query = new TreeRequest()
                 .setQualifiers(singletonList(SonarQualifier.MODULE.getQualifier()))
                 .setComponent(projectResourceKey);
         return sonarClient.components().tree(query).getComponentsList();
@@ -119,11 +120,9 @@ public class SonarServer {
 
     public ImmutableList<Issue> getAllIssuesFor(String resourceKey, String organization) {
         final ImmutableList.Builder<Issue> builder = ImmutableList.builder();
-        SearchWsRequest query = new SearchWsRequest();
-        query.setComponentRoots(singletonList(resourceKey))
-                .setResolved(false)
-                .setPageSize(500);
-        query.setProjectKeys(singletonList(resourceKey));
+        SearchRequest query = new SearchRequest();
+        query.setComponentKeys(singletonList(resourceKey)).setPs("500").setResolved("false");
+        //query.setProjectKeys(singletonList(resourceKey));
         addSearchParameter(organization, query::setOrganization);
         IssuesService issuesService = sonarClient.issues();
         SearchWsResponse response = issuesService.search(query);
@@ -141,7 +140,7 @@ public class SonarServer {
             ProgressIndicatorUtil.setText(progressIndicator, pagesProgressMessage);
             ProgressIndicatorUtil.setFraction(progressIndicator, pageIndex * 1.0 / pages);
 
-            query.setPage(pageIndex);
+            query.setP(String.valueOf(pageIndex));
             builder.addAll(issuesService.search(query).getIssuesList());
         }
         return builder.build();
