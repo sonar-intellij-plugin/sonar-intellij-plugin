@@ -14,7 +14,7 @@ repositories {
     mavenCentral()
 }
 
-version = '2.10.0'
+version = '2.10.1'
 
 intellij {
     version '2021.2'

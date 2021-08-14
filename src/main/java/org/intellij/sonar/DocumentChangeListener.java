@@ -15,6 +15,7 @@ import com.intellij.openapi.project.ProjectManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.testFramework.LightVirtualFile;
 import org.intellij.sonar.analysis.SonarExternalAnnotator;
 import org.intellij.sonar.index.SonarIssue;
 import org.intellij.sonar.persistence.IssuesByFileIndexProjectService;
@@ -149,6 +150,7 @@ public class DocumentChangeListener
     private void updateHighlightingFor(VirtualFile virtualFile, Project project) {
         if (virtualFile.isValid() && !project.isDisposed() && project.isInitialized()) {
             PsiManager pm = PsiManager.getInstance(project);
+            if (virtualFile instanceof LightVirtualFile) return; // fixes Light files should have PSI only in one project
             Optional<PsiFile> psiFile = Optional.ofNullable(pm.findFile(virtualFile));
             psiFile.ifPresent(it -> {
                 DaemonCodeAnalyzer daemonCodeAnalyzer = DaemonCodeAnalyzer.getInstance(project);

@@ -3,7 +3,7 @@
     <id>org.mayevskiy.intellij.sonar</id>
     <name>SonarQube Analyzer</name>
 
-    <version>2.10.0</version>
+    <version>2.10.1</version>
 
     <vendor email="sonarqube-intellij-plugin@googlegroups.com"
             url="https://github.com/sonar-intellij-plugin/sonar-intellij-plugin">
@@ -15,6 +15,12 @@
 
     <change-notes>
         <![CDATA[
+<p>
+2.10.1
+<ul>
+<li>Fixes Light files should have PSI only in one project</li>
+</ul>
+</p>
 <p>
 2.10.0
 <ul>
