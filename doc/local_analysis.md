@@ -1,3 +1,5 @@
+# Local Analysis
+
 After configuring the Sonar server you are ready to start downloading issues and showing them in the IDEA. But as soon you start editing your source code, you might want to trigger a local sonar analysis. To achieve this by using the plugin and showing new issues directly inside the IDEA, you need to tell the plugin how to analyse your project and provide the path to the sonar-report.json file. The plugin understands the contents of the report file and shows the results in IDEA like any other inspection.
 Before configuring the plugin, you need to understand how to run local analysis for your project. 
 
@@ -55,7 +57,7 @@ A finished configuration can look like:
 
 **NOTE: For Gradle, it is recommended to [use a wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html).**
 
-#### Placeholders
+### Placeholders
 
 In the previous example we have used a hard coded script and a sonar-report.json file path using a $WORKING_DIR placeholder. You can use several placeholders to replace values in your script or sonar-report.json file path.
 
@@ -83,7 +85,7 @@ For example in a multi module project, you will find `sonar-report.json` in foll
 
 **NOTE: if your module.iml files are not located in same directory as the module root, then you can override the working directory manually.**
 
-### Module configuration
+## Module configuration
 
 Module configuration is similar project configuration. **Please note that for a multi module maven project you need to manually define the sonar resource for each module.**
 
@@ -92,7 +94,7 @@ Go to `Project Structure -> Select a module -> Select SonarQube Tab`.
 Configure the module in the same way as a project. You can use a special option `<PROJECT>`, in this case the project configuration will be used.
 The local analysis script is per default, starting in the module base directory.
 
-#### Example: A multi-module maven project
+### Example: A multi-module maven project
 
 With maven:
 
