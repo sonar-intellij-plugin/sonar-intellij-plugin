@@ -24,7 +24,7 @@ We appreciate constructive feedback and contributions of any kind, so please rep
 
 You can install the "SonarQube Community Plugin" via the plugin manager inside your Jetbrains IDE or download it from the [Jetbrains Plugin Repository](http://plugins.jetbrains.com/plugin/7238). After the installation, you first of all need to configure the connection to your Sonar server. This is done per project and/ or module. You can use a remote server or a local one on your machine.
 
-In your IDE go to `File -> Settings -> Other Settings -> SonarQube`. 
+In your IDE go to `File -> Settings -> Other Settings -> SonarQube`. In IntelliJ Ultimate go to `IntelliJ IDEA -> Preferences -> Tools -> SonarQube`.
 
 ![alt text](https://raw.github.com/sonar-intellij-plugin/sonar-intellij-plugin/master/screenshots/server_selection.png "Example server selection")
 
